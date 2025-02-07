@@ -2,7 +2,7 @@ name: Deploy API to AWS
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, dev , add_workflow_deploy_to_aws_ecs]
     paths:
       - 'apps/api/**'
       - '.deploy/api/**'
@@ -12,7 +12,7 @@ on:
 jobs:
   deploy-api:
     name: Deploy API to AWS
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       id-token: write
