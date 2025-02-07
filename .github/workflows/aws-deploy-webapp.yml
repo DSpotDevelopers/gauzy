@@ -2,7 +2,7 @@ name: Deploy WebApp to AWS
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, dev, add_workflow_deploy_to_aws_ecs ]
     paths:
       - 'apps/webapp/**'
       - '.deploy/webapp/**'
@@ -12,12 +12,27 @@ on:
 jobs:
   deploy-webapp:
     name: Deploy WebApp to AWS
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
 
     steps:
+      - name: Runner clean up
+        run: |
+          echo "Available disk space:"
+          df -h
+          echo "Cleanup space:"
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/swift
+          sudo docker image prune -af || true
+          echo "Available disk space"
+          df -h
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
