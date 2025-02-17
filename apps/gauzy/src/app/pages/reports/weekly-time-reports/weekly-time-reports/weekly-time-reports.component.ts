@@ -255,7 +255,7 @@ export class WeeklyTimeReportsComponent extends BaseSelectorFilterComponent impl
 			const rowData = {
 				employee: employeeFullName,
 				...dates.reduce((acc, date) => {
-					acc[date] = entry.dates[date]?.sum ? this.durationFormatPipe.transform(entry.dates[date].sum) : '-'; // Default to '-' if no data for that date
+					acc[date] = entry.dates[date]?.sum ? this.durationFormatPipe.transform(entry.dates[date].sum) : '-';
 					return acc;
 				}, {}),
 				sum: this.durationFormatPipe.transform(entry?.sum || 0),
