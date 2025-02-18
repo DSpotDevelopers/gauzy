@@ -160,8 +160,8 @@ export class AmountsOwedGridComponent extends BaseSelectorFilterComponent implem
 					date: this.dateFormatPipe.transform(entry?.date),
 					employee: employeeFullName,
 					currentRate: billRateValue,
-					hours: this.durationFormatPipe.transform(employee?.duration) || '-',
-					amount: employee?.amount || '-'
+					hours: this.durationFormatPipe.transform(employee?.duration) || 0,
+					amount: employee?.amount || '0.00'
 				};
 
 				data.push(rowData);

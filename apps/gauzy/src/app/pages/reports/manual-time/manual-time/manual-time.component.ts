@@ -188,16 +188,14 @@ export class ManualTimeComponent extends BaseSelectorFilterComponent implements 
 
 			entry.timeLogs.forEach((logs) => {
 				const employeeFullName = logs?.employee?.fullName || 'N/A';
-				const projectName = logs?.project.name || 'N/A';
+				const projectName = logs?.project.name;
 				const membersCount = logs?.project?.membersCount || 'N/A';
 				const title = logs?.task?.title || 'N/A';
 
 				const rowData = {
 					date: this.dateFormatPipe.transform(entry?.date),
 					employee: employeeFullName,
-					project: projectName
-						? `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`
-						: 'N/A',
+					project: `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`,
 					title: title,
 					reason: logs.reason || '-',
 					from: this.dateFormatPipe.transform(logs?.createdAt) || '-',

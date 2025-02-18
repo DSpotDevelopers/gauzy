@@ -146,7 +146,7 @@ export class ProjectBudgetsReportComponent extends BaseSelectorFilterComponent i
 	exportToCsv() {
 		const data = [];
 		this.projects.forEach((entry) => {
-			const projectName = entry?.project.name || 'N/A';
+			const projectName = entry?.project.name;
 			const membersCount = entry?.project?.membersCount || 'N/A';
 			const spent =
 				entry.project.budgetType === OrganizationProjectBudgetTypeEnum.HOURS
@@ -168,9 +168,7 @@ export class ProjectBudgetsReportComponent extends BaseSelectorFilterComponent i
 					: entry?.budget || 0;
 
 			const rowData = {
-				project: projectName
-					? `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`
-					: 'N/A',
+				project: `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`,
 				employeesOrTeams: '-',
 				spent: spent,
 				remaining: remaining,

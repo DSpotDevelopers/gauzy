@@ -162,7 +162,7 @@ export class ActivitiesReportGridComponent extends BaseSelectorFilterComponent i
 				}
 
 				employeeData.projects.forEach((project) => {
-					const projectName = project?.project.name || 'N/A';
+					const projectName = project?.project.name;
 					const membersCount = project?.project?.membersCount || 'N/A';
 
 					if (!project.activity || !Array.isArray(project.activity)) {
@@ -174,9 +174,7 @@ export class ActivitiesReportGridComponent extends BaseSelectorFilterComponent i
 						data.push({
 							date: this.dateFormatPipe.transform(entry.date, null, null),
 							employee: employeeFullName,
-							project: projectName
-								? `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`
-								: 'N/A',
+							project: `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`,
 							title: activity?.title || 'N/A',
 							duration: this.durationFormatPipe.transform(activity?.duration || 0),
 							durationPercentage: `${activity?.duration_percentage || 0}%`

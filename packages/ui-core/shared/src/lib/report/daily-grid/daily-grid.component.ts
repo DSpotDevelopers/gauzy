@@ -178,7 +178,7 @@ export class DailyGridComponent extends BaseSelectorFilterComponent implements O
 			}
 
 			entry.logs.forEach((log) => {
-				const projectName = log?.project?.name || 'N/A';
+				const projectName = log?.project?.name;
 				const membersCount = log?.project?.membersCount || 'N/A';
 				const client = log?.project?.organizationContact?.name || 'N/A';
 
@@ -192,9 +192,7 @@ export class DailyGridComponent extends BaseSelectorFilterComponent implements O
 							averageActivity: `${entry?.activity || 0}%`,
 							employee: employeeFullName,
 							client,
-							project: projectName
-								? `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`
-								: 'N/A',
+							project: `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`,
 							title: task?.task?.title || 'N/A',
 							notes: this.truncatePipe.transform(task?.description || 'N/A', 40),
 							time: this.durationFormatPipe.transform(employee?.sum || 0),
