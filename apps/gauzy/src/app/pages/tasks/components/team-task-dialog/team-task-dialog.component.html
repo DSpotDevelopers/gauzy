@@ -24,7 +24,10 @@
 			<div class="row">
 				<div class="col-sm-6">
 					<div class="form-group">
-						<label class="label">{{ 'CONTEXT_MENU.PROJECT' | translate }}</label>
+						<label class="label"
+							>{{ 'CONTEXT_MENU.PROJECT' | translate }}
+							<span *ngIf="form.get('projectId').invalid" class="required-asterisk">*</span></label
+						>
 						<ga-project-selector
 							(onChanged)="selectedProject($event)"
 							[defaultSelected]="false"
@@ -68,7 +71,10 @@
 			<div class="row">
 				<div class="col-sm-12">
 					<div class="form-group">
-						<label class="label">{{ 'TASKS_PAGE.TASK_TEAMS' | translate }}</label>
+						<label class="label"
+							>{{ 'TASKS_PAGE.TASK_TEAMS' | translate }}
+							<span *ngIf="form.get('teams').invalid" class="required-asterisk">*</span></label
+						>
 						<nb-select
 							(selectedChange)="onTeamsSelected($event)"
 							[selected]="selectedTeams"
@@ -85,7 +91,10 @@
 			<div class="row">
 				<div class="col-sm-12">
 					<div class="form-group">
-						<label class="label">{{ 'TASKS_PAGE.TASKS_TITLE' | translate }}</label>
+						<label class="label"
+							>{{ 'TASKS_PAGE.TASKS_TITLE' | translate }}
+							<span *ngIf="form.get('title').invalid" class="required-asterisk">*</span></label
+						>
 						<input
 							class="name-input"
 							formControlName="title"

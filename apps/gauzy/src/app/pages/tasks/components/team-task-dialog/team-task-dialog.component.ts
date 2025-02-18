@@ -85,7 +85,7 @@ export class TeamTaskDialogComponent extends TranslationBaseComponent implements
 			number: [{ value: '', disabled: true }],
 			title: [null, Validators.required],
 			project: [],
-			projectId: [],
+			projectId: [null, Validators.required],
 			modules: [],
 			status: [TaskStatusEnum.OPEN],
 			priority: [],
@@ -97,7 +97,7 @@ export class TeamTaskDialogComponent extends TranslationBaseComponent implements
 			dueDate: [],
 			description: [],
 			tags: [],
-			teams: [],
+			teams: [null, Validators.required],
 			taskStatus: [],
 			taskSize: [],
 			taskPriority: []
@@ -210,6 +210,7 @@ export class TeamTaskDialogComponent extends TranslationBaseComponent implements
 				.map((id) => this.availableModules?.find((e) => e?.id === id))
 				.filter(Boolean);
 			this.form.get('modules')?.setValue(mappedModules);
+			this.form.get('projectId').setValue(this.form.get('projectId').value);
 			this.form.get('status').setValue(this.form.get('taskStatus').value?.name);
 			this.form.get('priority').setValue(this.form.get('taskPriority').value?.name);
 			this.form.get('size').setValue(this.form.get('taskSize').value?.name);
