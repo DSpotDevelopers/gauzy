@@ -97,7 +97,7 @@ export class TeamTaskDialogComponent extends TranslationBaseComponent implements
 			dueDate: [],
 			description: [],
 			tags: [],
-			teams: [null, Validators.required],
+			teams: [],
 			taskStatus: [],
 			taskSize: [],
 			taskPriority: []

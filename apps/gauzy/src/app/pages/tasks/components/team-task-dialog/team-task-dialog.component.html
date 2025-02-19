@@ -71,10 +71,7 @@
 			<div class="row">
 				<div class="col-sm-12">
 					<div class="form-group">
-						<label class="label"
-							>{{ 'TASKS_PAGE.TASK_TEAMS' | translate }}
-							<span *ngIf="form.get('teams').invalid" class="required-asterisk">*</span></label
-						>
+						<label class="label">{{ 'TASKS_PAGE.TASK_TEAMS' | translate }}</label>
 						<nb-select
 							(selectedChange)="onTeamsSelected($event)"
 							[selected]="selectedTeams"
