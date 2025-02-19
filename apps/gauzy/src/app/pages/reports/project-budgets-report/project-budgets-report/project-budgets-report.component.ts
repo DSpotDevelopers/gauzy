@@ -172,7 +172,8 @@ export class ProjectBudgetsReportComponent extends BaseSelectorFilterComponent i
 				employeesOrTeams: '-',
 				spent: spent,
 				remaining: remaining,
-				spentPercentage: budget + ` ${entry?.spentPercentage || 0}%`
+				budget,
+				spentPercentage: `${entry?.spentPercentage || 0}%`
 			};
 
 			data.push(rowData);
