@@ -190,7 +190,7 @@ export class ManualTimeComponent extends BaseSelectorFilterComponent implements 
 
 			entry.timeLogs.forEach((logs) => {
 				const employeeFullName = logs?.employee?.fullName || 'N/A';
-				const projectName = logs?.project?.name || 'N/A';
+				const projectName = logs?.project.name;
 				const membersCount = logs?.project?.membersCount || 'N/A';
 				const title = logs?.task?.title || 'N/A';
 

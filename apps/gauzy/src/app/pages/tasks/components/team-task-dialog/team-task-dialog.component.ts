@@ -15,7 +15,7 @@ import { TranslateService } from '@ngx-translate/core';
 import * as moment from 'moment';
 import { CKEditor4 } from 'ckeditor4-angular/ckeditor';
 import { TranslationBaseComponent } from '@gauzy/ui-core/i18n';
-import { richTextCKEditorConfig } from '@gauzy/ui-core/shared';
+import { FormHelpers, richTextCKEditorConfig } from '@gauzy/ui-core/shared';
 import {
 	ErrorHandlingService,
 	OrganizationProjectModuleService,
@@ -48,6 +48,7 @@ const initialTaskValue = {
 	styleUrls: ['./team-task-dialog.component.scss']
 })
 export class TeamTaskDialogComponent extends TranslationBaseComponent implements OnInit {
+	FormHelpers: typeof FormHelpers = FormHelpers;
 	selectedTaskId: string;
 	projects: IOrganizationProject[];
 	employees: IEmployee[] = [];
