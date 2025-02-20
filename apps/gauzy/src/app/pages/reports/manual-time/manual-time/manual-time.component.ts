@@ -15,7 +15,6 @@ import {
 	DurationFormatPipe,
 	GauzyFiltersComponent,
 	generateCsv,
-	TimeFormatPipe,
 	TimeZoneService
 } from '@gauzy/ui-core/shared';
 import {
@@ -55,8 +54,7 @@ export class ManualTimeComponent extends BaseSelectorFilterComponent implements 
 		protected readonly dateRangePickerBuilderService: DateRangePickerBuilderService,
 		protected readonly timeZoneService: TimeZoneService,
 		private readonly dateFormatPipe: DateFormatPipe,
-		private readonly durationFormatPipe: DurationFormatPipe,
-		private readonly timeFormatPipe: TimeFormatPipe
+		private readonly durationFormatPipe: DurationFormatPipe
 	) {
 		super(store, translateService, dateRangePickerBuilderService, timeZoneService);
 	}
@@ -200,7 +198,7 @@ export class ManualTimeComponent extends BaseSelectorFilterComponent implements 
 					project: `${projectName} ${this.getTranslation('SM_TABLE.MEMBERS_COUNT')}: ${membersCount}`,
 					title: title,
 					reason: logs.reason || '-',
-					from: this.timeFormatPipe.transform(logs?.createdAt) || '-',
+					from: this.dateFormatPipe.transform(logs?.createdAt) || '-',
 					duration: this.durationFormatPipe.transform(logs?.duration || 0),
 					editedAt: logs?.editedAt || 'N/A',
 					edited: logs?.isEdited ? `${ManualTimeLogAction.EDITED}` : `${ManualTimeLogAction.ADDED}`

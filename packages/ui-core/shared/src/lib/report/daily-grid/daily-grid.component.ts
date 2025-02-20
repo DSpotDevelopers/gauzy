@@ -178,7 +178,7 @@ export class DailyGridComponent extends BaseSelectorFilterComponent implements O
 			}
 
 			entry.logs.forEach((log) => {
-				const projectName = log?.project?.name || 'N/A';
+				const projectName = log?.project.name;
 				const membersCount = log?.project?.membersCount || 'N/A';
 				const client = log?.project?.organizationContact?.name || 'N/A';
 
