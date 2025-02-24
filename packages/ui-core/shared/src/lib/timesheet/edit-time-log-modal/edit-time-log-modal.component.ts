@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, AfterViewInit, ChangeDetectorRef } from '@angular/core';
-import { FormGroup, FormBuilder } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NbDialogRef } from '@nebular/theme';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { combineLatest, debounceTime, filter, Subject, Subscription, tap } from 'rxjs';
@@ -64,7 +64,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit {
 	static buildForm(fb: FormBuilder, self: EditTimeLogModalComponent): FormGroup {
 		return fb.group({
 			isBillable: [true],
-			employeeId: [],
+			employeeId: [null, Validators.required],
 			projectId: [],
 			organizationContactId: [],
 			organizationTeamId: [],
@@ -160,6 +160,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit {
 
 		// Initialize form with the time log values
 		this.populateFormWithTimeLog(this._timeLog);
+		this._cdr.detectChanges();
 	}
 
 	/**
@@ -428,6 +429,14 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit {
 		} else {
 			return false;
 		}
+	}
+
+	get isButtonDisabled(): boolean {
+		return (
+			this.form.invalid ||
+			!this.isValidSelectedRange(this.selectedRange) ||
+			(this.overlaps && this.overlaps.length > 0)
+		);
 	}
 
 	ngOnDestroy(): void {

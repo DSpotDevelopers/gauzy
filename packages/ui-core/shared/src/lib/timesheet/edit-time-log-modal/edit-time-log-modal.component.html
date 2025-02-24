@@ -127,7 +127,7 @@
 			<div class="form-group">
 				<div class="col-12 d-flex">
 					<div class="mr-3">
-						<label [ngClass]="this.organization?.requireClient ? 'required-asterisk' : null">{{
+						<label [ngClass]="organization?.requireClient ? 'required-asterisk' : null">{{
 							'TIMER_TRACKER.SELECT_CLIENT' | translate
 						}}</label>
 						<ga-contact-selector
@@ -147,7 +147,7 @@
 						</div>
 					</div>
 					<div class="ml-3">
-						<label [ngClass]="this.organization?.requireProject ? 'required-asterisk' : null">{{
+						<label [ngClass]="organization?.requireProject ? 'required-asterisk' : null">{{
 							'TIMER_TRACKER.SELECT_PROJECT' | translate
 						}}</label>
 						<ga-project-selector
@@ -188,7 +188,7 @@
 
 			<div class="form-group">
 				<div class="col-12">
-					<label [ngClass]="this.organization?.requireTask ? 'required-asterisk' : null">{{
+					<label [ngClass]="organization?.requireTask ? 'required-asterisk' : null">{{
 						'TIMER_TRACKER.SELECT_TASK' | translate
 					}}</label>
 					<ga-task-selector
@@ -208,7 +208,7 @@
 			</div>
 			<div class="form-group">
 				<div class="col-12">
-					<label [ngClass]="this.organization?.requireDescription ? 'required-asterisk' : null">{{
+					<label [ngClass]="organization?.requireDescription ? 'required-asterisk' : null">{{
 						'TIMER_TRACKER.DESCRIPTION' | translate
 					}}</label>
 					<textarea
@@ -231,7 +231,7 @@
 			</div>
 			<div class="form-group">
 				<div class="col-12">
-					<label [ngClass]="this.organization?.requireReason ? 'required-asterisk' : null">{{
+					<label [ngClass]="organization?.requireReason ? 'required-asterisk' : null">{{
 						'TIMESHEET.REASON' | translate
 					}}</label>
 					<nb-form-field fullWidth>
@@ -268,9 +268,8 @@
 				status="success"
 				size="small"
 				[nbSpinner]="loading"
-				[disabled]="loading"
 				nbSpinnerStatus="primary"
-				[disabled]="form.invalid || !isValidSelectedRange(selectedRange) || (overlaps && overlaps.length > 0)"
+				[disabled]="loading || isButtonDisabled"
 				(click)="addTime()"
 			>
 				<nb-icon icon="save-outline"></nb-icon>
