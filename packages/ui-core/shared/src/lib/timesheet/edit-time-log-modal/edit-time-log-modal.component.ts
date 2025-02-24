@@ -432,11 +432,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit {
 	}
 
 	get isButtonDisabled(): boolean {
-		return (
-			this.form.invalid ||
-			!this.isValidSelectedRange(this.selectedRange) ||
-			(this.overlaps && this.overlaps.length > 0)
-		);
+		return this.form.invalid || !this.isValidSelectedRange(this.selectedRange) || this.overlaps?.length > 0;
 	}
 
 	ngOnDestroy(): void {
