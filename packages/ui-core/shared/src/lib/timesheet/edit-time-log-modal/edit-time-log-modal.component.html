@@ -127,7 +127,7 @@
 			<div class="form-group">
 				<div class="col-12 d-flex">
 					<div class="mr-3">
-						<label [ngClass]="this.organization.requireClient ? 'required-asterisk' : null">{{
+						<label [ngClass]="this.organization?.requireClient ? 'required-asterisk' : null">{{
 							'TIMER_TRACKER.SELECT_CLIENT' | translate
 						}}</label>
 						<ga-contact-selector
