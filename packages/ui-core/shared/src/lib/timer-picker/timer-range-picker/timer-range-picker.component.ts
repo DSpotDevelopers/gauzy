@@ -90,6 +90,8 @@ export class TimerRangePickerComponent implements OnInit, AfterViewInit {
 	filter = (date) => !this._disabledDates.includes(date.getTime());
 
 	ngOnInit() {
+		//TODO: GZY-131 default date and start/stop values for manual time entry and time edit
+		//TODO: GZY-132 Specify start & stop time for manual time entry and time editing
 		this._lastValidDate = this.date;
 
 		if (this.fromEmployeeAppointment) {

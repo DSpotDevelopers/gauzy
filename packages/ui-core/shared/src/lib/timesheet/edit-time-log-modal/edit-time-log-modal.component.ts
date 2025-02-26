@@ -319,6 +319,8 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit {
 	 * @returns {Promise<void>} - Resolves after the time log is added or updated.
 	 */
 	async addTime(): Promise<void> {
+		if (this.loading || this.isButtonDisabled) return;
+
 		try {
 			this.loading = true;
 
