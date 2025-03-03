@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, AfterViewInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NbDialogRef } from '@nebular/theme';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -24,7 +24,7 @@ import { Store, TimesheetService, ToastrService } from '@gauzy/ui-core/core';
 	templateUrl: './edit-time-log-modal.component.html',
 	styleUrls: ['./edit-time-log-modal.component.scss']
 })
-export class EditTimeLogModalComponent implements OnInit, AfterViewInit {
+export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestroy {
 	// Permissions and basic state initialization
 	PermissionsEnum = PermissionsEnum;
 	organization: IOrganization;
@@ -442,5 +442,11 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit {
 
 	get isButtonDisabled(): boolean {
 		return this.form.invalid || !this.isValidSelectedRange(this.selectedRange) || this.overlaps?.length > 0;
+	}
+
+	ngOnDestroy(): void {
+		if (this.selectedRangeSubscription) {
+			this.selectedRangeSubscription.unsubscribe();
+		}
 	}
 }
