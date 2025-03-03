@@ -4262,7 +4262,8 @@
 	},
 	"VALIDATION": {
 		"FIELD_REQUIRED": "Dieses Feld ist erforderlich!",
-		"ENTER_POSITIVE_NUMBER": "Bitte geben Sie eine positive Zahl ein!"
+		"ENTER_POSITIVE_NUMBER": "Bitte geben Sie eine positive Zahl ein!",
+		"INVALID_TIME_FORMAT": "Falsches Format. Das korrekte Format ist HH:mm:ss."
 	},
 	"APPOINTMENTS_PAGE": {
 		"ADD_APPOINTMENT": "Termin hinzufügen",

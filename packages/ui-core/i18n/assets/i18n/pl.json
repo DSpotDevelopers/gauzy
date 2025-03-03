@@ -4266,7 +4266,8 @@
 	},
 	"VALIDATION": {
 		"FIELD_REQUIRED": "To pole jest wymagane!",
-		"ENTER_POSITIVE_NUMBER": "Proszę wprowadzić liczbę dodatnią!"
+		"ENTER_POSITIVE_NUMBER": "Proszę wprowadzić liczbę dodatnią!",
+		"INVALID_TIME_FORMAT": "Niepoprawny format. Poprawny format to HH:mm:ss."
 	},
 	"APPOINTMENTS_PAGE": {
 		"ADD_APPOINTMENT": "Dodaj spotkanie",

@@ -3738,7 +3738,8 @@
 	},
 	"VALIDATION": {
 		"FIELD_REQUIRED": "crwdns4248:0crwdne4248:0",
-		"ENTER_POSITIVE_NUMBER": "crwdns4250:0crwdne4250:0"
+		"ENTER_POSITIVE_NUMBER": "crwdns4250:0crwdne4250:0",
+		"INVALID_TIME_FORMAT": "crwdnsXXXXX:0crwdneXXXXX:0"
 	},
 	"APPOINTMENTS_PAGE": {
 		"ADD_APPOINTMENT": "crwdns3958:0crwdne3958:0",

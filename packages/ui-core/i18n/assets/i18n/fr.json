@@ -4266,7 +4266,8 @@
 	},
 	"VALIDATION": {
 		"FIELD_REQUIRED": "Ce champ est obligatoire !",
-		"ENTER_POSITIVE_NUMBER": "Veuillez saisir un nombre positif !"
+		"ENTER_POSITIVE_NUMBER": "Veuillez saisir un nombre positif !",
+		"INVALID_TIME_FORMAT": "Format incorrect. Le format correct est HH:mm:ss."
 	},
 	"APPOINTMENTS_PAGE": {
 		"ADD_APPOINTMENT": "Ajouter un rendez-vous",

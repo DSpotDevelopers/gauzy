@@ -4398,7 +4398,8 @@
 	},
 	"VALIDATION": {
 		"FIELD_REQUIRED": "This field is required!",
-		"ENTER_POSITIVE_NUMBER": "Please enter positive number!"
+		"ENTER_POSITIVE_NUMBER": "Please enter positive number!",
+		"INVALID_TIME_FORMAT": "Incorrect format. The correct format is HH:mm:ss."
 	},
 	"APPOINTMENTS_PAGE": {
 		"ADD_APPOINTMENT": "Add Appointment",

@@ -4264,7 +4264,8 @@
 	},
 	"VALIDATION": {
 		"FIELD_REQUIRED": "هذا الحقل مطلوب!",
-		"ENTER_POSITIVE_NUMBER": "الرجاء إدخال رقم إيجابي!"
+		"ENTER_POSITIVE_NUMBER": "الرجاء إدخال رقم إيجابي!",
+		"INVALID_TIME_FORMAT": "تنسيق غير صحيح. التنسيق الصحيح هو HH:mm:ss."
 	},
 	"APPOINTMENTS_PAGE": {
 		"ADD_APPOINTMENT": "أضِف الموعد",

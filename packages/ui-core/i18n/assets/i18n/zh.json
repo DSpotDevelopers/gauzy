@@ -4266,7 +4266,8 @@
 	},
 	"VALIDATION": {
 		"FIELD_REQUIRED": "此字段为必填项！",
-		"ENTER_POSITIVE_NUMBER": "请输入正数！"
+		"ENTER_POSITIVE_NUMBER": "请输入正数！",
+		"INVALID_TIME_FORMAT": "格式错误。正确的格式是 HH:mm:ss."
 	},
 	"APPOINTMENTS_PAGE": {
 		"ADD_APPOINTMENT": "添加预约",

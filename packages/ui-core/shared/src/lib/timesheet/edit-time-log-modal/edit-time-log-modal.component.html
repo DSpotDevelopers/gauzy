@@ -45,7 +45,9 @@
 				<div class="col-6">
 					<ngx-timer-range-picker
 						name="selectedRange"
-						[maxDate]="futureDateAllowed ? null : today"
+						[date]="futureDateAllowed ? null : today"
+						[selectedRange]="selectedRange"
+						(selectedRangeChange)="onDateRangeChange($event)"
 						[customClass]="'required-asterisk'"
 						formControlName="selectedRange"
 					>
