@@ -12,6 +12,8 @@ export function generateTimeSlots(start: Date, end: Date, previousTime = 0) {
 
 		/* Check start time is Rounded 10 minutes slot I.E 10:20, false if 10:14 */
 		if (mStart.get('minute') % 10 === 0) {
+			mStart.set('second', 0);
+			mStart.set('millisecond', 0);
 			tempEnd = mStart.clone().add(10, 'minute');
 			if (tempEnd.isBefore(mEnd)) {
 				duration = tempEnd.diff(mStart, 'seconds');
@@ -23,6 +25,8 @@ export function generateTimeSlots(start: Date, end: Date, previousTime = 0) {
 			const tempStart = mStart
 				.clone()
 				.set('minute', mStart.get('minute') - (mStart.minutes() % 10));
+			tempStart.set('second', 0);
+			tempStart.set('millisecond', 0);
 
 			/* Added 10 min for next slot */
 			tempEnd = tempStart.clone().add(10, 'minute');
@@ -45,9 +49,6 @@ export function generateTimeSlots(start: Date, end: Date, previousTime = 0) {
 				duration = 0;
 			}
 		}
-
-		mStart.set('second', 0);
-		mEnd.set('millisecond', 0);
 
 		slots.push({
 			startedAt: mStart.toDate(),
