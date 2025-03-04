@@ -249,14 +249,12 @@ export class ManageAppointmentComponent extends TranslationBaseComponent impleme
 				}
 			});
 			const response = await firstValueFrom(dialog.onClose);
-			if (response) {
-				if (response === 'yes') {
-					await this._employeeAppointmentService.update(this.employeeAppointment.id, {
-						status: EmployeeAppointmentStatus.CANCELLED
-					});
-					this._toastrService.success('APPOINTMENTS_PAGE.CANCEL_SUCCESS');
-					history.back();
-				}
+			if (response === 'yes') {
+				await this._employeeAppointmentService.update(this.employeeAppointment.id, {
+					status: EmployeeAppointmentStatus.CANCELLED
+				});
+				this._toastrService.success('APPOINTMENTS_PAGE.CANCEL_SUCCESS');
+				history.back();
 			}
 		} catch (error) {
 			this._toastrService.danger(

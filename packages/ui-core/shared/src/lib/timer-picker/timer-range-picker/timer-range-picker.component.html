@@ -49,4 +49,7 @@
 			></ga-manual-timer-picker>
 		</div>
 	</div>
+	<div *ngIf="errorMessage" class="col-12 invalid-feedback d-block">
+		{{ errorMessage | translate }}
+	</div>
 </div>

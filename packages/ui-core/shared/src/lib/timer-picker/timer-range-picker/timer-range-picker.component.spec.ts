@@ -89,20 +89,6 @@ describe('TimerRangePickerComponent', () => {
 	});
 
 	describe('Validation Logic', () => {
-		it('should set endTime to 23:59:59 if it is before startTime', () => {
-			const startTime = '08:00:00';
-			const endTime = '07:00:00';
-			const selectedDate = new Date(2025, 5, 1);
-
-			component.date = selectedDate;
-			component.startTime = startTime;
-			component.endTime = endTime;
-
-			component.validateInputs();
-
-			expect(component.endTime).toBe('23:59:59');
-		});
-
 		it('should reset date to current date if it is invalid', () => {
 			component.date = new Date('invalid date');
 

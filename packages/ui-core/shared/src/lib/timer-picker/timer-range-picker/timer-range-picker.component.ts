@@ -78,10 +78,12 @@ export class TimerRangePickerComponent implements AfterViewInit {
 	@ViewChild('endTimeModel') endTimeModel: NgModel;
 
 	@Output() selectedRangeChange = new EventEmitter<IDateRange>();
+	@Output() validationStatus = new EventEmitter<boolean>();
 
 	endTime: string;
 	startTime: string;
 	date: Date;
+	errorMessage: string | null = null;
 
 	constructor(private cd: ChangeDetectorRef) {}
 
@@ -96,6 +98,7 @@ export class TimerRangePickerComponent implements AfterViewInit {
 			.subscribe(() => {
 				this.updateSelectedRange();
 				this.validateDate();
+				this.validateInputs();
 			});
 	}
 
@@ -122,7 +125,6 @@ export class TimerRangePickerComponent implements AfterViewInit {
 		};
 
 		this.selectedRangeChange.emit(this.selectedRange);
-		this.validateInputs();
 	}
 
 	/**
@@ -152,17 +154,26 @@ export class TimerRangePickerComponent implements AfterViewInit {
 	validateInputs() {
 		const selectedDate = moment(this.date).format('YYYY-MM-DD');
 		const startDateTime = moment(`${selectedDate} ${this.startTime}`, 'YYYY-MM-DD HH:mm:ss');
-		let endDateTime = moment(`${selectedDate} ${this.endTime}`, 'YYYY-MM-DD HH:mm:ss');
+		const endDateTime = moment(`${selectedDate} ${this.endTime}`, 'YYYY-MM-DD HH:mm:ss');
+		this.errorMessage = null;
+		this.validationStatus.emit(true);
 
-		if (endDateTime.isBefore(startDateTime)) {
-			this.endTime = '23:59:59';
-		} else if (endDateTime.isSameOrBefore(startDateTime)) {
-			endDateTime = startDateTime.add(1, 'second');
-			this.endTime = endDateTime.format('HH:mm:ss');
+		if (this.startTime && this.endTime) {
+			if (endDateTime.isBefore(startDateTime)) {
+				this.errorMessage = 'VALIDATION.END_TIME_BEFORE_START_TIME';
+				this.validationStatus.emit(false);
+			} else if (endDateTime.isSameOrBefore(startDateTime)) {
+				this.errorMessage = 'VALIDATION.END_TIME_LATER_THAN_START_TIME';
+				this.validationStatus.emit(false);
+			} else {
+				this.errorMessage = null;
+				this.validationStatus.emit(true);
+			}
 		}
 
 		if (this.startTime === '23:59:59' && this.endTime === '23:59:59') {
-			this.startTime = '00:00:00';
+			this.errorMessage = 'VALIDATION.START_TIME_EARLIER_THAN_END_TIME';
+			this.validationStatus.emit(false);
 		}
 
 		this.cd.detectChanges();

@@ -35,7 +35,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 
 	// Date range and time-related properties
 	selectedRange: IDateRange = { start: null, end: null };
-	timeDiff: Date = null;
+	timeDiff: number = null;
 
 	// Employee-related properties
 	employee: ISelectedEmployee;
@@ -46,6 +46,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	reasons: string[] = ['Worked offline', 'Internet issue', 'Forgot to track', 'Usability issue', 'App issue'];
 	selectedReason = '';
 	selectedRangeSubscription: Subscription;
+	isTimeRangeValid = true;
 
 	// Time log state management
 	private _timeLog: ITimeLog | Partial<ITimeLog> = {};
@@ -180,12 +181,12 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	/**
 	 * Helper function to calculate time difference
 	 */
-	private calculateTimeDiff(start: Date, end: Date): Date | null {
+	private calculateTimeDiff(start: Date, end: Date): number | null {
 		const startMoment = moment(start);
 		const endMoment = moment(end);
 
 		if (startMoment.isValid() && endMoment.isValid()) {
-			return new Date(endMoment.diff(startMoment, 'seconds'));
+			return endMoment.diff(startMoment, 'seconds');
 		} else {
 			return null;
 		}
@@ -194,6 +195,10 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	onDateRangeChange(newRange: IDateRange) {
 		this.selectedRange = newRange;
 		this._cdr.detectChanges();
+	}
+
+	onValidationChange(isValid: boolean) {
+		this.isTimeRangeValid = isValid;
 	}
 
 	/**
@@ -441,7 +446,12 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	}
 
 	get isButtonDisabled(): boolean {
-		return this.form.invalid || !this.isValidSelectedRange(this.selectedRange) || this.overlaps?.length > 0;
+		return (
+			this.form.invalid ||
+			!this.isValidSelectedRange(this.selectedRange) ||
+			this.overlaps?.length > 0 ||
+			!this.isTimeRangeValid
+		);
 	}
 
 	ngOnDestroy(): void {
