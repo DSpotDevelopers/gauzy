@@ -152,10 +152,17 @@ export class TimerRangePickerComponent implements AfterViewInit {
 	validateInputs() {
 		const selectedDate = moment(this.date).format('YYYY-MM-DD');
 		const startDateTime = moment(`${selectedDate} ${this.startTime}`, 'YYYY-MM-DD HH:mm:ss');
-		const endDateTime = moment(`${selectedDate} ${this.endTime}`, 'YYYY-MM-DD HH:mm:ss');
+		let endDateTime = moment(`${selectedDate} ${this.endTime}`, 'YYYY-MM-DD HH:mm:ss');
 
 		if (endDateTime.isBefore(startDateTime)) {
 			this.endTime = '23:59:59';
+		} else if (endDateTime.isSameOrBefore(startDateTime)) {
+			endDateTime = startDateTime.add(1, 'second');
+			this.endTime = endDateTime.format('HH:mm:ss');
+		}
+
+		if (this.startTime === '23:59:59' && this.endTime === '23:59:59') {
+			this.startTime = '00:00:00';
 		}
 
 		this.cd.detectChanges();
