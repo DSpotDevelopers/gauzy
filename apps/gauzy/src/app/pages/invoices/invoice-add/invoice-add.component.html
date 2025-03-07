@@ -241,6 +241,24 @@
 							</div>
 						</ng-container>
 
+						<ng-container *ngIf="isEmployeeHourTable && selectedEmployeeIds?.length > 0">
+							<div class="col-sm-6">
+								<div class="form-group">
+									<label for="selectedDateRange" class="label required-asterisk"
+										>{{ 'INVOICES_PAGE.SELECT_DATE_RANGE' | translate }}
+									</label>
+									<ngx-date-range-picker
+										[arrows]="false"
+										[firstDayOfWeek]="organization.startWeekOn"
+										class="date-range-selector"
+									></ngx-date-range-picker>
+									<div class="invalid-feedback d-block" *ngIf="!selectedDateRange">
+										{{ 'VALIDATION.FIELD_REQUIRED' | transition }}
+									</div>
+								</div>
+							</div>
+						</ng-container>
+
 						<div class="col-sm-6" *ngIf="isProjectHourTable">
 							<div class="form-group">
 								<label for="inputProject" class="label">
