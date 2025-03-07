@@ -56,7 +56,6 @@ export class ManualTimerPickerComponent {
 	}
 
 	writeValue(value: string): void {
-		console.log(value);
 		if (value) {
 			this._value = moment(value, 'HH:mm:ss').format('HH:mm:ss');
 		} else {
