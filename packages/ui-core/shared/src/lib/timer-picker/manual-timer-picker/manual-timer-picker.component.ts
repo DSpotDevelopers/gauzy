@@ -30,6 +30,11 @@ export class ManualTimerPickerComponent {
 	}
 
 	set value(val: string) {
+		if (!val) {
+			this.onChange(null);
+			this.errorMessage = null;
+			return;
+		}
 		if (this.isValidTimeFormat(val)) {
 			this._value = moment(val, 'HH:mm:ss').format('HH:mm:ss');
 			this.onChange(val);
@@ -51,6 +56,7 @@ export class ManualTimerPickerComponent {
 	}
 
 	writeValue(value: string): void {
+		console.log(value);
 		if (value) {
 			this._value = moment(value, 'HH:mm:ss').format('HH:mm:ss');
 		} else {
