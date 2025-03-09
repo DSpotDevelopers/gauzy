@@ -29,7 +29,9 @@ import {
 	ITimeLogActivity,
 	IReportDayData,
 	IReportWeeklyData,
-	IReportWeeklyDate
+	IReportWeeklyDate,
+	IAmountOwedReportChart,
+	IDailyReportChart
 } from '@gauzy/contracts';
 import { isEmpty, isNotEmpty } from '@gauzy/common';
 import { TenantAwareCrudService } from './../../core/crud';
@@ -129,7 +131,6 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 
 		// Inner join with related entities (employee, timeSlots)
 		query.innerJoin(`${query.alias}.employee`, 'employee');
-		query.innerJoin(`${query.alias}.timeSlots`, 'timeSlots');
 
 		// Set up the find options for the query
 		query.setFindOptions({
@@ -167,13 +168,44 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 
 		// Set up the where clause using the provided filter function
 		query.where((qb: SelectQueryBuilder<TimeLog>) => {
-			this.getFilterTimeLogQuery(qb, request);
+			this.getFilterTimeLogQuery(qb, request, true);
 		});
 
 		const timeLogs = await query.getMany();
 
 		// Set up the where clause using the provided filter function
 		return timeLogs;
+	}
+
+	/**
+	 * Retrieves time logs for invoice based on the provided input.
+	 * @param request The input parameters for fetching time logs.
+	 * @returns A Promise that resolves to an array of time logs.
+	 */
+	async getInvoiceLogs(request: IGetTimeLogReportInput): Promise<IReportDayData> {
+		// Extract timezone from the request
+		const { timeZone } = request;
+
+		const timeLogs = await this.getTimeLogs(request);
+
+		// Group time logs based on the specified 'groupBy' filter
+		let invoiceData: IReportDayData;
+		switch (request.groupBy) {
+			case ReportGroupFilterEnum.employee:
+				invoiceData = await this.commandBus.execute(new GetTimeLogGroupByEmployeeCommand(timeLogs, {}, timeZone));
+				break;
+			case ReportGroupFilterEnum.project:
+				invoiceData = await this.commandBus.execute(new GetTimeLogGroupByProjectCommand(timeLogs, {}, timeZone));
+				break;
+			case ReportGroupFilterEnum.client:
+				invoiceData = await this.commandBus.execute(new GetTimeLogGroupByClientCommand(timeLogs, {}, timeZone));
+				break;
+			default:
+				invoiceData = await this.commandBus.execute(new GetTimeLogGroupByDateCommand(timeLogs, {}, timeZone));
+				break;
+		}
+
+		return invoiceData;
 	}
 
 	/**
@@ -277,7 +309,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 	 * @param request The input parameters for fetching daily time logs.
 	 * @returns An array of daily time log chart reports.
 	 */
-	async getDailyReportCharts(request: IGetTimeLogReportInput) {
+	async getDailyReportCharts(request: IGetTimeLogReportInput): Promise<IDailyReportChart[]> {
 		// Create a query builder for the TimeLog entity
 		const query = this.typeOrmRepository.createQueryBuilder('time_log');
 
@@ -495,7 +527,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 		// Execute the query and retrieve time logs
 		const timeLogs = await query.getMany();
 
-		const dailyLogs: any = chain(timeLogs)
+		const dailyLogs = chain(timeLogs)
 			.groupBy((log) => moment.utc(log.startedAt).tz(timeZone).format('YYYY-MM-DD'))
 			.map((byDateLogs: ITimeLog[], date: string) => {
 				const byEmployee = chain(byDateLogs)
@@ -531,7 +563,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 	 * @param request The input parameters for fetching owed amount report charts.
 	 * @returns An array of owed amount report chart data.
 	 */
-	async getOwedAmountReportCharts(request: IGetTimeLogReportInput) {
+	async getOwedAmountReportCharts(request: IGetTimeLogReportInput): Promise<IAmountOwedReportChart[]> {
 		// Step 1: Create a query builder for the TimeLog entity
 		const query = this.typeOrmRepository.createQueryBuilder('time_log');
 
@@ -579,7 +611,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 		const { startDate, endDate, timeZone } = request;
 		const days: Array<string> = getDaysBetweenDates(startDate, endDate, timeZone);
 
-		const byDate: any = chain(timeLogs)
+		const byDate = chain(timeLogs)
 			.groupBy((log: ITimeLog) => moment.utc(log.startedAt).tz(timeZone).format('YYYY-MM-DD'))
 			.mapObject((byDateLogs: ITimeLog[], date) => {
 				const byEmployee = chain(byDateLogs)
@@ -603,7 +635,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 					.value();
 
 				// Calculate the total owed amount for all employees on a specific date
-				const value = byEmployee.reduce((iteratee: any, item: any) => {
+				const value = byEmployee.reduce((iteratee, item) => {
 					return iteratee + item.amount;
 				}, 0);
 
@@ -680,7 +712,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 		const days: Array<string> = getDaysBetweenDates(startDate, endDate, timeZone);
 
 		// Process time log data and calculate time limits for each employee and date
-		const byDate: any = chain(timeLogs)
+		const byDate = chain(timeLogs)
 			.groupBy((log) => moment.utc(log.startedAt).tz(timeZone).startOf(request.duration).format('YYYY-MM-DD'))
 			.mapObject((byDateLogs: ITimeLog[], date) => {
 				const byEmployee = chain(byDateLogs)
@@ -843,6 +875,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 				remainingBudget = Math.max(budget - spent, 0);
 
 				// Remove timeLogs property from the organizationProject object
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const { timeLogs: _, ...projectWithoutTimeLogs } = organizationProject;
 
 				return {
