@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotAcceptableException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotAcceptableException, Logger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { SelectQueryBuilder, Brackets, WhereExpressionBuilder, DeleteResult, UpdateResult } from 'typeorm';
 import { chain, pluck } from 'underscore';
@@ -64,6 +64,7 @@ import { ActivityLogService } from '../../activity-log/activity-log.service';
 
 @Injectable()
 export class TimeLogService extends TenantAwareCrudService<TimeLog> {
+	private readonly logger = new Logger(`GZY - ${TimeLogService.name}`);
 	constructor(
 		readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
 		readonly mikroOrmTimeLogRepository: MikroOrmTimeLogRepository,
@@ -104,17 +105,16 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 
 		// Add values aggregation grouping by time_log.id and sum the timeSlots overall and duration values
 		// Prevent requiring to return the whole timeslot entries in the result
-		query.groupBy(`"${query.alias}"."id"`)
-
+		query.groupBy(`"${query.alias}"."id"`);
 
 		// Execute the query and retrieve time logs
 		const logs = await query.getRawMany<ITimeLogActivity>();
 
 		// Prepare the log activity map
-		const logActivity = {}
-		logs.forEach(log => {
-			logActivity[log.id] = log.overall * 100 / log.duration || 0;
-		})
+		const logActivity = {};
+		logs.forEach((log) => {
+			logActivity[log.id] = (log.overall * 100) / log.duration || 0;
+		});
 
 		// Return the generated daily time logs report
 		return logActivity;
@@ -192,10 +192,14 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 		let invoiceData: IReportDayData;
 		switch (request.groupBy) {
 			case ReportGroupFilterEnum.employee:
-				invoiceData = await this.commandBus.execute(new GetTimeLogGroupByEmployeeCommand(timeLogs, {}, timeZone));
+				invoiceData = await this.commandBus.execute(
+					new GetTimeLogGroupByEmployeeCommand(timeLogs, {}, timeZone)
+				);
 				break;
 			case ReportGroupFilterEnum.project:
-				invoiceData = await this.commandBus.execute(new GetTimeLogGroupByProjectCommand(timeLogs, {}, timeZone));
+				invoiceData = await this.commandBus.execute(
+					new GetTimeLogGroupByProjectCommand(timeLogs, {}, timeZone)
+				);
 				break;
 			case ReportGroupFilterEnum.client:
 				invoiceData = await this.commandBus.execute(new GetTimeLogGroupByClientCommand(timeLogs, {}, timeZone));
@@ -236,7 +240,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 						lastName: true,
 						imageUrl: true
 					}
-				},
+				}
 			},
 			relations: {
 				// Related entities to be included in the result
@@ -258,7 +262,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 		const logs = await query.getMany();
 
 		// Get the time logs activity report
-		const logActivity = await this.getTimeLogReportActivity(request)
+		const logActivity = await this.getTimeLogReportActivity(request);
 
 		// Gets an array of days between the given start date, end date and timezone.
 		const { startDate, endDate, timeZone } = request;
@@ -451,22 +455,30 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 		const logs = await query.getMany();
 
 		// Get the time logs activity report
-		const logActivity = await this.getTimeLogReportActivity(request)
+		const logActivity = await this.getTimeLogReportActivity(request);
 
 		// Group time logs based on the specified 'groupBy' filter
 		let dailyLogs: IReportDayData;
 		switch (request.groupBy) {
 			case ReportGroupFilterEnum.employee:
-				dailyLogs = await this.commandBus.execute(new GetTimeLogGroupByEmployeeCommand(logs, logActivity, timeZone));
+				dailyLogs = await this.commandBus.execute(
+					new GetTimeLogGroupByEmployeeCommand(logs, logActivity, timeZone)
+				);
 				break;
 			case ReportGroupFilterEnum.project:
-				dailyLogs = await this.commandBus.execute(new GetTimeLogGroupByProjectCommand(logs, logActivity, timeZone));
+				dailyLogs = await this.commandBus.execute(
+					new GetTimeLogGroupByProjectCommand(logs, logActivity, timeZone)
+				);
 				break;
 			case ReportGroupFilterEnum.client:
-				dailyLogs = await this.commandBus.execute(new GetTimeLogGroupByClientCommand(logs, logActivity, timeZone));
+				dailyLogs = await this.commandBus.execute(
+					new GetTimeLogGroupByClientCommand(logs, logActivity, timeZone)
+				);
 				break;
 			default:
-				dailyLogs = await this.commandBus.execute(new GetTimeLogGroupByDateCommand(logs, logActivity, timeZone));
+				dailyLogs = await this.commandBus.execute(
+					new GetTimeLogGroupByDateCommand(logs, logActivity, timeZone)
+				);
 				break;
 		}
 
@@ -1195,7 +1207,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 			return timeLog;
 		} catch (error) {
 			// Handle exceptions appropriately
-			console.error(error);
+			this.logger.error('Failed to add manual time log', error);
 			throw new BadRequestException('Failed to add manual time log');
 		}
 	}
@@ -1286,7 +1298,7 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 
 			return newTimeLog;
 		} catch (error) {
-			console.error(error);
+			this.logger.error('Failed to update manual time log', error);
 			// Handle exceptions appropriately
 			throw new BadRequestException('Failed to update manual time log');
 		}
