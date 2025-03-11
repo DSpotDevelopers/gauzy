@@ -81,7 +81,6 @@ export class EmployeeSelectComponent implements OnInit {
 
 	@Output() selectedChange = new EventEmitter();
 	@Output() onLoadEmployees = new EventEmitter();
-	@Output() touched = new EventEmitter<void>();
 
 	@Input() multiple = true;
 	@Input() label = 'FORM.PLACEHOLDERS.ADD_REMOVE_EMPLOYEES';
@@ -133,7 +132,6 @@ export class EmployeeSelectComponent implements OnInit {
 
 	markAsTouchedOnInteraction(): void {
 		this.onTouched();
-		this.touched.emit();
 	}
 
 	checkForMultiSelectValue(val): void {

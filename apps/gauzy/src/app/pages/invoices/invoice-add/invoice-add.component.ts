@@ -1139,7 +1139,7 @@ export class InvoiceAddComponent extends PaginationFilterBaseComponent implement
 	}
 
 	onTouched() {
-		const control = this.form.get('selectedEmployeeIds');
+		const control = this.form?.get('selectedEmployeeIds');
 		if (control) {
 			control.markAsTouched();
 		}
