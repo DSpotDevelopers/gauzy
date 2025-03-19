@@ -2,7 +2,7 @@ import { Component, OnInit, Input, AfterViewInit, ChangeDetectorRef, OnDestroy }
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NbDialogRef } from '@nebular/theme';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { combineLatest, debounceTime, filter, Subject, Subscription, tap } from 'rxjs';
+import { combineLatest, debounceTime, filter, Observable, Subject, Subscription, takeUntil, tap } from 'rxjs';
 import * as moment from 'moment';
 import { omit } from 'underscore';
 import {
@@ -16,7 +16,9 @@ import {
 	TimeLogSourceEnum
 } from '@gauzy/contracts';
 import { toUTC, toLocal, distinctUntilChange } from '@gauzy/ui-core/common';
-import { Store, TimesheetService, ToastrService } from '@gauzy/ui-core/core';
+import { Store, TimesheetService, TimeTrackerService, ToastrService } from '@gauzy/ui-core/core';
+import { DurationFormatPipe } from '../../pipes';
+import { TranslateService } from '@ngx-translate/core';
 
 @UntilDestroy({ checkProperties: true })
 @Component({
@@ -42,14 +44,21 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	futureDateAllowed = false;
 	subject$: Subject<boolean> = new Subject();
 
+	private readonly workedThisWeek$: Observable<number> = this._timeTrackerService.workedThisWeek$;
+	private readonly reWeeklyLimit$: Observable<number> = this._timeTrackerService.reWeeklyLimit$;
+	private readonly destroy$ = new Subject<void>();
+
 	// Additional properties
 	reasons: string[] = ['Worked offline', 'Internet issue', 'Forgot to track', 'Usability issue', 'App issue'];
 	selectedReason = '';
 	selectedRangeSubscription: Subscription;
 	isTimeRangeValid = true;
+	limitReached = false;
 
 	// Time log state management
 	private _timeLog: ITimeLog | Partial<ITimeLog> = {};
+	private workedThisWeek: string;
+	private reWeeklyLimit: string;
 	@Input() set timeLog(value: ITimeLog | Partial<ITimeLog>) {
 		this._timeLog = { ...value }; // Shallow copy to avoid mutation
 		this.mode = this._timeLog?.id ? 'update' : 'create';
@@ -82,7 +91,10 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 		private readonly _dialogRef: NbDialogRef<EditTimeLogModalComponent>,
 		private readonly _store: Store,
 		private readonly _timesheetService: TimesheetService,
-		private readonly _toastrService: ToastrService
+		private readonly _toastrService: ToastrService,
+		private readonly _timeTrackerService: TimeTrackerService,
+		private readonly _durationFormatPipe: DurationFormatPipe,
+		public readonly _translateService: TranslateService
 	) {}
 
 	ngOnInit() {
@@ -141,6 +153,14 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 				untilDestroyed(this)
 			)
 			.subscribe();
+
+		combineLatest([this.workedThisWeek$, this.reWeeklyLimit$])
+			.pipe(takeUntil(this.destroy$))
+			.subscribe(([workedThisWeek, reWeeklyLimit]) => {
+				this.limitReached = this._timeTrackerService.hasReachedWeeklyLimit();
+				this.workedThisWeek = this._durationFormatPipe.transform(workedThisWeek);
+				this.reWeeklyLimit = this._durationFormatPipe.transform(reWeeklyLimit * 3600);
+			});
 	}
 
 	ngAfterViewInit(): void {
@@ -332,6 +352,16 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	 */
 	async addTime(): Promise<void> {
 		if (this.loading || this.isButtonDisabled) return;
+		if (this.limitReached || this.workedThisWeek + this.timeDiff >= this.reWeeklyLimit) {
+			this._toastrService.danger(
+				`${this._translateService.instant('TOASTR.MESSAGE.WORKED_THIS_WEEK')}: ${this.workedThisWeek}
+				\n ${this._translateService.instant('TOASTR.MESSAGE.WEEKLY_LIMIT')}: ${this.reWeeklyLimit}`,
+				'TOASTR.TITLE.MAX_LIMIT_REACHED',
+				null,
+				{ duration: 1500, preventDuplicates: true, toastClass: 'custom-toast' }
+			);
+			return;
+		}
 
 		try {
 			this.loading = true;
@@ -458,5 +488,8 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 		if (this.selectedRangeSubscription) {
 			this.selectedRangeSubscription.unsubscribe();
 		}
+
+		this.destroy$.next();
+		this.destroy$.complete();
 	}
 }

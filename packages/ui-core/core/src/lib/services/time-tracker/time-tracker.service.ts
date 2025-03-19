@@ -89,7 +89,7 @@ export class TimerQuery extends Query<TimerState> {
 	providedIn: 'root'
 })
 export class TimeTrackerService implements OnDestroy {
-	interval: any;
+	interval: number;
 	showTimerWindow$ = this.timerQuery.select((state) => state.showTimerWindow);
 	duration$ = this.timerQuery.select((state) => state.duration);
 	currentSessionDuration$ = this.timerQuery.select((state) => state.currentSessionDuration);
@@ -155,7 +155,7 @@ export class TimeTrackerService implements OnDestroy {
 				const newValues = { workedThisWeek: status?.workedThisWeek, reWeeklyLimit: status?.reWeeklyLimit };
 				this.updateTimerStore(newValues);
 				this.duration = status.duration;
-				if (status?.lastLog && status?.lastLog?.isRunning) {
+				if (status?.lastLog?.isRunning) {
 					this.currentSessionDuration = moment().diff(toLocal(status?.lastLog?.startedAt), 'seconds');
 				} else {
 					this.currentSessionDuration = 0;

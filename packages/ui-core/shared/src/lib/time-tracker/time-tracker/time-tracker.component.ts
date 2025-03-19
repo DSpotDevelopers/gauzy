@@ -44,10 +44,9 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
 	@ViewChild(NgForm) form: NgForm;
 
 	trackType$: Observable<string> = this.timeTrackerService.trackType$;
-	workedThisWeek$: Observable<number> = this.timeTrackerService.workedThisWeek$;
-	reWeeklyLimit$: Observable<number> = this.timeTrackerService.reWeeklyLimit$;
-
 	private runningSubscription: Subscription;
+	private readonly workedThisWeek$: Observable<number> = this.timeTrackerService.workedThisWeek$;
+	private readonly reWeeklyLimit$: Observable<number> = this.timeTrackerService.reWeeklyLimit$;
 	private readonly destroy$ = new Subject<void>();
 
 	constructor(
@@ -324,9 +323,7 @@ export class TimeTrackerComponent implements OnInit, OnDestroy {
 				this.timeTrackerService.remoteToggle();
 			} else {
 				await this._timeTrackerStatusService.status();
-				if (this.limitReached) {
-					return;
-				}
+				if (this.limitReached) return;
 				await this.timeTrackerService.toggle();
 			}
 		} catch (error) {
