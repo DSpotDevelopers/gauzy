@@ -165,7 +165,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 			.subscribe(([workedThisWeek, reWeeklyLimit]) => {
 				this.limitReached = this._timeTrackerService.hasReachedWeeklyLimit();
 				this.workedThisWeek = this._durationFormatPipe.transform(workedThisWeek);
-				this.reWeeklyLimit = this._durationFormatPipe.transform(reWeeklyLimit * 3600);
+				this.reWeeklyLimit = this._durationFormatPipe.transform(Math.trunc(reWeeklyLimit * 3600));
 				this.timerStatusWithWeeklyLimits = { workedThisWeek, reWeeklyLimit };
 			});
 	}
@@ -369,21 +369,21 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	 */
 	async addTime(): Promise<void> {
 		const newWorkedTime = this.timerStatusWithWeeklyLimits.workedThisWeek - this.originalTimeDiff + this.timeDiff;
-		if (this.loading || this.isButtonDisabled) return;
 		const isEditing = !!this.timeLog?.id;
+		if (this.loading || this.isButtonDisabled) return;
 		if (
 			isEditing &&
-			((this.timeDiff > this.originalTimeDiff &&
-				newWorkedTime > this.timerStatusWithWeeklyLimits.reWeeklyLimit * 3600) ||
-				this.timerStatusWithWeeklyLimits.reWeeklyLimit === 0)
+			this.timeDiff > this.originalTimeDiff &&
+			newWorkedTime > Math.trunc(this.timerStatusWithWeeklyLimits.reWeeklyLimit * 3600)
 		) {
 			this.showMaxLimitReachedToast();
 			return;
-		} else if (
+		}
+
+		if (
 			!isEditing &&
-			(this.timeDiff + this.timerStatusWithWeeklyLimits.workedThisWeek >
-				this.timerStatusWithWeeklyLimits.reWeeklyLimit * 3600 ||
-				this.timerStatusWithWeeklyLimits.reWeeklyLimit === 0)
+			this.timeDiff + this.timerStatusWithWeeklyLimits.workedThisWeek >
+				Math.trunc(this.timerStatusWithWeeklyLimits.reWeeklyLimit * 3600)
 		) {
 			this.showMaxLimitReachedToast();
 			return;

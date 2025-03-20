@@ -315,7 +315,7 @@ export class TimeTrackerService implements OnDestroy {
 
 	hasReachedWeeklyLimit(): boolean {
 		const { workedThisWeek, reWeeklyLimit } = this.timerStore.getValue();
-		const reWeeklyLimitInSeconds = reWeeklyLimit * 3600;
+		const reWeeklyLimitInSeconds = Math.trunc(reWeeklyLimit * 3600);
 		return workedThisWeek >= reWeeklyLimitInSeconds || reWeeklyLimit === 0;
 	}
 
