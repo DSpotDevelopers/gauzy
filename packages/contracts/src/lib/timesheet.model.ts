@@ -124,8 +124,6 @@ export interface ITimeLog
 	isBillable?: boolean;
 	isRunning?: boolean;
 	isEdited?: boolean;
-	reWeeklyLimit?: number;
-	workedThisWeek?: number;
 }
 
 export interface ITimeLogCreateInput extends IBasePerTenantAndOrganizationEntityModel {

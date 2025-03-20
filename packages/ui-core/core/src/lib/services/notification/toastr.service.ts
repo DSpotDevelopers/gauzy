@@ -75,7 +75,7 @@ export class ToastrService {
 	info(
 		message: any,
 		title: string,
-		options: Record<string, any> = {
+		options: Partial<NbToastrConfig> = {
 			duration: 5000,
 			preventDuplicates: true
 		}

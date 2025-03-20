@@ -320,9 +320,7 @@ export class TimeTrackerService implements OnDestroy {
 	}
 
 	async toggle(): Promise<ITimeLog> {
-		if (this.hasReachedWeeklyLimit()) {
-			return;
-		}
+		if (this.hasReachedWeeklyLimit()) return;
 
 		if (this.running) {
 			this.turnOffTimer();
@@ -356,9 +354,8 @@ export class TimeTrackerService implements OnDestroy {
 	}
 
 	turnOnTimer() {
-		if (this.hasReachedWeeklyLimit()) {
-			return;
-		}
+		if (this.hasReachedWeeklyLimit()) return;
+
 		this.running = true;
 		// post state of timer to worker on start timer
 		this._worker.postMessage({
@@ -511,9 +508,8 @@ export class TimeTrackerService implements OnDestroy {
 	}
 
 	public remoteToggle(): ITimeLog {
-		if (this.hasReachedWeeklyLimit()) {
-			return;
-		}
+		if (this.hasReachedWeeklyLimit()) return;
+
 		if (this.running) {
 			this.turnOffTimer();
 			this.timerConfig = {

@@ -13,7 +13,8 @@ import {
 	IGetTimeLogConflictInput,
 	ISelectedEmployee,
 	TimeLogType,
-	TimeLogSourceEnum
+	TimeLogSourceEnum,
+	ITimerStatusWithWeeklyLimits
 } from '@gauzy/contracts';
 import { toUTC, toLocal, distinctUntilChange } from '@gauzy/ui-core/common';
 import { Store, TimesheetService, TimeTrackerService, ToastrService } from '@gauzy/ui-core/core';
@@ -38,6 +39,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	// Date range and time-related properties
 	selectedRange: IDateRange = { start: null, end: null };
 	timeDiff: number = null;
+	originalTimeDiff: number = null;
 
 	// Employee-related properties
 	employee: ISelectedEmployee;
@@ -59,6 +61,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	private _timeLog: ITimeLog | Partial<ITimeLog> = {};
 	private workedThisWeek: string;
 	private reWeeklyLimit: string;
+	private timerStatusWithWeeklyLimits: ITimerStatusWithWeeklyLimits;
 	@Input() set timeLog(value: ITimeLog | Partial<ITimeLog>) {
 		this._timeLog = { ...value }; // Shallow copy to avoid mutation
 		this.mode = this._timeLog?.id ? 'update' : 'create';
@@ -131,6 +134,9 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 			this.selectedRange = selectedRange;
 			const { start, end } = selectedRange;
 			this.timeDiff = start && end ? this.calculateTimeDiff(start, end) : null;
+			if (this.originalTimeDiff == null) {
+				this.originalTimeDiff = this.timeDiff;
+			}
 		});
 
 		// Combine employeeId and selectedRange value changes
@@ -160,6 +166,7 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 				this.limitReached = this._timeTrackerService.hasReachedWeeklyLimit();
 				this.workedThisWeek = this._durationFormatPipe.transform(workedThisWeek);
 				this.reWeeklyLimit = this._durationFormatPipe.transform(reWeeklyLimit * 3600);
+				this.timerStatusWithWeeklyLimits = { workedThisWeek, reWeeklyLimit };
 			});
 	}
 
@@ -341,6 +348,16 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 		}
 	}
 
+	private showMaxLimitReachedToast(): void {
+		this._toastrService.danger(
+			`${this._translateService.instant('TOASTR.MESSAGE.WORKED_THIS_WEEK')}: ${this.workedThisWeek}
+			\n ${this._translateService.instant('TOASTR.MESSAGE.WEEKLY_LIMIT')}: ${this.reWeeklyLimit}`,
+			'TOASTR.TITLE.MAX_LIMIT_REACHED',
+			null,
+			{ duration: 2500, preventDuplicates: true, toastClass: 'custom-toast' }
+		);
+	}
+
 	/**
 	 * Adds or updates a time log based on the current mode ('create' or 'update').
 	 *
@@ -351,15 +368,24 @@ export class EditTimeLogModalComponent implements OnInit, AfterViewInit, OnDestr
 	 * @returns {Promise<void>} - Resolves after the time log is added or updated.
 	 */
 	async addTime(): Promise<void> {
+		const newWorkedTime = this.timerStatusWithWeeklyLimits.workedThisWeek - this.originalTimeDiff + this.timeDiff;
 		if (this.loading || this.isButtonDisabled) return;
-		if (this.limitReached || this.workedThisWeek + this.timeDiff >= this.reWeeklyLimit) {
-			this._toastrService.danger(
-				`${this._translateService.instant('TOASTR.MESSAGE.WORKED_THIS_WEEK')}: ${this.workedThisWeek}
-				\n ${this._translateService.instant('TOASTR.MESSAGE.WEEKLY_LIMIT')}: ${this.reWeeklyLimit}`,
-				'TOASTR.TITLE.MAX_LIMIT_REACHED',
-				null,
-				{ duration: 1500, preventDuplicates: true, toastClass: 'custom-toast' }
-			);
+		const isEditing = !!this.timeLog?.id;
+		if (
+			isEditing &&
+			((this.timeDiff > this.originalTimeDiff &&
+				newWorkedTime > this.timerStatusWithWeeklyLimits.reWeeklyLimit * 3600) ||
+				this.timerStatusWithWeeklyLimits.reWeeklyLimit === 0)
+		) {
+			this.showMaxLimitReachedToast();
+			return;
+		} else if (
+			!isEditing &&
+			(this.timeDiff + this.timerStatusWithWeeklyLimits.workedThisWeek >
+				this.timerStatusWithWeeklyLimits.reWeeklyLimit * 3600 ||
+				this.timerStatusWithWeeklyLimits.reWeeklyLimit === 0)
+		) {
+			this.showMaxLimitReachedToast();
 			return;
 		}
 

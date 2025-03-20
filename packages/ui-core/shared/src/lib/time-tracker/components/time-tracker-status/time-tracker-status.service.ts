@@ -47,9 +47,7 @@ export class TimeTrackerStatusService {
 				tap((status: ITimerStatusWithWeeklyLimits) => {
 					const remoteTimer = new TimerSynced({
 						...status.lastLog,
-						duration: status.duration,
-						reWeeklyLimit: status.reWeeklyLimit,
-						workedThisWeek: status.workedThisWeek
+						duration: status.duration
 					});
 					this._icon$.next(TimerIconFactory.create(remoteTimer.source));
 					if (!remoteTimer.running || !remoteTimer.isExternalSource) this._icon$.next(null);
