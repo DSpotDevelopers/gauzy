@@ -2,16 +2,11 @@ import { IPipeline, IPipelineStage as IStage } from '@gauzy/contracts';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	Pipeline,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Pipeline, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmPipelineStageRepository } from './repository/mikro-orm-pipeline-stage.repository';
 
-@MultiORMEntity('pipeline_stage', { mikroOrmRepository: () => MikroOrmPipelineStageRepository })
+@MultiORMEntity('pipeline_stage')
 export class PipelineStage extends TenantOrganizationBaseEntity implements IStage {
-
 	@ApiPropertyOptional({ type: () => String })
 	@IsOptional()
 	@IsString()

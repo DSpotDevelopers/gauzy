@@ -1,18 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	JoinColumn,
-	Unique,
-	RelationId,
-	JoinTable
-} from 'typeorm';
-import {
-	IsString,
-	IsNumber,
-	IsBoolean,
-	IsDate,
-	IsOptional,
-	IsEnum
-} from 'class-validator';
+import { JoinColumn, Unique, RelationId, JoinTable } from 'typeorm';
+import { IsString, IsNumber, IsBoolean, IsDate, IsOptional, IsEnum } from 'class-validator';
 import {
 	IInvoice,
 	CurrenciesEnum,
@@ -36,13 +24,18 @@ import {
 	Tag,
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmInvoiceRepository } from './repository/mikro-orm-invoice.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('invoice', { mikroOrmRepository: () => MikroOrmInvoiceRepository })
+@MultiORMEntity('invoice')
 @Unique(['invoiceNumber'])
 export class Invoice extends TenantOrganizationBaseEntity implements IInvoice {
-
 	@ApiProperty({ type: () => Date })
 	@IsDate()
 	@MultiORMColumn({ nullable: true })
@@ -199,10 +192,9 @@ export class Invoice extends TenantOrganizationBaseEntity implements IInvoice {
 	@IsOptional()
 	@MultiORMColumn({
 		nullable: true,
-		...(isMySQL() ? { type: "text" } : {})
+		...(isMySQL() ? { type: 'text' } : {})
 	})
 	token?: string;
-
 
 	/*
 	|--------------------------------------------------------------------------
@@ -276,7 +268,7 @@ export class Invoice extends TenantOrganizationBaseEntity implements IInvoice {
 		owner: true,
 		pivotTable: 'tag_invoice',
 		joinColumn: 'invoiceId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_invoice'

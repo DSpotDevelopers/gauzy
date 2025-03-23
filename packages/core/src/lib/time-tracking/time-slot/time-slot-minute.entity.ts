@@ -5,9 +5,8 @@ import { IsNumber, IsDateString, IsUUID } from 'class-validator';
 import { TenantOrganizationBaseEntity } from './../../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../../core/decorators/entity';
 import { TimeSlot } from './time-slot.entity';
-import { MikroOrmTimeSlotMinuteRepository } from './repository/mikro-orm-time-slot-minute.repository';
 
-@MultiORMEntity('time_slot_minute', { mikroOrmRepository: () => MikroOrmTimeSlotMinuteRepository })
+@MultiORMEntity('time_slot_minute')
 @Unique(['timeSlotId', 'datetime'])
 export class TimeSlotMinute extends TenantOrganizationBaseEntity implements ITimeSlotMinute {
 	/**

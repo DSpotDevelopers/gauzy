@@ -3,11 +3,9 @@ import { IsString, IsNotEmpty } from 'class-validator';
 import { IReport, IReportCategory } from '@gauzy/contracts';
 import { BaseEntity, Report } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmReportCategoryRepository } from './repository/mikro-orm-report-category.repository';
 
-@MultiORMEntity('report_category', { mikroOrmRepository: () => MikroOrmReportCategoryRepository })
+@MultiORMEntity('report_category')
 export class ReportCategory extends BaseEntity implements IReportCategory {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@IsNotEmpty()

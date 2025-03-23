@@ -4,11 +4,8 @@ import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ID, IOrganizationSprintTaskHistory, ITask, IUser } from '@gauzy/contracts';
 import { OrganizationSprint, Task, TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmOrganizationSprintTaskRepository } from './repository/mikro-orm-organization-sprint-task.repository';
 
-@MultiORMEntity('organization_sprint_task_history', {
-	mikroOrmRepository: () => MikroOrmOrganizationSprintTaskRepository
-})
+@MultiORMEntity('organization_sprint_task_history')
 export class OrganizationSprintTaskHistory
 	extends TenantOrganizationBaseEntity
 	implements IOrganizationSprintTaskHistory

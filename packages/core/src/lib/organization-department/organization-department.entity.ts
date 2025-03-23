@@ -1,24 +1,12 @@
-import {
-	IOrganizationDepartment,
-	ITag,
-	IEmployee,
-	ICandidate
-} from '@gauzy/contracts';
+import { IOrganizationDepartment, ITag, IEmployee, ICandidate } from '@gauzy/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { JoinTable } from 'typeorm';
-import {
-	Candidate,
-	Employee,
-	Tag,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Candidate, Employee, Tag, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany } from './../core/decorators/entity';
-import { MikroOrmOrganizationDepartmentRepository } from './repository/mikro-orm-organization-department.repository';
 
-@MultiORMEntity('organization_department', { mikroOrmRepository: () => MikroOrmOrganizationDepartmentRepository })
+@MultiORMEntity('organization_department')
 export class OrganizationDepartment extends TenantOrganizationBaseEntity implements IOrganizationDepartment {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@IsNotEmpty()
@@ -41,8 +29,7 @@ export class OrganizationDepartment extends TenantOrganizationBaseEntity impleme
 		owner: true,
 		pivotTable: 'tag_organization_department',
 		joinColumn: 'organizationDepartmentId',
-		inverseJoinColumn: 'tagId',
-
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization_department'
@@ -58,7 +45,7 @@ export class OrganizationDepartment extends TenantOrganizationBaseEntity impleme
 		owner: true,
 		pivotTable: 'organization_department_employee',
 		joinColumn: 'organizationDepartmentId',
-		inverseJoinColumn: 'employeeId',
+		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'organization_department_employee'
@@ -75,7 +62,7 @@ export class OrganizationDepartment extends TenantOrganizationBaseEntity impleme
 		owner: true,
 		pivotTable: 'candidate_department',
 		joinColumn: 'organizationDepartmentId',
-		inverseJoinColumn: 'candidateId',
+		inverseJoinColumn: 'candidateId'
 	})
 	@JoinTable({
 		name: 'candidate_department'

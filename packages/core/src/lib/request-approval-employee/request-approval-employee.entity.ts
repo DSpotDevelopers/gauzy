@@ -6,17 +6,11 @@ import { RelationId } from 'typeorm';
 import { IEmployee, IRequestApproval, IRequestApprovalEmployee } from '@gauzy/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
-import {
-	Employee,
-	RequestApproval,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Employee, RequestApproval, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmRequestApprovalEmployeeRepository } from './repository/mikro-orm-request-approval-employee.repository';
 
-@MultiORMEntity('request_approval_employee', { mikroOrmRepository: () => MikroOrmRequestApprovalEmployeeRepository })
+@MultiORMEntity('request_approval_employee')
 export class RequestApprovalEmployee extends TenantOrganizationBaseEntity implements IRequestApprovalEmployee {
-
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
 	@MultiORMColumn({ nullable: true })

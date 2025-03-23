@@ -1,20 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DeepPartial, JoinTable } from 'typeorm';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { IEmployeeUpworkJobsSearchCriterion, IJobPresetUpworkJobSearchCriterion, IJobPreset } from '@gauzy/contracts';
 import {
-	IEmployeeUpworkJobsSearchCriterion,
-	IJobPresetUpworkJobSearchCriterion,
-	IJobPreset
-} from '@gauzy/contracts';
-import { Employee, TenantOrganizationBaseEntity } from '@gauzy/core';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMOneToMany } from '@gauzy/core';
-import { MikroOrmJobPresetRepository } from './repository/mikro-orm-job-preset.repository';
+	Employee,
+	TenantOrganizationBaseEntity,
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMOneToMany
+} from '@gauzy/core';
 import { EmployeeUpworkJobsSearchCriterion } from './employee-upwork-jobs-search-criterion.entity';
 import { JobPresetUpworkJobSearchCriterion } from './job-preset-upwork-job-search-criterion.entity';
 
-@MultiORMEntity('job_preset', { mikroOrmRepository: () => MikroOrmJobPresetRepository })
+@MultiORMEntity('job_preset')
 export class JobPreset extends TenantOrganizationBaseEntity implements IJobPreset {
-
 	constructor(input?: DeepPartial<JobPreset>) {
 		super(input);
 	}
@@ -65,7 +66,7 @@ export class JobPreset extends TenantOrganizationBaseEntity implements IJobPrese
 		/** Column in pivot table referencing 'job_preset' primary key. */
 		joinColumn: 'jobPresetId',
 		/** Column in pivot table referencing 'employee' primary key. */
-		inverseJoinColumn: 'employeeId',
+		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({ name: 'employee_job_preset' })
 	employees?: Employee[];

@@ -5,9 +5,8 @@ import { JoinColumn, RelationId } from 'typeorm';
 import { TranslationBase } from '../core/entities/internal';
 import { Product } from './product.entity';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmProductTranslationRepository } from './repository/mikro-orm-product-translation.repository';
 
-@MultiORMEntity('product_translation', { mikroOrmRepository: () => MikroOrmProductTranslationRepository })
+@MultiORMEntity('product_translation')
 export class ProductTranslation extends TranslationBase implements IProductTranslation {
 	@ApiProperty({ type: () => String })
 	@IsString()

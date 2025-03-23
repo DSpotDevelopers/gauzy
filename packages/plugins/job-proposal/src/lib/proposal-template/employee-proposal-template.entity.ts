@@ -9,9 +9,8 @@ import {
 	MultiORMManyToOne,
 	TenantOrganizationBaseEntity
 } from '@gauzy/core';
-import { MikroOrmEmployeeProposalTemplateRepository } from './repository/mikro-orm-employee-proposal-template.repository';
 
-@MultiORMEntity('employee_proposal_template', { mikroOrmRepository: () => MikroOrmEmployeeProposalTemplateRepository })
+@MultiORMEntity('employee_proposal_template')
 export class EmployeeProposalTemplate extends TenantOrganizationBaseEntity implements IEmployeeProposalTemplate {
 	/**
 	 * The name/title of the proposal template (e.g., "General Proposal", "Technical Proposal").

@@ -3,11 +3,9 @@ import { IsDate } from 'class-validator';
 import { IImportRecord } from '@gauzy/contracts';
 import { MultiORMColumn, MultiORMEntity, VirtualMultiOrmColumn } from './../../core/decorators/entity';
 import { TenantBaseEntity } from '../../core/entities/internal';
-import { MikroOrmImportRecordRepository } from './repository/mikro-orm-import-record.repository';
 
-@MultiORMEntity('import-record', { mikroOrmRepository: () => MikroOrmImportRecordRepository })
+@MultiORMEntity('import-record')
 export class ImportRecord extends TenantBaseEntity implements IImportRecord {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn({ nullable: false })
 	entityType: string;

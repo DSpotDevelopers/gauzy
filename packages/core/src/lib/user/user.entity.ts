@@ -4,8 +4,6 @@
 
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { JoinColumn, RelationId, JoinTable } from 'typeorm';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import {
@@ -43,12 +41,9 @@ import {
 	MultiORMOneToMany,
 	VirtualMultiOrmColumn
 } from './../core/decorators/entity';
-import { MikroOrmUserRepository } from './repository/mikro-orm-user.repository';
 
-@MultiORMEntity('user', { mikroOrmRepository: () => MikroOrmUserRepository })
+@MultiORMEntity('user')
 export class User extends TenantBaseEntity implements IUser {
-	[EntityRepositoryType]?: MikroOrmUserRepository;
-
 	@ApiPropertyOptional({ type: () => String })
 	@IsOptional()
 	@IsString()

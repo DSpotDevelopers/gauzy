@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { JoinColumn, JoinTable, RelationId } from 'typeorm';
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { IsBoolean, IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
 import {
@@ -91,13 +90,10 @@ import {
 import { Trimmed } from '../shared/decorators';
 import { ColumnNumericTransformerPipe } from '../shared/pipes';
 import { Taggable } from '../tags/tag.types';
-import { MikroOrmEmployeeRepository } from './repository/mikro-orm-employee.repository';
 import { OrganizationProjectModuleEmployee } from '../organization-project-module/organization-project-module-employee.entity';
 
-@MultiORMEntity('employee', { mikroOrmRepository: () => MikroOrmEmployeeRepository })
+@MultiORMEntity('employee')
 export class Employee extends TenantOrganizationBaseEntity implements IEmployee, Taggable, HasCustomFields {
-	[EntityRepositoryType]?: MikroOrmEmployeeRepository;
-
 	@MultiORMColumn({ nullable: true })
 	valueDate?: Date;
 

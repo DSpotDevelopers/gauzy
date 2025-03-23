@@ -1,8 +1,4 @@
-import {
-	JoinColumn,
-	JoinTable,
-	RelationId
-} from 'typeorm';
+import { JoinColumn, JoinTable, RelationId } from 'typeorm';
 import {
 	IPayment,
 	CurrenciesEnum,
@@ -26,12 +22,16 @@ import {
 } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
 import { IsOptional, IsUUID } from 'class-validator';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmPaymentRepository } from './repository/mikro-orm-payment.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('payment', { mikroOrmRepository: () => MikroOrmPaymentRepository })
+@MultiORMEntity('payment')
 export class Payment extends TenantOrganizationBaseEntity implements IPayment {
-
 	@ApiPropertyOptional({ type: () => Date })
 	@MultiORMColumn({ nullable: true })
 	paymentDate?: Date;
@@ -169,7 +169,7 @@ export class Payment extends TenantOrganizationBaseEntity implements IPayment {
 		owner: true,
 		pivotTable: 'tag_payment',
 		joinColumn: 'paymentId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_payment'

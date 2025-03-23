@@ -13,9 +13,8 @@ import {
 	VirtualMultiOrmColumn
 } from '@gauzy/core';
 import { IProductReview, ProductReviewStatus, ProductReviewStatusEnum } from '../product-review.types';
-import { MikroOrmProductReviewRepository } from './repository/mikro-orm-product-review.repository';
 
-@MultiORMEntity('product_review', { mikroOrmRepository: () => MikroOrmProductReviewRepository })
+@MultiORMEntity('product_review')
 export class ProductReview extends TenantOrganizationBaseEntity implements IProductReview {
 	// Title of the review
 	@ApiPropertyOptional({ type: () => String })

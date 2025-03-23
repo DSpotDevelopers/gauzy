@@ -3,27 +3,15 @@ import {
 	IOrganizationProject,
 	IOrganizationTaskSetting,
 	IOrganizationTeam,
-	TaskProofOfCompletionTypeEnum,
+	TaskProofOfCompletionTypeEnum
 } from '@gauzy/contracts';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	IsBoolean,
-	IsEnum,
-	IsNumber,
-	IsOptional,
-	IsUUID,
-} from 'class-validator';
-import {
-	OrganizationProject,
-	OrganizationTeam,
-	TenantOrganizationBaseEntity,
-} from '../core/entities/internal';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsUUID } from 'class-validator';
+import { OrganizationProject, OrganizationTeam, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmOrganizationTaskSettingRepository } from './repository/mikro-orm-organization-task-setting.repository';
 
-@MultiORMEntity('organization_task_setting', { mikroOrmRepository: () => MikroOrmOrganizationTaskSettingRepository })
+@MultiORMEntity('organization_task_setting')
 export class OrganizationTaskSetting extends TenantOrganizationBaseEntity implements IOrganizationTaskSetting {
-
 	/**
 	 * Indicates whether tasks privacy features are enabled.
 	 * When true, tasks have privacy features such as restricted visibility.

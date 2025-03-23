@@ -1,8 +1,4 @@
-import {
-	RelationId,
-	JoinColumn,
-	JoinTable
-} from 'typeorm';
+import { RelationId, JoinColumn, JoinTable } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
 	IProductVariant,
@@ -23,10 +19,17 @@ import {
 	TenantOrganizationBaseEntity,
 	WarehouseProductVariant
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToMany, MultiORMOneToOne } from './../core/decorators/entity';
-import { MikroOrmProductVariantRepository } from './repository/mikro-orm-product-variant.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToMany,
+	MultiORMOneToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('product_variant', { mikroOrmRepository: () => MikroOrmProductVariantRepository })
+@MultiORMEntity('product_variant')
 export class ProductVariant extends TenantOrganizationBaseEntity implements IProductVariant {
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
@@ -128,7 +131,7 @@ export class ProductVariant extends TenantOrganizationBaseEntity implements IPro
 		nullable: true,
 
 		/** Eager relations are always loaded automatically when relation's owner entity is loaded using find* methods. */
-		eager: true,
+		eager: true
 	})
 	@JoinColumn()
 	image?: ImageAsset;

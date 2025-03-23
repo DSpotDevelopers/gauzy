@@ -1,6 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, JoinTable, RelationId } from 'typeorm';
 import { IsArray, IsBoolean, IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -15,12 +13,9 @@ import {
 	MultiORMOneToMany
 } from '../core/decorators/entity';
 import { ActorTypeTransformerPipe } from '../shared/pipes';
-import { MikroOrmCommentRepository } from './repository/mikro-orm-comment.repository';
 
-@MultiORMEntity('comment', { mikroOrmRepository: () => MikroOrmCommentRepository })
+@MultiORMEntity('comment')
 export class Comment extends TenantOrganizationBaseEntity implements IComment {
-	[EntityRepositoryType]?: MikroOrmCommentRepository;
-
 	@ApiProperty({ type: () => String, enum: BaseEntityEnum })
 	@IsNotEmpty()
 	@IsEnum(BaseEntityEnum)

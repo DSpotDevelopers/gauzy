@@ -3,9 +3,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IPipeline, IPipelineStage } from '@gauzy/contracts';
 import { PipelineStage, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmPipelineRepository } from './repository/mikro-orm-pipeline.repository';
 
-@MultiORMEntity('pipeline', { mikroOrmRepository: () => MikroOrmPipelineRepository })
+@MultiORMEntity('pipeline')
 export class Pipeline extends TenantOrganizationBaseEntity implements IPipeline {
 	@ApiPropertyOptional({ type: () => String })
 	@IsOptional()

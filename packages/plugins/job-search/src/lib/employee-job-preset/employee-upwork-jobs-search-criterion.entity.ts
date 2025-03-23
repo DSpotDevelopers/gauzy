@@ -13,11 +13,12 @@ import { Employee, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, TenantOrga
 import { JobPreset } from './job-preset.entity';
 import { JobSearchOccupation } from './job-search-occupation/job-search-occupation.entity';
 import { JobSearchCategory } from './job-search-category/job-search-category.entity';
-import { MikroOrmEmployeeUpworkJobsSearchCriterionRepository } from './repository/mikro-orm-employee-upwork-jobs-search-criterion.entity.repository';
 
-@MultiORMEntity('employee_upwork_job_search_criterion', { mikroOrmRepository: () => MikroOrmEmployeeUpworkJobsSearchCriterionRepository })
-export class EmployeeUpworkJobsSearchCriterion extends TenantOrganizationBaseEntity implements IEmployeeUpworkJobsSearchCriterion {
-
+@MultiORMEntity('employee_upwork_job_search_criterion')
+export class EmployeeUpworkJobsSearchCriterion
+	extends TenantOrganizationBaseEntity
+	implements IEmployeeUpworkJobsSearchCriterion
+{
 	constructor(input?: DeepPartial<EmployeeUpworkJobsSearchCriterion>) {
 		super(input);
 	}

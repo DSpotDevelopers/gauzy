@@ -33,9 +33,8 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from './../core/decorators/entity';
-import { MikroOrmOrganizationSprintRepository } from './repository/mikro-orm-organization-sprint.repository';
 
-@MultiORMEntity('organization_sprint', { mikroOrmRepository: () => MikroOrmOrganizationSprintRepository })
+@MultiORMEntity('organization_sprint')
 export class OrganizationSprint extends TenantOrganizationBaseEntity implements IOrganizationSprint {
 	@ApiProperty({ type: () => String })
 	@IsString()

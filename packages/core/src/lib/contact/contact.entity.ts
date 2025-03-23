@@ -1,24 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsNumber } from 'class-validator';
-import {
-	ICandidate,
-	IContact,
-	IEmployee,
-	IOrganizationContact
-} from '@gauzy/contracts';
-import {
-	Candidate,
-	Employee,
-	OrganizationContact,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { ICandidate, IContact, IEmployee, IOrganizationContact } from '@gauzy/contracts';
+import { Candidate, Employee, OrganizationContact, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
 import { MultiORMColumn, MultiORMEntity, MultiORMOneToOne } from './../core/decorators/entity';
-import { MikroOrmContactRepository } from './repository/mikro-orm-contact.repository';
 
-@MultiORMEntity('contact', { mikroOrmRepository: () => MikroOrmContactRepository })
+@MultiORMEntity('contact')
 export class Contact extends TenantOrganizationBaseEntity implements IContact {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@IsOptional()

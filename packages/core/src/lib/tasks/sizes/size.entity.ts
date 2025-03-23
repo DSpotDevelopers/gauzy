@@ -2,17 +2,17 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RelationId } from 'typeorm';
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { IOrganizationProject, IOrganizationTeam, ITaskSize } from '@gauzy/contracts';
+import { OrganizationProject, OrganizationTeam, TenantOrganizationBaseEntity } from './../../core/entities/internal';
 import {
-	OrganizationProject,
-	OrganizationTeam,
-	TenantOrganizationBaseEntity,
-} from './../../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, VirtualMultiOrmColumn } from './../../core/decorators/entity';
-import { MikroOrmTaskSizeRepository } from './repository/mikro-orm-task-size.repository';
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	VirtualMultiOrmColumn
+} from './../../core/decorators/entity';
 
-@MultiORMEntity('task_size', { mikroOrmRepository: () => MikroOrmTaskSizeRepository })
+@MultiORMEntity('task_size')
 export class TaskSize extends TenantOrganizationBaseEntity implements ITaskSize {
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsString()
@@ -61,7 +61,7 @@ export class TaskSize extends TenantOrganizationBaseEntity implements ITaskSize 
 		nullable: true,
 
 		/** Defines the database cascade action on delete. */
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	project?: IOrganizationProject;
 
@@ -81,7 +81,7 @@ export class TaskSize extends TenantOrganizationBaseEntity implements ITaskSize 
 		nullable: true,
 
 		/** Defines the database cascade action on delete. */
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	organizationTeam?: IOrganizationTeam;
 

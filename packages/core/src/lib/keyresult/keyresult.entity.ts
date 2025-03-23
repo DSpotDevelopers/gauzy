@@ -1,7 +1,4 @@
-import {
-	RelationId,
-	JoinColumn
-} from 'typeorm';
+import { RelationId, JoinColumn } from 'typeorm';
 import {
 	IKeyResult,
 	KeyResultTypeEnum,
@@ -23,13 +20,16 @@ import {
 	Task,
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmKeyResultRepository } from './repository/mikro-orm-keyresult.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('key_result', { mikroOrmRepository: () => MikroOrmKeyResultRepository })
-export class KeyResult extends TenantOrganizationBaseEntity
-	implements IKeyResult {
-
+@MultiORMEntity('key_result')
+export class KeyResult extends TenantOrganizationBaseEntity implements IKeyResult {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;

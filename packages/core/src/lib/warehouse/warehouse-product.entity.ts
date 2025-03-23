@@ -1,28 +1,18 @@
-import {
-	JoinColumn,
-	RelationId
-} from 'typeorm';
-import {
-	IProductTranslatable,
-	IWarehouse,
-	IWarehouseProduct,
-	IWarehouseProductVariant
-} from '@gauzy/contracts';
+import { JoinColumn, RelationId } from 'typeorm';
+import { IProductTranslatable, IWarehouse, IWarehouseProduct, IWarehouseProductVariant } from '@gauzy/contracts';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	Product,
-	Warehouse,
-	WarehouseProductVariant,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Product, Warehouse, WarehouseProductVariant, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmWarehouseProductRepository } from './repository/mikro-orm-warehouse-product.repository ';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('warehouse_product', { mikroOrmRepository: () => MikroOrmWarehouseProductRepository })
-export class WarehouseProduct extends TenantOrganizationBaseEntity
-	implements IWarehouseProduct {
-
+@MultiORMEntity('warehouse_product')
+export class WarehouseProduct extends TenantOrganizationBaseEntity implements IWarehouseProduct {
 	@ApiPropertyOptional({ type: Number })
 	@MultiORMColumn({
 		nullable: true,
@@ -76,9 +66,13 @@ export class WarehouseProduct extends TenantOrganizationBaseEntity
 	|--------------------------------------------------------------------------
 	*/
 	@ApiProperty({ type: () => WarehouseProductVariant, isArray: true })
-	@MultiORMOneToMany(() => WarehouseProductVariant, (warehouseProductVariant) => warehouseProductVariant.warehouseProduct, {
-		cascade: true
-	})
+	@MultiORMOneToMany(
+		() => WarehouseProductVariant,
+		(warehouseProductVariant) => warehouseProductVariant.warehouseProduct,
+		{
+			cascade: true
+		}
+	)
 	@JoinColumn()
 	variants: IWarehouseProductVariant[];
 }

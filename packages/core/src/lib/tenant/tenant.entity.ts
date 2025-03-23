@@ -18,9 +18,8 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from './../core/decorators/entity';
-import { MikroOrmTenantRepository } from './repository/mikro-orm-tenant.repository';
 
-@MultiORMEntity('tenant', { mikroOrmRepository: () => MikroOrmTenantRepository })
+@MultiORMEntity('tenant')
 export class Tenant extends BaseEntity implements ITenant {
 	@ApiProperty({ type: () => String })
 	@ColumnIndex()

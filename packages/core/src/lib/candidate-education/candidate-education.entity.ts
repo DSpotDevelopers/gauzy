@@ -1,17 +1,11 @@
 import { RelationId } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { ICandidateEducation, ICandidate } from '@gauzy/contracts';
-import {
-	Candidate,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Candidate, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmCandidateEducationRepository } from './repository/mikro-orm-candidate-education.repository';
 
-@MultiORMEntity('candidate_education', { mikroOrmRepository: () => MikroOrmCandidateEducationRepository })
-export class CandidateEducation extends TenantOrganizationBaseEntity
-	implements ICandidateEducation {
-
+@MultiORMEntity('candidate_education')
+export class CandidateEducation extends TenantOrganizationBaseEntity implements ICandidateEducation {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	schoolName: string;

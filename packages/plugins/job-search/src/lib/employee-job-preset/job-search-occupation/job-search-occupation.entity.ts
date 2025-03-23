@@ -2,13 +2,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DeepPartial } from 'typeorm';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { JobPostSourceEnum, IJobSearchOccupation } from '@gauzy/contracts';
-import { isMySQL } from "@gauzy/config";
+import { isMySQL } from '@gauzy/config';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, TenantOrganizationBaseEntity } from '@gauzy/core';
-import { MikroOrmJobSearchOccupationRepository } from './repository/mikro-orm-job-search-occupation.repository';
 
-@MultiORMEntity('job_search_occupation', { mikroOrmRepository: () => MikroOrmJobSearchOccupationRepository })
+@MultiORMEntity('job_search_occupation')
 export class JobSearchOccupation extends TenantOrganizationBaseEntity implements IJobSearchOccupation {
-
 	constructor(input?: DeepPartial<JobSearchOccupation>) {
 		super(input);
 	}

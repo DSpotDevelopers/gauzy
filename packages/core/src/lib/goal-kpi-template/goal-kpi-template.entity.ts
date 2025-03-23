@@ -1,19 +1,11 @@
 import { JoinColumn } from 'typeorm';
-import {
-	IGoalKPITemplate,
-	KpiMetricEnum,
-	IEmployee
-} from '@gauzy/contracts';
+import { IGoalKPITemplate, KpiMetricEnum, IEmployee } from '@gauzy/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
-import {
-	Employee,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Employee, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmGoalKPITemplateRepository } from './repository/mikro-orm-goal-kpi-template.repository';
 
-@MultiORMEntity('goal_kpi_template', { mikroOrmRepository: () => MikroOrmGoalKPITemplateRepository })
+@MultiORMEntity('goal_kpi_template')
 export class GoalKPITemplate extends TenantOrganizationBaseEntity implements IGoalKPITemplate {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()

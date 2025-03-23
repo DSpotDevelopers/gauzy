@@ -9,13 +9,16 @@ import {
 	OrganizationTeamJoinRequestStatusEnum
 } from '@gauzy/contracts';
 import { OrganizationTeam, TenantOrganizationBaseEntity, User } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, VirtualMultiOrmColumn } from './../core/decorators/entity';
-import { MikroOrmOrganizationTeamJoinRequestRepository } from './repository/mikro-orm-organization-team-join-request.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	VirtualMultiOrmColumn
+} from './../core/decorators/entity';
 
-@MultiORMEntity('organization_team_join_request', { mikroOrmRepository: () => MikroOrmOrganizationTeamJoinRequestRepository })
-export class OrganizationTeamJoinRequest extends TenantOrganizationBaseEntity
-	implements IOrganizationTeamJoinRequest {
-
+@MultiORMEntity('organization_team_join_request')
+export class OrganizationTeamJoinRequest extends TenantOrganizationBaseEntity implements IOrganizationTeamJoinRequest {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsEmail()
@@ -76,7 +79,7 @@ export class OrganizationTeamJoinRequest extends TenantOrganizationBaseEntity
 		nullable: true,
 
 		/** Database cascade action on delete. */
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	@JoinColumn()
 	user?: IUser;

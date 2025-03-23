@@ -1,17 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
 import { BaseEntityEnum, ID, ISubscription, IUser, SubscriptionTypeEnum } from '@gauzy/contracts';
 import { TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmSubscriptionRepository } from './repository/mikro-orm-subscription.repository';
 
-@MultiORMEntity('subscription', { mikroOrmRepository: () => MikroOrmSubscriptionRepository })
+@MultiORMEntity('subscription')
 export class Subscription extends TenantOrganizationBaseEntity implements ISubscription {
-	[EntityRepositoryType]?: MikroOrmSubscriptionRepository;
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsUUID()

@@ -1,6 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsEnum, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { isMySQL, isPostgres } from '@gauzy/config';
@@ -8,12 +6,9 @@ import { IApiCallLog, ID, IUser, JsonData, RequestMethod } from '@gauzy/contract
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
 import { TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { HttpMethodTransformerPipe } from '../shared/pipes';
-import { MikroOrmApiCallLogRepository } from './repository/mikro-orm-api-call-log.repository';
 
-@MultiORMEntity('api_call_log', { mikroOrmRepository: () => MikroOrmApiCallLogRepository })
+@MultiORMEntity('api_call_log')
 export class ApiCallLog extends TenantOrganizationBaseEntity implements IApiCallLog {
-	[EntityRepositoryType]?: MikroOrmApiCallLogRepository;
-
 	/**
 	 * Correlation ID to track the request across services
 	 */

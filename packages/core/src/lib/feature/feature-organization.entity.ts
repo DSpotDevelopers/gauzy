@@ -1,17 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IFeature, IFeatureOrganization } from '@gauzy/contracts';
-import {
-	Feature,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Feature, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { IsString } from 'class-validator';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmFeatureOrganizationRepository } from './repository/mikro-orm-feature-organization.repository';
 
-@MultiORMEntity('feature_organization', { mikroOrmRepository: () => MikroOrmFeatureOrganizationRepository })
+@MultiORMEntity('feature_organization')
 export class FeatureOrganization extends TenantOrganizationBaseEntity implements IFeatureOrganization {
-
 	@MultiORMColumn({ default: true })
 	isEnabled: boolean;
 

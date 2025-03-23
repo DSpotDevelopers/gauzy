@@ -5,9 +5,8 @@ import { IPasswordReset } from '@gauzy/contracts';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { TenantBaseEntity } from './../core/entities/tenant-base.entity';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, VirtualMultiOrmColumn } from './../core/decorators/entity';
-import { MikroOrmPasswordResetRepository } from './repository/mikro-orm-password-reset.repository';
 
-@MultiORMEntity('password_reset', { mikroOrmRepository: () => MikroOrmPasswordResetRepository })
+@MultiORMEntity('password_reset')
 export class PasswordReset extends TenantBaseEntity implements IPasswordReset {
 	/**
 	 * The `email` column stores the user's email address.

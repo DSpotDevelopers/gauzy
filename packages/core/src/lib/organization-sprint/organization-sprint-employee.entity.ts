@@ -4,11 +4,8 @@ import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsUUID } from 'class-v
 import { ID, IEmployee, IOrganizationSprintEmployee, IRole } from '@gauzy/contracts';
 import { Employee, OrganizationSprint, Role, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmOrganizationSprintEmployeeRepository } from './repository/mikro-orm-organization-sprint-employee.repository';
 
-@MultiORMEntity('organization_sprint_employee', {
-	mikroOrmRepository: () => MikroOrmOrganizationSprintEmployeeRepository
-})
+@MultiORMEntity('organization_sprint_employee')
 export class OrganizationSprintEmployee extends TenantOrganizationBaseEntity implements IOrganizationSprintEmployee {
 	// Manager of the organization project
 	@ApiPropertyOptional({ type: () => Boolean, default: false })

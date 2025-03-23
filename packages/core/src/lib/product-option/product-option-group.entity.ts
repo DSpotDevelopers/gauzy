@@ -8,10 +8,15 @@ import {
 	ProductOptionGroupTranslation,
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmProductOptionGroupRepository } from './repository/mikro-orm-product-option-group.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('product_option_group', { mikroOrmRepository: () => MikroOrmProductOptionGroupRepository })
+@MultiORMEntity('product_option_group')
 export class ProductOptionGroup extends TenantOrganizationBaseEntity implements IProductOptionGroupTranslatable {
 	@ApiProperty({ type: () => String })
 	@IsString()
@@ -52,7 +57,7 @@ export class ProductOptionGroup extends TenantOrganizationBaseEntity implements 
 	@ApiProperty({ type: () => ProductOption, isArray: true })
 	@MultiORMOneToMany(() => ProductOption, (productOption) => productOption.group, {
 		/** Eager relations are always loaded automatically when relation's owner entity is loaded using find* methods. */
-		eager: true,
+		eager: true
 	})
 	options: ProductOption[];
 
@@ -62,7 +67,7 @@ export class ProductOptionGroup extends TenantOrganizationBaseEntity implements 
 	@ApiProperty({ type: () => ProductOptionGroupTranslation, isArray: true })
 	@MultiORMOneToMany(() => ProductOptionGroupTranslation, (translation) => translation.reference, {
 		/** Eager relations are always loaded automatically when relation's owner entity is loaded using find* methods. */
-		eager: true,
+		eager: true
 	})
 	translations: ProductOptionGroupTranslation[];
 }

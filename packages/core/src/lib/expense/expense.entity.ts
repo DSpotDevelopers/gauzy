@@ -1,19 +1,6 @@
-import {
-	RelationId,
-	JoinColumn,
-	JoinTable
-} from 'typeorm';
+import { RelationId, JoinColumn, JoinTable } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	IsNotEmpty,
-	IsString,
-	IsNumber,
-	IsOptional,
-	IsDate,
-	IsEnum,
-	IsBoolean,
-	IsUUID
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsDate, IsEnum, IsBoolean, IsUUID } from 'class-validator';
 import {
 	IExpense,
 	CurrenciesEnum,
@@ -36,12 +23,17 @@ import {
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmExpenseRepository } from './repository/mikro-orm-expense.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('expense', { mikroOrmRepository: () => MikroOrmExpenseRepository })
+@MultiORMEntity('expense')
 export class Expense extends TenantOrganizationBaseEntity implements IExpense {
-
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
 	@IsNotEmpty()
@@ -199,7 +191,7 @@ export class Expense extends TenantOrganizationBaseEntity implements IExpense {
 		nullable: true,
 
 		/** Defines the database cascade action on delete. */
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	@JoinColumn()
 	project?: IOrganizationProject;
@@ -266,7 +258,7 @@ export class Expense extends TenantOrganizationBaseEntity implements IExpense {
 		owner: true,
 		pivotTable: 'tag_expense',
 		joinColumn: 'expenseId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_expense'

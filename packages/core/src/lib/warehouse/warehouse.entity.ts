@@ -1,34 +1,20 @@
-import {
-	JoinColumn,
-	JoinTable,
-	RelationId
-} from 'typeorm';
-import {
-	ApiProperty,
-	ApiPropertyOptional
-} from '@nestjs/swagger';
-import {
-	IContact,
-	IImageAsset,
-	IMerchant,
-	ITag,
-	IWarehouse,
-	IWarehouseProduct
-} from '@gauzy/contracts';
-import {
-	Contact,
-	Tag,
-	TenantOrganizationBaseEntity,
-	ImageAsset,
-	Merchant
-} from '../core/entities/internal';
+import { JoinColumn, JoinTable, RelationId } from 'typeorm';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IContact, IImageAsset, IMerchant, ITag, IWarehouse, IWarehouseProduct } from '@gauzy/contracts';
+import { Contact, Tag, TenantOrganizationBaseEntity, ImageAsset, Merchant } from '../core/entities/internal';
 import { WarehouseProduct } from './warehouse-product.entity';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToMany, MultiORMOneToOne } from './../core/decorators/entity';
-import { MikroOrmWarehouseRepository } from './repository/mikro-orm-warehouse.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToMany,
+	MultiORMOneToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('warehouse', { mikroOrmRepository: () => MikroOrmWarehouseRepository })
+@MultiORMEntity('warehouse')
 export class Warehouse extends TenantOrganizationBaseEntity implements IWarehouse {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;
@@ -141,7 +127,7 @@ export class Warehouse extends TenantOrganizationBaseEntity implements IWarehous
 		/** Specifies the name of the pivot table in the database. */
 		pivotTable: 'tag_warehouse',
 		joinColumn: 'warehouseId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		/** Specifies the name of the pivot table in the database. */

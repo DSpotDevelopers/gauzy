@@ -1,19 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { RelationId } from 'typeorm';
 import { IsNotEmpty, IsString, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { IEmployeeSetting, IEmployee, EmployeeSettingTypeEnum, ID, BaseEntityEnum, JsonData } from '@gauzy/contracts';
 import { isMySQL, isPostgres } from '@gauzy/config';
 import { Employee, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmEmployeeSettingRepository } from './repository/mikro-orm-employee-setting.repository';
 import { EmployeeSettingTypeTransformerPipe } from '../shared/pipes';
 
-@MultiORMEntity('employee_setting', { mikroOrmRepository: () => MikroOrmEmployeeSettingRepository })
+@MultiORMEntity('employee_setting')
 export class EmployeeSetting extends TenantOrganizationBaseEntity implements IEmployeeSetting {
-	[EntityRepositoryType]?: MikroOrmEmployeeSettingRepository;
-
 	@ApiPropertyOptional({ enum: EmployeeSettingTypeEnum })
 	@IsEnum(EmployeeSettingTypeEnum)
 	@IsOptional()

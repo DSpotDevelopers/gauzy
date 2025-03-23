@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { JoinColumn, JoinTable, RelationId } from 'typeorm';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DailyPlanStatusEnum, ID, IDailyPlan, IEmployee, IOrganizationTeam, ITask } from '@gauzy/contracts';
@@ -13,12 +11,9 @@ import {
 	MultiORMManyToOne
 } from '../../core/decorators/entity';
 import { Employee, OrganizationTeam, Task, TenantOrganizationBaseEntity } from '../../core/entities/internal';
-import { MikroOrmDailyPlanRepository } from './repository';
 
-@MultiORMEntity('daily_plan', { mikroOrmRepository: () => MikroOrmDailyPlanRepository })
+@MultiORMEntity('daily_plan')
 export class DailyPlan extends TenantOrganizationBaseEntity implements IDailyPlan {
-	[EntityRepositoryType]?: MikroOrmDailyPlanRepository;
-
 	@ApiProperty({ type: () => Date })
 	@Type(() => Date)
 	@IsNotEmpty()

@@ -7,7 +7,7 @@ import {
 	IEmployee,
 	ITask,
 	ITimeSlot,
-	IOrganizationProject,
+	IOrganizationProject
 } from '@gauzy/contracts';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsNumber, IsDateString, IsUUID } from 'class-validator';
@@ -20,11 +20,9 @@ import {
 	TimeSlot
 } from './../../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../../core/decorators/entity';
-import { MikroOrmActivityRepository } from './repository/mikro-orm-activity.repository';
 
-@MultiORMEntity('activity', { mikroOrmRepository: () => MikroOrmActivityRepository })
+@MultiORMEntity('activity')
 export class Activity extends TenantOrganizationBaseEntity implements IActivity {
-
 	@ApiPropertyOptional({ type: () => String })
 	@IsOptional()
 	@IsString()

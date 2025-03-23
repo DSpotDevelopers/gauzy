@@ -1,17 +1,11 @@
 import { JoinTable } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IEmployee, IOrganization, ISkill } from '@gauzy/contracts';
-import {
-	Employee,
-	Organization,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Employee, Organization, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToMany } from './../core/decorators/entity';
-import { MikroOrmSkillRepository } from './repository/mikro-orm-skill.repository';
 
-@MultiORMEntity('skill', { mikroOrmRepository: () => MikroOrmSkillRepository })
+@MultiORMEntity('skill')
 export class Skill extends TenantOrganizationBaseEntity implements ISkill {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name?: string;
@@ -39,7 +33,7 @@ export class Skill extends TenantOrganizationBaseEntity implements ISkill {
 		owner: true,
 		pivotTable: 'skill_employee',
 		joinColumn: 'skillId',
-		inverseJoinColumn: 'employeeId',
+		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'skill_employee'
@@ -55,7 +49,7 @@ export class Skill extends TenantOrganizationBaseEntity implements ISkill {
 		owner: true,
 		pivotTable: 'skill_organization',
 		joinColumn: 'skillId',
-		inverseJoinColumn: 'organizationId',
+		inverseJoinColumn: 'organizationId'
 	})
 	@JoinTable({
 		name: 'skill_organization'

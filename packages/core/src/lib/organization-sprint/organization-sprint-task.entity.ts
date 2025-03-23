@@ -4,11 +4,8 @@ import { IsNotEmpty, IsNumber, IsOptional, IsUUID } from 'class-validator';
 import { ID, IOrganizationSprintTask, ITask } from '@gauzy/contracts';
 import { OrganizationSprint, Task, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmOrganizationSprintTaskRepository } from './repository/mikro-orm-organization-sprint-task.repository';
 
-@MultiORMEntity('organization_sprint_task', {
-	mikroOrmRepository: () => MikroOrmOrganizationSprintTaskRepository
-})
+@MultiORMEntity('organization_sprint_task')
 export class OrganizationSprintTask extends TenantOrganizationBaseEntity implements IOrganizationSprintTask {
 	@ApiPropertyOptional({ type: () => Number })
 	@IsOptional()

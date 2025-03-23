@@ -1,8 +1,4 @@
-import {
-	JoinColumn,
-	JoinTable,
-	RelationId
-} from 'typeorm';
+import { JoinColumn, JoinTable, RelationId } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsUUID } from 'class-validator';
 import {
@@ -43,11 +39,9 @@ import {
 	MultiORMOneToMany,
 	MultiORMOneToOne
 } from './../core/decorators/entity';
-import { MikroOrmOrganizationContactRepository } from './repository/mikro-orm-organization-contact.repository';
 
-@MultiORMEntity('organization_contact', { mikroOrmRepository: () => MikroOrmOrganizationContactRepository })
+@MultiORMEntity('organization_contact')
 export class OrganizationContact extends TenantOrganizationBaseEntity implements IOrganizationContact {
-
 	@ApiProperty({ type: () => String })
 	@ColumnIndex()
 	@MultiORMColumn()
@@ -217,7 +211,7 @@ export class OrganizationContact extends TenantOrganizationBaseEntity implements
 		owner: true,
 		pivotTable: 'tag_organization_contact',
 		joinColumn: 'organizationContactId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization_contact'
@@ -231,7 +225,7 @@ export class OrganizationContact extends TenantOrganizationBaseEntity implements
 		owner: true,
 		pivotTable: 'organization_contact_employee',
 		joinColumn: 'organizationContactId',
-		inverseJoinColumn: 'employeeId',
+		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'organization_contact_employee'

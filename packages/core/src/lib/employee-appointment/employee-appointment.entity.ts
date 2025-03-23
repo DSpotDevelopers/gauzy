@@ -4,9 +4,8 @@ import { JoinColumn, RelationId } from 'typeorm';
 import { EmployeeAppointmentStatus, ID, IEmployee, IEmployeeAppointment } from '@gauzy/contracts';
 import { AppointmentEmployee, Employee, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmEmployeeAppointmentRepository } from './repository/mikro-orm-employee-appointment.repository';
 
-@MultiORMEntity('employee_appointment', { mikroOrmRepository: () => MikroOrmEmployeeAppointmentRepository })
+@MultiORMEntity('employee_appointment')
 export class EmployeeAppointment extends TenantOrganizationBaseEntity implements IEmployeeAppointment {
 	@ApiProperty({ type: () => String })
 	@IsString()
@@ -39,22 +38,22 @@ export class EmployeeAppointment extends TenantOrganizationBaseEntity implements
 	@ApiProperty({ type: () => Boolean })
 	@IsBoolean()
 	@MultiORMColumn({ nullable: true })
-	bufferTimeStart?: Boolean;
+	bufferTimeStart?: boolean;
 
 	@ApiProperty({ type: () => Boolean })
 	@IsBoolean()
 	@MultiORMColumn({ nullable: true })
-	bufferTimeEnd?: Boolean;
+	bufferTimeEnd?: boolean;
 
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
 	@MultiORMColumn({ nullable: true })
-	bufferTimeInMins?: Number;
+	bufferTimeInMins?: number;
 
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
 	@MultiORMColumn({ nullable: true })
-	breakTimeInMins?: Number;
+	breakTimeInMins?: number;
 
 	@ApiProperty({ type: () => Date })
 	@IsDate()

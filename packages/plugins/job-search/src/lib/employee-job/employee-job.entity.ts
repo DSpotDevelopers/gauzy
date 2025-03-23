@@ -1,11 +1,5 @@
-
 import { Employee, Model } from '@gauzy/core';
-import {
-	IEmployeeJobPost,
-	JobPostSourceEnum,
-	JobPostStatusEnum,
-	JobPostTypeEnum
-} from '@gauzy/contracts';
+import { IEmployeeJobPost, JobPostSourceEnum, JobPostStatusEnum, JobPostTypeEnum } from '@gauzy/contracts';
 import { JobPost } from './jobPost.entity';
 
 export class EmployeeJobPost extends Model implements IEmployeeJobPost {

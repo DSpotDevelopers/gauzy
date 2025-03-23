@@ -12,9 +12,8 @@ import {
 	VirtualMultiOrmColumn
 } from '../../core/decorators/entity';
 import { TenantOrganizationBaseEntity, TimeSlot, User } from './../../core/entities/internal';
-import { MikroOrmScreenshotRepository } from './repository/mikro-orm-screenshot.repository';
 
-@MultiORMEntity('screenshot', { mikroOrmRepository: () => MikroOrmScreenshotRepository })
+@MultiORMEntity('screenshot')
 export class Screenshot extends TenantOrganizationBaseEntity implements IScreenshot {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()

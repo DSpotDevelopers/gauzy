@@ -3,17 +3,11 @@ import { RelationId } from 'typeorm';
 import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { isMySQL } from '@gauzy/config';
 import { IEmailHistory, IEmailTemplate, IUser, EmailStatusEnum } from '@gauzy/contracts';
-import {
-	EmailTemplate,
-	TenantOrganizationBaseEntity,
-	User,
-} from '../core/entities/internal';
+import { EmailTemplate, TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmEmailHistoryRepository } from './repository/mikro-orm-email-history.repository';
 
-@MultiORMEntity('email_sent', { mikroOrmRepository: () => MikroOrmEmailHistoryRepository })
+@MultiORMEntity('email_sent')
 export class EmailHistory extends TenantOrganizationBaseEntity implements IEmailHistory {
-
 	@ApiPropertyOptional({ type: () => String })
 	@IsOptional()
 	@ColumnIndex()
@@ -33,7 +27,6 @@ export class EmailHistory extends TenantOrganizationBaseEntity implements IEmail
 	@MultiORMColumn()
 	email: string;
 
-
 	/*
 	|--------------------------------------------------------------------------
 	| @ManyToOne
@@ -45,7 +38,7 @@ export class EmailHistory extends TenantOrganizationBaseEntity implements IEmail
 	 */
 	@ApiProperty({ type: () => User })
 	@MultiORMManyToOne(() => User, {
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	user?: IUser;
 

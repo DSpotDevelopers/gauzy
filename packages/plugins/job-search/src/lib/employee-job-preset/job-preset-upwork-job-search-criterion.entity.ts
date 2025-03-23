@@ -9,14 +9,15 @@ import {
 	JobPostTypeEnum
 } from '@gauzy/contracts';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne, TenantOrganizationBaseEntity } from '@gauzy/core';
-import { MikroOrmJobPresetUpworkJobSearchCriterionRepository } from './repository/mikro-orm-job-preset-upwork-job-search-criterion.repository';
 import { JobPreset } from './job-preset.entity';
 import { JobSearchOccupation } from './job-search-occupation/job-search-occupation.entity';
 import { JobSearchCategory } from './job-search-category/job-search-category.entity';
 
-@MultiORMEntity('job_preset_upwork_job_search_criterion', { mikroOrmRepository: () => MikroOrmJobPresetUpworkJobSearchCriterionRepository })
-export class JobPresetUpworkJobSearchCriterion extends TenantOrganizationBaseEntity implements IJobPresetUpworkJobSearchCriterion {
-
+@MultiORMEntity('job_preset_upwork_job_search_criterion')
+export class JobPresetUpworkJobSearchCriterion
+	extends TenantOrganizationBaseEntity
+	implements IJobPresetUpworkJobSearchCriterion
+{
 	constructor(input?: DeepPartial<JobPresetUpworkJobSearchCriterion>) {
 		super(input);
 	}
