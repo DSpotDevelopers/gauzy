@@ -1,6 +1,5 @@
 import { environment as env } from '@gauzy/config';
 import { CanActivate, ExecutionContext, Inject, Injectable, Type } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Reflector } from '@nestjs/core';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
@@ -12,15 +11,12 @@ import { isEmpty, PERMISSIONS_METADATA, removeDuplicates } from '@gauzy/common';
 import { RequestContext } from './../../core/context';
 import { TypeOrmEmployeeRepository } from '../../employee/repository';
 import { MultiORMEnum } from '../../core/utils';
-import { Employee } from '../../employee/employee.entity';
 
 @Injectable()
 export class OrganizationPermissionGuard implements CanActivate {
 	constructor(
 		@Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 		readonly _reflector: Reflector,
-
-		@InjectRepository(Employee)
 		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository
 	) {}
 

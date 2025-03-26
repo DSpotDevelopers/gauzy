@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommandBus } from '@nestjs/cqrs';
-import { IsNull, Between, Not, In } from 'typeorm';
+import { IsNull, Between, Not, In, FindOneOptions } from 'typeorm';
 import * as moment from 'moment';
 import {
 	TimeLogType,
@@ -20,17 +20,15 @@ import {
 	PermissionsEnum,
 	ITimeSlot,
 	IEmployee,
-	IEmployeeFindInput,
 	ID,
 	ITimerStatusWithWeeklyLimits
 } from '@gauzy/contracts';
 import { isNotEmpty } from '@gauzy/common';
 import { environment as env } from '@gauzy/config';
-import { TimeLog } from '../../core/entities/internal';
+import { Employee, TimeLog } from '../../core/entities/internal';
 import { RequestContext } from '../../core/context';
 import { getDateRangeFormat, validateDateRange } from '../../core/utils';
 import { prepareSQLQuery as p } from '../../database/database.helper';
-import { Employee } from '../../employee/employee.entity';
 import { EmployeeService } from '../../employee/employee.service';
 import {
 	DeleteTimeSpanCommand,
@@ -40,7 +38,6 @@ import {
 	TimeLogUpdateCommand
 } from '../time-log/commands';
 import { TypeOrmTimeLogRepository } from '../time-log/repository';
-import { TypeOrmEmployeeRepository } from '../../employee/repository';
 import { addRelationsToQuery, buildCommonQueryParameters, buildLogQueryParameters } from './timer.helper';
 import { TimerWeeklyLimitService } from './timer-weekly-limit.service';
 import { Logger } from '../../logger';
@@ -54,13 +51,10 @@ export class TimerService {
 		@InjectRepository(TimeLog)
 		private readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
 
-		@InjectRepository(Employee)
-		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-
 		private readonly _employeeService: EmployeeService,
 		private readonly _timerWeeklyLimitService: TimerWeeklyLimitService,
 		private readonly _commandBus: CommandBus
-	) {}
+	) { }
 
 	/**
 	 * Fetches an employee based on the provided query.
@@ -68,9 +62,9 @@ export class TimerService {
 	 * @param query - The query parameters to find the employee.
 	 * @returns A Promise resolving to the employee entity or null.
 	 */
-	async fetchEmployee(query: IEmployeeFindInput): Promise<IEmployee | null> {
+	async fetchEmployee(query: FindOneOptions<Employee>): Promise<IEmployee | null> {
 		// Replace 'Employee' with your actual Employee entity type
-		return await this.typeOrmEmployeeRepository.findOneByOptions(query);
+		return await this._employeeService.findOneByOptions(query);
 	}
 
 	/**
@@ -90,10 +84,10 @@ export class TimerService {
 
 		if (!!permission && isNotEmpty(request.employeeId)) {
 			const { employeeId } = request;
-			employee = await this.fetchEmployee({ id: employeeId, tenantId, organizationId });
+			employee = await this.fetchEmployee({ where: { id: employeeId, tenantId, organizationId } });
 		} else {
 			const userId = RequestContext.currentUserId();
-			employee = await this.fetchEmployee({ userId, tenantId, organizationId });
+			employee = await this.fetchEmployee({ where: { userId, tenantId, organizationId } });
 		}
 
 		if (!employee) {
@@ -597,15 +591,15 @@ export class TimerService {
 		// Determine whether to fetch a single log or multiple logs
 		return fetchAll
 			? await this.typeOrmTimeLogRepository.find({
-					where: whereClause,
-					order: { startedAt: 'DESC', createdAt: 'DESC' }
-			  })
+				where: whereClause,
+				order: { startedAt: 'DESC', createdAt: 'DESC' }
+			})
 			: await this.typeOrmTimeLogRepository.findOne({
-					where: whereClause,
-					order: { startedAt: 'DESC', createdAt: 'DESC' },
-					// Determine relations if includeTimeSlots is true
-					...(includeTimeSlots && { relations: { timeSlots: true } })
-			  });
+				where: whereClause,
+				order: { startedAt: 'DESC', createdAt: 'DESC' },
+				// Determine relations if includeTimeSlots is true
+				...(includeTimeSlots && { relations: { timeSlots: true } })
+			});
 	}
 
 	/**

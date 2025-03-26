@@ -65,9 +65,7 @@ import { TypeOrmOrganizationContactRepository } from '../../organization-contact
 import { TimeLog } from './time-log.entity';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { TimerWeeklyLimitService } from '../timer/timer-weekly-limit.service';
-import { OrganizationContact } from '../../organization-contact/organization-contact.entity';
-import { OrganizationProject } from '../../organization-project/organization-project.entity';
-import { Employee } from '../../employee/employee.entity';
+import { Employee, OrganizationContact, OrganizationProject } from './../../core/entities/internal';
 import { Logger } from '../../logger';
 
 @Injectable()
