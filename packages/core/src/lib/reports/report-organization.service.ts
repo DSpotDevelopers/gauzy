@@ -4,6 +4,7 @@ import { IOrganization, IReport, UpdateReportMenuInput } from '@gauzy/contracts'
 import { TenantAwareCrudService } from '../core/crud';
 import { RequestContext } from '../core/context';
 import { ReportOrganization } from './report-organization.entity';
+import { Report } from './report.entity';
 import { TypeOrmReportRepository, TypeOrmReportOrganizationRepository } from './repository';
 import { Logger } from '../logger';
 
