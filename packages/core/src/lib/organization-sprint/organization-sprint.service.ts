@@ -1,5 +1,6 @@
 import { EventBus } from '@nestjs/cqrs';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
 	BaseEntityEnum,
 	ActorTypeEnum,
@@ -15,9 +16,8 @@ import {
 import { isNotEmpty } from '@gauzy/common';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
-import { OrganizationSprintEmployee } from '../core/entities/internal';
+import { Employee, OrganizationSprintEmployee } from '../core/entities/internal';
 import { FavoriteService } from '../core/decorators';
-// import { prepareSQLQuery as p } from './../database/database.helper';
 import { CreateSubscriptionEvent } from '../subscription/events';
 import { RoleService } from '../role/role.service';
 import { EmployeeService } from '../employee/employee.service';
@@ -25,29 +25,32 @@ import { SubscriptionService } from '../subscription/subscription.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { OrganizationSprint } from './organization-sprint.entity';
 import { TypeOrmEmployeeRepository } from '../employee/repository';
-import {
-	MikroOrmOrganizationSprintEmployeeRepository,
-	MikroOrmOrganizationSprintRepository,
-	TypeOrmOrganizationSprintEmployeeRepository,
-	TypeOrmOrganizationSprintRepository
-} from './repository';
+import { TypeOrmOrganizationSprintEmployeeRepository, TypeOrmOrganizationSprintRepository } from './repository';
+import { Logger } from '../logger';
 
 @FavoriteService(BaseEntityEnum.OrganizationSprint)
 @Injectable()
 export class OrganizationSprintService extends TenantAwareCrudService<OrganizationSprint> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		private readonly _eventBus: EventBus,
-		readonly typeOrmOrganizationSprintRepository: TypeOrmOrganizationSprintRepository,
-		readonly mikroOrmOrganizationSprintRepository: MikroOrmOrganizationSprintRepository,
-		readonly typeOrmOrganizationSprintEmployeeRepository: TypeOrmOrganizationSprintEmployeeRepository,
-		readonly mikroOrmOrganizationSprintEmployeeRepository: MikroOrmOrganizationSprintEmployeeRepository,
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+		@InjectRepository(OrganizationSprint)
+		private readonly typeOrmOrganizationSprintRepository: TypeOrmOrganizationSprintRepository,
+
+		@InjectRepository(OrganizationSprintEmployee)
+		private readonly typeOrmOrganizationSprintEmployeeRepository: TypeOrmOrganizationSprintEmployeeRepository,
+
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
 		private readonly _roleService: RoleService,
 		private readonly _employeeService: EmployeeService,
 		private readonly subscriptionService: SubscriptionService,
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmOrganizationSprintRepository, mikroOrmOrganizationSprintRepository);
+		super(typeOrmOrganizationSprintRepository);
 	}
 
 	/**
@@ -75,7 +78,9 @@ export class OrganizationSprintService extends TenantAwareCrudService<Organizati
 					// If not included, add the employeeId to the managerIds array.
 					managerIds.push(employeeId);
 				}
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error looking for role to assign employee as sprint manager: ${error}`);
+			}
 
 			// Combine memberIds and managerIds into a single array.
 			const employeeIds = [...memberIds, ...managerIds].filter(Boolean);
@@ -138,7 +143,9 @@ export class OrganizationSprintService extends TenantAwareCrudService<Organizati
 						)
 					)
 				);
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error subscribing creators and assignees to the sprint: ${error}`);
+			}
 
 			// Generate the activity log
 			this.activityLogService.logActivity<OrganizationSprint>(
@@ -154,6 +161,7 @@ export class OrganizationSprintService extends TenantAwareCrudService<Organizati
 
 			return sprint;
 		} catch (error) {
+			this.logger.error(`Error while creating organization sprint: ${error}`);
 			// Handle errors and return an appropriate error response
 			throw new HttpException(`Failed to create organization sprint: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
@@ -223,6 +231,7 @@ export class OrganizationSprintService extends TenantAwareCrudService<Organizati
 				return updatedSprint;
 			}
 		} catch (error) {
+			this.logger.error(`Error while updating organization sprint: ${error}`);
 			// Handle errors and return an appropriate error response
 			throw new HttpException(`Failed to update organization sprint: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
@@ -299,7 +308,9 @@ export class OrganizationSprintService extends TenantAwareCrudService<Organizati
 							})
 					)
 				);
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error unsubscribing members from the sprint: ${error}`);
+			}
 		}
 
 		// 2. Update roles for existing members where necessary.
@@ -345,7 +356,9 @@ export class OrganizationSprintService extends TenantAwareCrudService<Organizati
 						)
 					)
 				);
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error subscribing new assignees to the sprint: ${error}`);
+			}
 
 			await this.typeOrmOrganizationSprintEmployeeRepository.save(newSprintMembers);
 		}

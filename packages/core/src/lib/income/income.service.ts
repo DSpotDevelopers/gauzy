@@ -6,18 +6,15 @@ import { IDateRangePicker, IPagination } from '@gauzy/contracts';
 import { isPostgres } from '@gauzy/config';
 import { Income } from './income.entity';
 import { TenantAwareCrudService } from './../core/crud';
-import { MikroOrmIncomeRepository } from './repository/mikro-orm-income.repository';
-import { TypeOrmIncomeRepository } from './repository/type-orm-income.repository';
+import { TypeOrmIncomeRepository } from './repository';
 
 @Injectable()
 export class IncomeService extends TenantAwareCrudService<Income> {
 	constructor(
 		@InjectRepository(Income)
-		typeOrmIncomeRepository: TypeOrmIncomeRepository,
-
-		mikroOrmIncomeRepository: MikroOrmIncomeRepository
+		private readonly typeOrmIncomeRepository: TypeOrmIncomeRepository
 	) {
-		super(typeOrmIncomeRepository, mikroOrmIncomeRepository);
+		super(typeOrmIncomeRepository);
 	}
 
 	public async findAllIncomes(filter?: FindManyOptions<Income>, filterDate?: string): Promise<IPagination<Income>> {
@@ -26,17 +23,17 @@ export class IncomeService extends TenantAwareCrudService<Income> {
 			const endOfMonth = moment(moment(filterDate).endOf('month').format('YYYY-MM-DD hh:mm:ss')).toDate();
 			return filter
 				? await this.findAll({
-					where: {
-						valueDate: Between<Date>(startOfMonth, endOfMonth),
-						...(filter.where as Object)
-					},
-					relations: filter.relations
-				})
+						where: {
+							valueDate: Between<Date>(startOfMonth, endOfMonth),
+							...(filter.where as object)
+						},
+						relations: filter.relations
+				  })
 				: await this.findAll({
-					where: {
-						valueDate: Between(startOfMonth, endOfMonth)
-					}
-				});
+						where: {
+							valueDate: Between(startOfMonth, endOfMonth)
+						}
+				  });
 		}
 		return await this.findAll(filter || {});
 	}

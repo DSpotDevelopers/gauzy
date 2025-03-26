@@ -12,18 +12,15 @@ import {
 import { ApprovalPolicy } from './approval-policy.entity';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from './../core/context';
-import { TypeOrmApprovalPolicyRepository } from './repository/type-orm-approval-policy.repository';
-import { MikroOrmApprovalPolicyRepository } from './repository/mikro-orm-approval-policy.repository';
+import { TypeOrmApprovalPolicyRepository } from './repository';
 
 @Injectable()
 export class ApprovalPolicyService extends TenantAwareCrudService<ApprovalPolicy> {
 	constructor(
 		@InjectRepository(ApprovalPolicy)
-		typeOrmApprovalPolicyRepository: TypeOrmApprovalPolicyRepository,
-
-		mikroOrmApprovalPolicyRepository: MikroOrmApprovalPolicyRepository
+		private readonly typeOrmApprovalPolicyRepository: TypeOrmApprovalPolicyRepository
 	) {
-		super(typeOrmApprovalPolicyRepository, mikroOrmApprovalPolicyRepository);
+		super(typeOrmApprovalPolicyRepository);
 	}
 
 	/**
@@ -36,7 +33,7 @@ export class ApprovalPolicyService extends TenantAwareCrudService<ApprovalPolicy
 		if ('where' in options) {
 			const { where } = options;
 			if ('name' in where) {
-				options.where.name = Like(`%${where.name}%`);
+				options.where.name = Like(`%${where.name as string}%`);
 			}
 		}
 		return super.paginate(options);
@@ -47,16 +44,8 @@ export class ApprovalPolicyService extends TenantAwareCrudService<ApprovalPolicy
 	 */
 	async findAllApprovalPolicies(options: PaginationParams<ApprovalPolicy>): Promise<IPagination<IApprovalPolicy>> {
 		return await super.findAll({
-			...(options && options.where
-				? {
-					where: options.where
-				}
-				: {}),
-			...(options && options.relations
-				? {
-					relations: options.relations
-				}
-				: {})
+			...(options?.where ? { where: options.where } : {}),
+			...(options?.relations ? { relations: options.relations } : {})
 		});
 	}
 
@@ -74,11 +63,7 @@ export class ApprovalPolicyService extends TenantAwareCrudService<ApprovalPolicy
 				),
 				...findInput
 			},
-			...(relations
-				? {
-					relations: relations
-				}
-				: {})
+			...(relations ? { relations: relations } : {})
 		};
 		return await super.findAll(query);
 	}

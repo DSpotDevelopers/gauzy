@@ -1,20 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IIntegrationSetting, IIntegrationTenant } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { IntegrationSetting } from './integration-setting.entity';
-import { TypeOrmIntegrationSettingRepository } from './repository/type-orm-integration-setting.repository';
-import { MikroOrmIntegrationSettingRepository } from './repository/mikro-orm-integration-setting.repository';
-
+import { TypeOrmIntegrationSettingRepository } from './repository';
+import { Logger } from '../logger';
 @Injectable()
 export class IntegrationSettingService extends TenantAwareCrudService<IntegrationSetting> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(IntegrationSetting)
-		readonly typeOrmIntegrationSettingRepository: TypeOrmIntegrationSettingRepository,
-
-		readonly mikroOrmIntegrationSettingRepository: MikroOrmIntegrationSettingRepository
+		private readonly typeOrmIntegrationSettingRepository: TypeOrmIntegrationSettingRepository
 	) {
-		super(typeOrmIntegrationSettingRepository, mikroOrmIntegrationSettingRepository);
+		super(typeOrmIntegrationSettingRepository);
 	}
 
 	/**
@@ -39,7 +39,7 @@ export class IntegrationSettingService extends TenantAwareCrudService<Integratio
 			return await this.typeOrmIntegrationSettingRepository.save(settings);
 		} catch (error) {
 			// Handle any errors that occur during the bulk update or create process
-			console.error('Bulk update or create of integration settings failed:', error);
+			this.logger.error(`Bulk update or create of integration settings failed: ${error}`);
 		}
 	}
 }

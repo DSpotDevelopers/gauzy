@@ -2,18 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyResult } from './keyresult.entity';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmKeyResultRepository } from './repository/type-orm-keyresult.repository';
-import { MikroOrmKeyResultRepository } from './repository/mikro-orm-keyresult.repository';
+import { TypeOrmKeyResultRepository } from './repository';
 
 @Injectable()
 export class KeyResultService extends TenantAwareCrudService<KeyResult> {
 	constructor(
 		@InjectRepository(KeyResult)
-		typeOrmKeyResultRepository: TypeOrmKeyResultRepository,
-
-		mikroOrmKeyResultRepository: MikroOrmKeyResultRepository
+		private readonly typeOrmKeyResultRepository: TypeOrmKeyResultRepository
 	) {
-		super(typeOrmKeyResultRepository, mikroOrmKeyResultRepository);
+		super(typeOrmKeyResultRepository);
 	}
 
 	/**

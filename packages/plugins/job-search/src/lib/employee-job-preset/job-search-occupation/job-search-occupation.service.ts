@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { TenantAwareCrudService } from '@gauzy/core';
 import { JobSearchOccupation } from './job-search-occupation.entity';
-import { MikroOrmJobSearchOccupationRepository, TypeOrmJobSearchOccupationRepository } from './repository';
+import { TypeOrmJobSearchOccupationRepository } from './repository';
 
 @Injectable()
 export class JobSearchOccupationService extends TenantAwareCrudService<JobSearchOccupation> {
 	constructor(
-		typeOrmJobSearchOccupationRepository: TypeOrmJobSearchOccupationRepository,
-		mikroOrmJobSearchOccupationRepository: MikroOrmJobSearchOccupationRepository
+		@InjectRepository(JobSearchOccupation)
+		private readonly typeOrmJobSearchOccupationRepository: TypeOrmJobSearchOccupationRepository
 	) {
-		super(typeOrmJobSearchOccupationRepository, mikroOrmJobSearchOccupationRepository);
+		super(typeOrmJobSearchOccupationRepository);
 	}
 }

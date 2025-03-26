@@ -1,35 +1,29 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult } from 'typeorm';
-import { Knex as KnexConnection } from 'knex';
-import { InjectConnection } from 'nest-knexjs';
 import {
 	IOrganization,
 	IPagination,
 	ITaskRelatedIssueType,
 	ITaskRelatedIssueTypeCreateInput,
-	ITaskRelatedIssueTypeFindInput,
+	ITaskRelatedIssueTypeFindInput
 } from '@gauzy/contracts';
-import { isPostgres } from '@gauzy/config';
 import { TaskStatusPrioritySizeService } from '../task-status-priority-size.service';
-import { MultiORMEnum } from '../../core/utils';
 import { RequestContext } from '../../core/context';
 import { TaskRelatedIssueType } from './related-issue-type.entity';
-import { TypeOrmTaskRelatedIssueTypeRepository } from './repository/type-orm-related-issue-type.repository';
-import { MikroOrmTaskRelatedIssueTypeRepository } from './repository/mikro-orm-related-issue-type.repository';
+import { TypeOrmTaskRelatedIssueTypeRepository } from './repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TaskRelatedIssueTypeService extends TaskStatusPrioritySizeService<TaskRelatedIssueType> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(TaskRelatedIssueType)
-		readonly typeOrmTaskRelatedIssueTypeRepository: TypeOrmTaskRelatedIssueTypeRepository,
-
-		readonly mikroOrmTaskRelatedIssueTypeRepository: MikroOrmTaskRelatedIssueTypeRepository,
-
-		@InjectConnection()
-		readonly knexConnection: KnexConnection
+		private readonly typeOrmTaskRelatedIssueTypeRepository: TypeOrmTaskRelatedIssueTypeRepository
 	) {
-		super(typeOrmTaskRelatedIssueTypeRepository, mikroOrmTaskRelatedIssueTypeRepository, knexConnection);
+		super(typeOrmTaskRelatedIssueTypeRepository);
 	}
 
 	/**
@@ -41,14 +35,13 @@ export class TaskRelatedIssueTypeService extends TaskStatusPrioritySizeService<T
 	 */
 	async fetchAll(params: ITaskRelatedIssueTypeFindInput): Promise<IPagination<TaskRelatedIssueType>> {
 		try {
-			if (this.ormType == MultiORMEnum.TypeORM && isPostgres()) {
-				return await super.fetchAllByKnex(params);
-			} else {
-				return await super.fetchAll(params);
-			}
+			return await super.fetchAll(params);
 		} catch (error) {
-			console.log('Failed to retrieve related issue types for tasks. Please ensure that the provided parameters are valid and complete.', error);
-			throw new BadRequestException('Failed to retrieve related issue types for tasks. Please ensure that the provided parameters are valid and complete.', error);
+			this.logger.error(`Failed to retrieve related issue types for tasks: ${error}`);
+			throw new BadRequestException(
+				'Failed to retrieve related issue types for tasks. Please ensure that the provided parameters are valid and complete.',
+				error
+			);
 		}
 	}
 
@@ -62,7 +55,7 @@ export class TaskRelatedIssueTypeService extends TaskStatusPrioritySizeService<T
 		return await super.delete(id, {
 			where: {
 				isSystem: false
-			},
+			}
 		});
 	}
 
@@ -90,12 +83,13 @@ export class TaskRelatedIssueTypeService extends TaskStatusPrioritySizeService<T
 					icon,
 					color,
 					organization,
-					isSystem: false,
+					isSystem: false
 				});
 				statuses.push(status);
 			}
 			return await this.typeOrmRepository.save(statuses);
 		} catch (error) {
+			this.logger.error(`Failed to create bulk statuses for specific organization: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -129,13 +123,14 @@ export class TaskRelatedIssueTypeService extends TaskStatusPrioritySizeService<T
 					description,
 					icon,
 					color,
-					isSystem: false,
+					isSystem: false
 				});
 				statuses.push(status);
 			}
 
 			return statuses;
 		} catch (error) {
+			this.logger.error(`Failed to create bulk related issue types by entity: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

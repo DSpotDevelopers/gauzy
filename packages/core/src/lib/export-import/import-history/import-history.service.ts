@@ -3,18 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IPagination } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../../core/crud';
 import { ImportHistory } from './import-history.entity';
-import { TypeOrmImportHistoryRepository } from './repository/type-orm-import-history.repository';
-import { MikroOrmImportHistoryRepository } from './repository/mikro-orm-import-history.repository';
+import { TypeOrmImportHistoryRepository } from './repository';
 
 @Injectable()
 export class ImportHistoryService extends TenantAwareCrudService<ImportHistory> {
 	constructor(
 		@InjectRepository(ImportHistory)
-		typeOrmImportHistoryRepository: TypeOrmImportHistoryRepository,
-
-		mikroOrmImportHistoryRepository: MikroOrmImportHistoryRepository
+		private readonly typeOrmImportHistoryRepository: TypeOrmImportHistoryRepository
 	) {
-		super(typeOrmImportHistoryRepository, mikroOrmImportHistoryRepository);
+		super(typeOrmImportHistoryRepository);
 	}
 
 	/**

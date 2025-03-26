@@ -1,23 +1,29 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere, In } from 'typeorm';
 import { BaseEntityEnum, ID, IFavorite, IFavoriteCreateInput, IPagination } from '@gauzy/contracts';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
 import { Favorite } from './favorite.entity';
-import { TypeOrmFavoriteRepository } from './repository/type-orm-favorite.repository';
-import { MikroOrmFavoriteRepository } from './repository/mikro-orm-favorite.repository';
+import { TypeOrmFavoriteRepository } from './repository';
 import { EmployeeService } from '../employee/employee.service';
 import { GlobalFavoriteDiscoveryService } from './global-favorite-service.service';
+import { Logger } from '../logger';
 
 @Injectable()
 export class FavoriteService extends TenantAwareCrudService<Favorite> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		private readonly favoriteDiscoveryService: GlobalFavoriteDiscoveryService,
-		readonly typeOrmFavoriteRepository: TypeOrmFavoriteRepository,
-		readonly mikroOrmFavoriteRepository: MikroOrmFavoriteRepository,
+
+		@InjectRepository(Favorite)
+		private readonly typeOrmFavoriteRepository: TypeOrmFavoriteRepository,
+
 		private readonly employeeService: EmployeeService
 	) {
-		super(typeOrmFavoriteRepository, mikroOrmFavoriteRepository);
+		super(typeOrmFavoriteRepository);
 	}
 
 	/**
@@ -39,6 +45,7 @@ export class FavoriteService extends TenantAwareCrudService<Favorite> {
 				...(relations && { relations })
 			});
 		} catch (error) {
+			this.logger.error('Failed to find favorites by employee', error);
 			throw new BadRequestException(error);
 		}
 	}
@@ -77,7 +84,7 @@ export class FavoriteService extends TenantAwareCrudService<Favorite> {
 			// If favorite element not exists, create and return new one
 			return await this.save(favorite);
 		} catch (error) {
-			console.log(error);
+			this.logger.error('Favorite creation failed', error);
 			throw new BadRequestException('Favorite creation failed', error);
 		}
 	}
@@ -95,6 +102,7 @@ export class FavoriteService extends TenantAwareCrudService<Favorite> {
 				where: { employeeId }
 			});
 		} catch (error) {
+			this.logger.error('Failed to delete favorite', error);
 			throw new BadRequestException(error);
 		}
 	}
@@ -121,7 +129,7 @@ export class FavoriteService extends TenantAwareCrudService<Favorite> {
 			const serviceWithMethods = this.favoriteDiscoveryService.getService(favoriteType);
 
 			if (!serviceWithMethods) {
-				throw new BadRequestException(`Service for entity of type ${entity} not found.`);
+				throw new BadRequestException(`Service for entity of type ${entity as string} not found.`);
 			}
 
 			// related entity where condition (Filtered records with passed IDs)
@@ -135,7 +143,7 @@ export class FavoriteService extends TenantAwareCrudService<Favorite> {
 			// return founded records for specific service
 			return items;
 		} catch (error) {
-			console.log(error); // Debug Logging
+			this.logger.error('Failed to get favorite details', error);
 			throw new BadRequestException(error);
 		}
 	}

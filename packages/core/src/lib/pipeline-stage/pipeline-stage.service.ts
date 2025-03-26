@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { TenantAwareCrudService } from './../core/crud';
 import { PipelineStage } from './pipeline-stage.entity';
-import { TypeOrmPipelineStageRepository } from './repository/type-orm-pipeline-stage.repository';
-import { MikroOrmPipelineStageRepository } from './repository/mikro-orm-pipeline-stage.repository';
+import { TypeOrmPipelineStageRepository } from './repository';
 
 @Injectable()
 export class StageService extends TenantAwareCrudService<PipelineStage> {
 	constructor(
-		typeOrmPipelineStageRepository: TypeOrmPipelineStageRepository,
-		mikroOrmPipelineStageRepository: MikroOrmPipelineStageRepository
+		@InjectRepository(PipelineStage)
+		private readonly typeOrmPipelineStageRepository: TypeOrmPipelineStageRepository
 	) {
-		super(typeOrmPipelineStageRepository, mikroOrmPipelineStageRepository);
+		super(typeOrmPipelineStageRepository);
 	}
 }

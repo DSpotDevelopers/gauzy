@@ -3,18 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IIntegrationEntitySetting, IIntegrationTenant, IPagination } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { IntegrationEntitySetting } from './integration-entity-setting.entity';
-import { MikroOrmIntegrationEntitySettingRepository } from './repository/mikro-orm-integration-entity-setting.repository';
-import { TypeOrmIntegrationEntitySettingRepository } from './repository/type-orm-integration-entity-setting.repository';
+import { TypeOrmIntegrationEntitySettingRepository } from './repository';
 
 @Injectable()
 export class IntegrationEntitySettingService extends TenantAwareCrudService<IntegrationEntitySetting> {
 	constructor(
 		@InjectRepository(IntegrationEntitySetting)
-		readonly typeOrmIntegrationEntitySettingRepository: TypeOrmIntegrationEntitySettingRepository,
-
-		mikroOrmIntegrationEntitySettingRepository: MikroOrmIntegrationEntitySettingRepository
+		private readonly typeOrmIntegrationEntitySettingRepository: TypeOrmIntegrationEntitySettingRepository
 	) {
-		super(typeOrmIntegrationEntitySettingRepository, mikroOrmIntegrationEntitySettingRepository);
+		super(typeOrmIntegrationEntitySettingRepository);
 	}
 
 	/**
@@ -46,7 +43,6 @@ export class IntegrationEntitySettingService extends TenantAwareCrudService<Inte
 	async bulkUpdateOrCreate(
 		input: IIntegrationEntitySetting | IIntegrationEntitySetting[]
 	): Promise<IIntegrationEntitySetting[]> {
-
 		// Prepare an array of settings to be saved
 		const settings: IIntegrationEntitySetting[] = Array.isArray(input) ? input : [input];
 

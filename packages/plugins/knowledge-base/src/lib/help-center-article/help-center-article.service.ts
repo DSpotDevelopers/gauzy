@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { TenantAwareCrudService } from '@gauzy/core';
 import { isNotEmpty } from '@gauzy/common';
 import { IHelpCenterArticleUpdate } from '@gauzy/contracts';
 import { HelpCenterArticle } from './help-center-article.entity';
-import { MikroOrmHelpCenterArticleRepository, TypeOrmHelpCenterArticleRepository } from './repository';
+import { TypeOrmHelpCenterArticleRepository } from './repository';
 
 @Injectable()
 export class HelpCenterArticleService extends TenantAwareCrudService<HelpCenterArticle> {
 	constructor(
-		readonly typeOrmHelpCenterArticleRepository: TypeOrmHelpCenterArticleRepository,
-		readonly mikroOrmHelpCenterArticleRepository: MikroOrmHelpCenterArticleRepository
+		@InjectRepository(HelpCenterArticle)
+		private readonly typeOrmHelpCenterArticleRepository: TypeOrmHelpCenterArticleRepository
 	) {
-		super(typeOrmHelpCenterArticleRepository, mikroOrmHelpCenterArticleRepository);
+		super(typeOrmHelpCenterArticleRepository);
 	}
 
 	async getArticlesByCategoryId(categoryId: string): Promise<HelpCenterArticle[]> {

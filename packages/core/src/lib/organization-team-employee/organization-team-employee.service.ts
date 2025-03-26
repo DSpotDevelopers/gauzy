@@ -1,5 +1,6 @@
 import { EventBus } from '@nestjs/cqrs';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere, UpdateResult } from 'typeorm';
 import {
 	BaseEntityEnum,
@@ -19,18 +20,24 @@ import { OrganizationTeamEmployee } from './organization-team-employee.entity';
 import { TaskService } from './../tasks/task.service';
 import { CreateSubscriptionEvent } from '../subscription/events';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { MikroOrmOrganizationTeamEmployeeRepository, TypeOrmOrganizationTeamEmployeeRepository } from './repository';
+import { TypeOrmOrganizationTeamEmployeeRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class OrganizationTeamEmployeeService extends TenantAwareCrudService<OrganizationTeamEmployee> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		private readonly _eventBus: EventBus,
-		readonly typeOrmOrganizationTeamEmployeeRepository: TypeOrmOrganizationTeamEmployeeRepository,
-		readonly mikroOrmOrganizationTeamEmployeeRepository: MikroOrmOrganizationTeamEmployeeRepository,
+
+		@InjectRepository(OrganizationTeamEmployee)
+		private readonly typeOrmOrganizationTeamEmployeeRepository: TypeOrmOrganizationTeamEmployeeRepository,
+
 		private readonly taskService: TaskService,
 		private readonly subscriptionService: SubscriptionService
 	) {
-		super(typeOrmOrganizationTeamEmployeeRepository, mikroOrmOrganizationTeamEmployeeRepository);
+		super(typeOrmOrganizationTeamEmployeeRepository);
 	}
 
 	/**
@@ -86,7 +93,7 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 					)
 				);
 			} catch (error) {
-				console.error('Error subscribing new team members:', error);
+				this.logger.error(`Error subscribing new team members: ${error}`);
 			}
 		}
 
@@ -138,7 +145,7 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 					)
 				);
 			} catch (error) {
-				console.error('Error subscribing new team members:', error);
+				this.logger.error(`Error subscribing new team members: ${error}`);
 			}
 
 			await this.typeOrmRepository.save(newTeamMembers);
@@ -197,6 +204,9 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 					// If the employee is a manager, proceed with the update
 					return await super.update({ id: memberId, ...whereClause }, entity);
 				} catch (error) {
+					this.logger.error(
+						`Error0 while checking the user permission to update the organization team member: ${error}`
+					);
 					throw new ForbiddenException('You do not have sufficient permissions to perform this action.');
 				}
 			}
@@ -204,6 +214,7 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 			// If user has permission, proceed with the update
 			return await super.update({ id: memberId, ...whereClause }, entity);
 		} catch (error) {
+			this.logger.error(`Error while updating the organization team member: ${error}`);
 			throw new ForbiddenException('An error occurred while updating the organization team member.');
 		}
 	}
@@ -254,6 +265,7 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 					// If employee is a manager, update the active task ID for the team
 					whereClause.id = memberId;
 				} catch (error) {
+					this.logger.error(`Error while checking if the employee is a manager of the team: ${error}`);
 					// If employee is not a manager, update the active task ID for themselves
 					whereClause.employeeId = employeeId;
 				}
@@ -270,6 +282,7 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 
 			throw new ForbiddenException('You do not have permission to update this active task.');
 		} catch (error) {
+			this.logger.error(`Error while updating the active task: ${error}`);
 			throw new ForbiddenException('An error occurred while updating the active task.');
 		}
 	}
@@ -328,6 +341,7 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 					// If employee is a manager, remove the member from the team
 					whereClause.id = memberId;
 				} catch (error) {
+					this.logger.error(`Error while checking if the employee is a manager of the team: ${error}`);
 					// If employee is not a manager, he/she can only remove himself from the team
 					whereClause.employeeId = employeeId;
 				}
@@ -342,6 +356,7 @@ export class OrganizationTeamEmployeeService extends TenantAwareCrudService<Orga
 				return await this.typeOrmRepository.remove(member);
 			}
 		} catch (error) {
+			this.logger.error(`Error while deleting the team member: ${error}`);
 			throw new ForbiddenException('An error occurred while deleting the team member.');
 		}
 	}

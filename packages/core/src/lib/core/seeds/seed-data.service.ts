@@ -4,11 +4,10 @@
 
 import * as rimraf from 'rimraf';
 import * as path from 'path';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import * as chalk from 'chalk';
-import * as moment from 'moment';
 import { environment as env, ConfigService, DatabaseTypeEnum } from '@gauzy/config';
 import { IEmployee, IOrganization, IOrganizationProject, IRole, ITenant, IUser } from '@gauzy/contracts';
 import { getPluginModules, hasLifecycleMethod, PluginLifecycleMethods } from '@gauzy/plugin';
@@ -210,6 +209,7 @@ import { createDefaultPriorities } from './../../tasks/priorities/priority.seed'
 import { createDefaultSizes } from './../../tasks/sizes/size.seed';
 import { createDefaultIssueTypes } from './../../tasks/issue-type/issue-type.seed';
 import { getDBType } from './../../core/utils';
+import { Logger } from '../../logger';
 
 export enum SeederTypeEnum {
 	ALL = 'all',
@@ -219,9 +219,11 @@ export enum SeederTypeEnum {
 
 @Injectable()
 export class SeedDataService {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	dataSource: DataSource;
 
-	log = console.log;
 	defaultOrganization: IOrganization;
 	tenant: ITenant;
 	seedType: SeederTypeEnum;
@@ -280,7 +282,7 @@ export class SeedDataService {
 			// Disconnect to database
 			await this.closeConnection();
 
-			console.log('Database All Seed Completed');
+			this.logger.log('Database All Seed Completed');
 		} catch (error) {
 			this.handleError(error);
 		}
@@ -314,7 +316,7 @@ export class SeedDataService {
 			// Disconnect to database
 			await this.closeConnection();
 
-			console.log('Database Default Seed Completed');
+			this.logger.log('Database Default Seed Completed');
 		} catch (error) {
 			this.handleError(error);
 		}
@@ -344,7 +346,7 @@ export class SeedDataService {
 			// Disconnect to database
 			await this.closeConnection();
 
-			console.log('Database Ever Seed Completed');
+			this.logger.log('Database Ever Seed Completed');
 		} catch (error) {
 			this.handleError(error);
 		}
@@ -364,11 +366,10 @@ export class SeedDataService {
 			// Disconnect to database
 			await this.closeConnection();
 
-			console.log('Database Reports Seed Completed');
+			this.logger.log('Database Reports Seed Completed');
 		} catch (error) {
 			this.handleError(error);
 		}
-		return;
 	}
 
 	/**
@@ -376,8 +377,6 @@ export class SeedDataService {
 	 */
 	public async executeDemoSeed() {
 		try {
-			console.log('Database Demo Seed Started');
-
 			// Connect to database
 			await this.createConnection();
 
@@ -393,7 +392,7 @@ export class SeedDataService {
 			// Disconnect to database
 			await this.closeConnection();
 
-			console.log('Database Demo Seed Completed');
+			this.logger.log('Database Demo Seed Completed');
 		} catch (error) {
 			this.handleError(error);
 		}
@@ -404,14 +403,12 @@ export class SeedDataService {
 	 */
 	private async seedReportsData() {
 		try {
-			this.log(chalk.green(`🌱 SEEDING ${env.production ? 'PRODUCTION' : ''} REPORTS DATABASE...`));
-
 			await this.tryExecute(
 				'Default Report Category & Report',
 				createDefaultReport(this.dataSource, this.configService.config, this.tenant)
 			);
 
-			this.log(chalk.green(`✅ SEEDED ${env.production ? 'PRODUCTION' : ''} REPORTS DATABASE`));
+			this.logger.log(`✅ SEEDED ${env.production ? 'PRODUCTION' : ''} REPORTS DATABASE`);
 		} catch (error) {
 			this.handleError(error);
 		}
@@ -432,8 +429,6 @@ export class SeedDataService {
 	 * Populate Database with Basic Default Data
 	 */
 	private async seedBasicDefaultData() {
-		this.log(chalk.magenta(`🌱 SEEDING BASIC ${env.production ? 'PRODUCTION' : ''} DATABASE...`));
-
 		// Seed data which only needs connection
 		await this.tryExecute('Countries', createCountries(this.dataSource));
 
@@ -485,7 +480,7 @@ export class SeedDataService {
 			this.dataSource,
 			this.tenant
 		);
-		this.superAdminUsers.push(...(defaultSuperAdminUsers as IUser[]));
+		this.superAdminUsers.push(...defaultSuperAdminUsers);
 
 		const { defaultEmployeeUsers } = await createDefaultEmployeesUsers(this.dataSource, this.tenant);
 
@@ -555,18 +550,16 @@ export class SeedDataService {
 		// run all plugins random seed method
 		await this.bootstrapPluginSeedMethods('onPluginBasicSeed', (instance: any) => {
 			const pluginName = instance.constructor.name || '(anonymous plugin)';
-			console.log(chalk.green(`SEEDED Basic Plugin [${pluginName}]`));
+			this.logger.log(`SEEDED Basic Plugin [${pluginName}]`);
 		});
 
-		this.log(chalk.magenta(`✅ SEEDED BASIC ${env.production ? 'PRODUCTION' : ''} DATABASE`));
+		this.logger.log(`✅ SEEDED BASIC ${env.production ? 'PRODUCTION' : ''} DATABASE`);
 	}
 
 	/**
 	 * Populate default data for default tenant
 	 */
 	private async seedDefaultData() {
-		this.log(chalk.magenta(`🌱 SEEDING DEFAULT ${env.production ? 'PRODUCTION' : ''} DATABASE...`));
-
 		await this.tryExecute(
 			'Default Employee Invite',
 			createDefaultEmployeeInviteSent(this.dataSource, this.tenant, this.organizations, this.superAdminUsers)
@@ -924,18 +917,16 @@ export class SeedDataService {
 		// run all plugins default seed method
 		await this.bootstrapPluginSeedMethods('onPluginDefaultSeed', (instance: any) => {
 			const pluginName = instance.constructor.name || '(anonymous plugin)';
-			console.log(chalk.green(`SEEDED Default Plugin [${pluginName}]`));
+			this.logger.log(`SEEDED Default Plugin [${pluginName}]`);
 		});
 
-		this.log(chalk.magenta(`✅ SEEDED DEFAULT ${env.production ? 'PRODUCTION' : ''} DATABASE`));
+		this.logger.log(`✅ SEEDED DEFAULT ${env.production ? 'PRODUCTION' : ''} DATABASE`);
 	}
 
 	/**
 	 * Populate database with random generated data
 	 */
 	private async seedRandomData() {
-		this.log(chalk.magenta(`🌱 SEEDING RANDOM ${env.production ? 'PRODUCTION' : ''} DATABASE...`));
-
 		await this.tryExecute('Random Tags', createTags(this.dataSource));
 
 		// Platform level data which only need database connection
@@ -1515,18 +1506,16 @@ export class SeedDataService {
 		// run all plugins random seed method
 		await this.bootstrapPluginSeedMethods('onPluginRandomSeed', (instance: any) => {
 			const pluginName = instance.constructor.name || '(anonymous plugin)';
-			console.log(chalk.green(`SEEDED Random Plugin [${pluginName}]`));
+			this.logger.log(`SEEDED Random Plugin [${pluginName}]`);
 		});
 
-		this.log(chalk.magenta(`✅ SEEDED RANDOM ${env.production ? 'PRODUCTION' : ''} DATABASE`));
+		this.logger.log(`✅ SEEDED RANDOM ${env.production ? 'PRODUCTION' : ''} DATABASE`);
 	}
 
 	/**
 	 * Cleans all the previous generate screenshots, reports etc
 	 */
 	private async cleanUpPreviousRuns() {
-		this.log(chalk.green(`CLEANING UP FROM PREVIOUS RUNS...`));
-
 		await new Promise((resolve) => {
 			const assetOptions = this.configService.assetOptions;
 			const dir = env.isElectron
@@ -1535,7 +1524,7 @@ export class SeedDataService {
 
 			// delete old generated screenshots
 			rimraf(`${dir}/!(rimraf|.gitkeep)`, () => {
-				this.log(chalk.green(`✅ CLEANED UP`));
+				this.logger.log(`✅ CLEANED UP`);
 				resolve(true);
 			});
 		});
@@ -1546,12 +1535,11 @@ export class SeedDataService {
 	 */
 	private async createConnection() {
 		if (!this.dataSource) {
-			this.log('NOTE: DATABASE CONNECTION DOES NOT EXIST YET. NEW ONE WILL BE CREATED!');
+			this.logger.warn('NOTE: DATABASE CONNECTION DOES NOT EXIST YET. NEW ONE WILL BE CREATED!');
 		}
 		const { dbConnectionOptions } = this.configService;
-		if (!this.dataSource || !this.dataSource.isInitialized) {
+		if (!this.dataSource?.isInitialized) {
 			try {
-				this.log(chalk.green(`CONNECTING TO DATABASE...`));
 				const options = {
 					...dbConnectionOptions,
 					...this.overrideDbConfig
@@ -1562,7 +1550,7 @@ export class SeedDataService {
 
 				if (!dataSource.isInitialized) {
 					this.dataSource = await dataSource.initialize();
-					this.log(chalk.green(`✅ CONNECTED TO DATABASE!`));
+					this.logger.log(`✅ CONNECTED TO DATABASE!`);
 				}
 			} catch (error) {
 				this.handleError(error, 'Unable to connect to database');
@@ -1575,12 +1563,13 @@ export class SeedDataService {
 	 */
 	private async closeConnection() {
 		try {
-			if (this.dataSource && this.dataSource.isInitialized) {
+			if (this.dataSource?.isInitialized) {
 				await this.dataSource.destroy();
-				this.log(chalk.green(`✅ DISCONNECTED TO DATABASE!`));
+				this.logger.log(`✅ DISCONNECTED FROM DATABASE!`);
 			}
 		} catch (error) {
-			this.log('NOTE: DATABASE CONNECTION DOES NOT EXIST YET. CANT CLOSE CONNECTION!');
+			this.logger.error(`Unable to close database connection: ${error}`);
+			this.logger.warn('NOTE: DATABASE CONNECTION DOES NOT EXIST YET. CANT CLOSE CONNECTION!');
 		}
 	}
 
@@ -1588,12 +1577,9 @@ export class SeedDataService {
 	 * Reset the database, truncate all tables (remove all data)
 	 */
 	private async resetDatabase() {
-		this.log(chalk.green(`RESETTING DATABASE...`));
-
 		const entities = await this.getEntities();
 		await this.cleanAll(entities);
-
-		this.log(chalk.green(`✅ RESET DATABASE SUCCESSFUL`));
+		this.logger.log(`✅ RESET DATABASE SUCCESSFUL`);
 	}
 
 	/**
@@ -1625,9 +1611,11 @@ export class SeedDataService {
 
 			switch (databaseType) {
 				case DatabaseTypeEnum.postgres:
-					const tables = entities.map((entity) => '"' + entity.tableName + '"');
-					const truncateSql = `TRUNCATE TABLE ${tables.join(',')} RESTART IDENTITY CASCADE;`;
-					await manager.query(truncateSql);
+					{
+						const tables = entities.map((entity) => '"' + entity.tableName + '"');
+						const truncateSql = `TRUNCATE TABLE ${tables.join(',')} RESTART IDENTITY CASCADE;`;
+						await manager.query(truncateSql);
+					}
 					break;
 				case DatabaseTypeEnum.mysql:
 					// -- disable foreign_key_checks to avoid query failing when there is a foreign key in the table
@@ -1667,8 +1655,8 @@ export class SeedDataService {
 			let classInstance: ClassDecorator;
 			try {
 				classInstance = this.moduleRef.get(plugin, { strict: false });
-			} catch (e) {
-				console.log(`Could not find ${plugin.name}`, undefined, e.stack);
+			} catch (error) {
+				this.logger.error(`Could not find ${plugin.name}: ${error}`);
 			}
 			if (classInstance && hasLifecycleMethod(classInstance, lifecycleMethod)) {
 				await classInstance[lifecycleMethod]();
@@ -1685,18 +1673,18 @@ export class SeedDataService {
 	 * Essentials seeds are ONLY those which are required to start the UI/login
 	 */
 	public tryExecute<T>(name: string, p: Promise<T>): Promise<T> | Promise<void> {
-		this.log(chalk.green(`${moment().format('DD.MM.YYYY HH:mm:ss')} SEEDING ${name}`));
+		this.logger.log(`SEEDING ${name}`);
 
 		return (p as any).then(
 			(x: T) => x,
 			(error: Error) => {
-				this.log(chalk.bgRed(`🛑 ERROR: ${error ? error.message : 'unknown'}`));
+				this.logger.error(`🛑 ERROR: ${error ? error.message : 'unknown'}`);
 			}
 		);
 	}
 
 	private handleError(error: Error, message?: string): void {
-		this.log(chalk.bgRed(`🛑 ERROR: ${message ? message + '-> ' : ''} ${error ? error.message : ''}`));
+		this.logger.error(`🛑 ERROR: ${message ? message + '-> ' : ''} ${error ? error.message : ''}`);
 		throw error;
 	}
 }

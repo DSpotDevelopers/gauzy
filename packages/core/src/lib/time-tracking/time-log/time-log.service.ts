@@ -1,4 +1,11 @@
-import { Injectable, BadRequestException, NotAcceptableException, Logger, ConflictException } from '@nestjs/common';
+import {
+	Injectable,
+	BadRequestException,
+	NotAcceptableException,
+	Logger as NestLogger,
+	ConflictException
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommandBus } from '@nestjs/cqrs';
 import { SelectQueryBuilder, Brackets, WhereExpressionBuilder, DeleteResult, UpdateResult } from 'typeorm';
 import { chain, pluck } from 'underscore';
@@ -51,35 +58,41 @@ import { RequestContext } from '../../core/context';
 import { moment } from './../../core/moment-extend';
 import { calculateAverage, calculateAverageActivity, calculateDuration } from './time-log.utils';
 import { prepareSQLQuery as p } from './../../database/database.helper';
-import { TypeOrmTimeLogRepository } from './repository/type-orm-time-log.repository';
-import { MikroOrmTimeLogRepository } from './repository/mikro-orm-time-log.repository';
-import { TypeOrmEmployeeRepository } from '../../employee/repository/type-orm-employee.repository';
-import { MikroOrmEmployeeRepository } from '../../employee/repository/mikro-orm-employee.repository';
-import { TypeOrmOrganizationProjectRepository } from '../../organization-project/repository/type-orm-organization-project.repository';
-import { MikroOrmOrganizationProjectRepository } from '../../organization-project/repository/mikro-orm-organization-project.repository';
-import { TypeOrmOrganizationContactRepository } from '../../organization-contact/repository/type-orm-organization-contact.repository';
-import { MikroOrmOrganizationContactRepository } from '../../organization-contact/repository/mikro-orm-organization-contact.repository';
+import { TypeOrmTimeLogRepository } from './repository';
+import { TypeOrmEmployeeRepository } from '../../employee/repository';
+import { TypeOrmOrganizationProjectRepository } from '../../organization-project/repository';
+import { TypeOrmOrganizationContactRepository } from '../../organization-contact/repository';
 import { TimeLog } from './time-log.entity';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { TimerWeeklyLimitService } from '../timer/timer-weekly-limit.service';
+import { OrganizationContact } from '../../organization-contact/organization-contact.entity';
+import { OrganizationProject } from '../../organization-project/organization-project.entity';
+import { Employee } from '../../employee/employee.entity';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TimeLogService extends TenantAwareCrudService<TimeLog> {
-	private readonly logger = new Logger(`GZY - ${TimeLogService.name}`);
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
-		readonly mikroOrmTimeLogRepository: MikroOrmTimeLogRepository,
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		readonly mikroOrmEmployeeRepository: MikroOrmEmployeeRepository,
-		readonly typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository,
-		readonly mikroOrmOrganizationProjectRepository: MikroOrmOrganizationProjectRepository,
-		readonly typeOrmOrganizationContactRepository: TypeOrmOrganizationContactRepository,
-		readonly mikroOrmOrganizationContactRepository: MikroOrmOrganizationContactRepository,
+		@InjectRepository(TimeLog)
+		private readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
+
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
+		@InjectRepository(OrganizationProject)
+		private readonly typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository,
+
+		@InjectRepository(OrganizationContact)
+		private readonly typeOrmOrganizationContactRepository: TypeOrmOrganizationContactRepository,
+
 		private readonly _timerWeeklyLimitService: TimerWeeklyLimitService,
 		private readonly commandBus: CommandBus,
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmTimeLogRepository, mikroOrmTimeLogRepository);
+		super(typeOrmTimeLogRepository);
 	}
 
 	/**
@@ -1134,14 +1147,20 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 
 	/**
 	 * Checks if the time log will fit the weekly limit taking into account the items that will be removed by conflicts
-	 * 
+	 *
 	 * @param employee - The employee to check the weekly limit for
 	 * @param startedAt - The start date of the time log
 	 * @param stoppedAt - The end date of the time log
 	 * @param conflicts - The conflicts that will be removed from the weekly limit
 	 * @param previousTime - The time that will be removed from the weekly limit by previous time logs
 	 */
-	async checkWeeklyLimitWithConflicts(employee: IEmployee, startedAt: Date, stoppedAt: Date, conflicts: ITimeLog[], previousTime = 0) {
+	async checkWeeklyLimitWithConflicts(
+		employee: IEmployee,
+		startedAt: Date,
+		stoppedAt: Date,
+		conflicts: ITimeLog[],
+		previousTime = 0
+	) {
 		// Calculate the amount of time that will be removed by conflicts
 		let timeToRemove = 0;
 		if (conflicts?.length) {
@@ -1150,15 +1169,25 @@ export class TimeLogService extends TenantAwareCrudService<TimeLog> {
 				// Entire time log is overlapped
 				if (timeLog.startedAt >= startedAt && timeLog.stoppedAt <= stoppedAt) {
 					timeToRemove += timeLog.duration;
-				} else if (timeLog.startedAt < startedAt && timeLog.stoppedAt > startedAt && timeLog.stoppedAt <= stoppedAt) {
+				} else if (
+					timeLog.startedAt < startedAt &&
+					timeLog.stoppedAt > startedAt &&
+					timeLog.stoppedAt <= stoppedAt
+				) {
 					// Partial time log is overlapped by the left side
 					timeToRemove += moment(timeLog.stoppedAt).diff(startedAt, 'seconds');
-				} else if (timeLog.startedAt >= startedAt && timeLog.startedAt < stoppedAt && timeLog.stoppedAt > stoppedAt) {
+				} else if (
+					timeLog.startedAt >= startedAt &&
+					timeLog.startedAt < stoppedAt &&
+					timeLog.stoppedAt > stoppedAt
+				) {
 					// Partial time log is overlapped by the right side
 					timeToRemove += moment(stoppedAt).diff(timeLog.startedAt, 'seconds');
 				} else {
 					// Time log isn't overlapped
-					this.logger.warn(`Time log ${timeLog.id} isn't overlapped with range [${timeLog.startedAt}, ${timeLog.stoppedAt}]`);
+					this.logger.warn(
+						`Time log ${timeLog.id} isn't overlapped with range [${timeLog.startedAt}, ${timeLog.stoppedAt}]`
+					);
 				}
 			}
 			this.logger.log(`Time to remove from weekly limit due to conflicts: ${timeToRemove} seconds`);

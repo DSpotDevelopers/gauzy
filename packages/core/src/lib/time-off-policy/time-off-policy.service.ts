@@ -1,21 +1,27 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { In } from 'typeorm';
 import { ID, ITimeOffPolicyCreateInput, ITimeOffPolicyUpdateInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from '../core/crud';
 import { RequestContext } from '../core/context';
-import { MikroOrmEmployeeRepository, TypeOrmEmployeeRepository } from '../employee/repository';
+import { TypeOrmEmployeeRepository } from '../employee/repository';
 import { TimeOffPolicy } from './time-off-policy.entity';
-import { MikroOrmTimeOffPolicyRepository, TypeOrmTimeOffPolicyRepository } from './repository';
-
+import { TypeOrmTimeOffPolicyRepository } from './repository';
+import { Logger } from '../logger';
+import { Employee } from '../employee/employee.entity';
 @Injectable()
 export class TimeOffPolicyService extends TenantAwareCrudService<TimeOffPolicy> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmTimeOffPolicyRepository: TypeOrmTimeOffPolicyRepository,
-		readonly mikroOrmTimeOffPolicyRepository: MikroOrmTimeOffPolicyRepository,
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		readonly mikroOrmEmployeeRepository: MikroOrmEmployeeRepository
+		@InjectRepository(TimeOffPolicy)
+		private readonly typeOrmTimeOffPolicyRepository: TypeOrmTimeOffPolicyRepository,
+
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository
 	) {
-		super(typeOrmTimeOffPolicyRepository, mikroOrmTimeOffPolicyRepository);
+		super(typeOrmTimeOffPolicyRepository);
 	}
 
 	/**
@@ -46,6 +52,7 @@ export class TimeOffPolicyService extends TenantAwareCrudService<TimeOffPolicy> 
 			// Save the policy
 			return await this.save(policy);
 		} catch (error) {
+			this.logger.error(`Error while creating time-off policy: ${error}`);
 			throw new HttpException(`Error while creating time-off policy: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -85,6 +92,7 @@ export class TimeOffPolicyService extends TenantAwareCrudService<TimeOffPolicy> 
 			// Save the policy
 			return await this.save(policy);
 		} catch (error) {
+			this.logger.error(`Error while updating time-off policy: ${error}`);
 			throw new HttpException(`Error while updating time-off policy: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
 	}

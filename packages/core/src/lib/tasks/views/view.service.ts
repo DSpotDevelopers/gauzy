@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
 	ActionTypeEnum,
@@ -14,21 +14,22 @@ import { TenantAwareCrudService } from '../../core/crud';
 import { RequestContext } from '../../core/context';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { TaskView } from './view.entity';
-import { TypeOrmTaskViewRepository } from './repository/type-orm-task-view.repository';
-import { MikroOrmTaskViewRepository } from './repository/mikro-orm-task-view.repository';
+import { TypeOrmTaskViewRepository } from './repository';
+import { Logger } from '../../logger';
 
 @FavoriteService(BaseEntityEnum.TaskView)
 @Injectable()
 export class TaskViewService extends TenantAwareCrudService<TaskView> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(TaskView)
-		typeOrmTaskViewRepository: TypeOrmTaskViewRepository,
-
-		mikroOrmTaskViewRepository: MikroOrmTaskViewRepository,
+		private readonly typeOrmTaskViewRepository: TypeOrmTaskViewRepository,
 
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmTaskViewRepository, mikroOrmTaskViewRepository);
+		super(typeOrmTaskViewRepository);
 	}
 
 	/**
@@ -60,7 +61,8 @@ export class TaskViewService extends TenantAwareCrudService<TaskView> {
 			return taskView;
 		} catch (error) {
 			// Handle errors and return an appropriate error response
-			throw new HttpException(`Failed to create view : ${error.message}`, HttpStatus.BAD_REQUEST);
+			this.logger.error(`Failed to create view: ${error}`);
+			throw new HttpException(`Failed to create view: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -109,6 +111,7 @@ export class TaskViewService extends TenantAwareCrudService<TaskView> {
 			return updatedTaskView;
 		} catch (error) {
 			// Handle errors and return an appropriate error response
+			this.logger.error(`Failed to update view: ${error}`);
 			throw new HttpException(`Failed to update view: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
 	}

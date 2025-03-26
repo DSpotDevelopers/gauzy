@@ -4,18 +4,15 @@ import { IHelpCenter } from '@gauzy/contracts';
 import { TenantAwareCrudService } from '@gauzy/core';
 import { isNotEmpty } from '@gauzy/common';
 import { HelpCenter } from './help-center.entity';
-import { TypeOrmHelpCenterRepository } from './repository/type-orm-help-center.repository';
-import { MikroOrmHelpCenterRepository } from './repository/mikro-orm-help-center.repository';
+import { TypeOrmHelpCenterRepository } from './repository';
 
 @Injectable()
 export class HelpCenterService extends TenantAwareCrudService<HelpCenter> {
 	constructor(
 		@InjectRepository(HelpCenter)
-		typeOrmHelpCenterRepository: TypeOrmHelpCenterRepository,
-
-		mikroOrmHelpCenterRepository: MikroOrmHelpCenterRepository
+		private readonly typeOrmHelpCenterRepository: TypeOrmHelpCenterRepository
 	) {
-		super(typeOrmHelpCenterRepository, mikroOrmHelpCenterRepository);
+		super(typeOrmHelpCenterRepository);
 	}
 
 	async updateBulk(updateInput: IHelpCenter[]) {

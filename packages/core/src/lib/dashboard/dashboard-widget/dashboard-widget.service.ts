@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-
-import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
 	ActionTypeEnum,
 	BaseEntityEnum,
@@ -12,18 +11,18 @@ import {
 import { TenantAwareCrudService } from '../../core/crud';
 import { RequestContext } from '../../core/context';
 import { DashboardWidget } from './dashboard-widget.entity';
-import { TypeOrmDashboardWidgetRepository } from './repository/type-orm-dashboard-widget.repository';
-import { MikroOrmDashboardWidgetRepository } from './repository/mikro-orm-dashboard-widget.repository';
+import { TypeOrmDashboardWidgetRepository } from './repository';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 
 @Injectable()
 export class DashboardWidgetService extends TenantAwareCrudService<DashboardWidget> {
 	constructor(
-		readonly typeOrmDashboardWidgetRepository: TypeOrmDashboardWidgetRepository,
-		readonly mikroOrmDashboardWidgetRepository: MikroOrmDashboardWidgetRepository,
+		@InjectRepository(DashboardWidget)
+		private readonly typeOrmDashboardWidgetRepository: TypeOrmDashboardWidgetRepository,
+
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmDashboardWidgetRepository, mikroOrmDashboardWidgetRepository);
+		super(typeOrmDashboardWidgetRepository);
 	}
 
 	/**

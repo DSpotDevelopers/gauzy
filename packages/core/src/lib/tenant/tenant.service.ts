@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommandBus } from '@nestjs/cqrs';
 import { ITenantCreateInput, RolesEnum, ITenant, IUser, FileStorageProviderEnum } from '@gauzy/contracts';
 import { ConfigService, IEnvironment } from '@gauzy/config';
@@ -11,24 +12,33 @@ import { TenantSettingSaveCommand } from './tenant-setting/commands';
 import { TenantTaskSizeBulkCreateCommand } from './../tasks/sizes/commands';
 import { TenantTaskPriorityBulkCreateCommand } from './../tasks/priorities/commands';
 import { TenantIssueTypeBulkCreateCommand } from './../tasks/issue-type/commands';
-import { MikroOrmTenantRepository, TypeOrmTenantRepository } from './repository';
-import { MikroOrmUserRepository, TypeOrmUserRepository } from '../user/repository';
-import { MikroOrmRoleRepository, TypeOrmRoleRepository } from '../role/repository';
+import { TypeOrmTenantRepository } from './repository';
+import { TypeOrmUserRepository } from '../user/repository';
+import { TypeOrmRoleRepository } from '../role/repository';
 import { Tenant } from './tenant.entity';
+import { User } from '../user/user.entity';
+import { Role } from '../role/role.entity';
+import { Logger } from '../logger';
 
 @Injectable()
 export class TenantService extends CrudService<Tenant> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmTenantRepository: TypeOrmTenantRepository,
-		readonly mikroOrmTenantRepository: MikroOrmTenantRepository,
-		readonly typeOrmRoleRepository: TypeOrmRoleRepository,
-		readonly mikroOrmRoleRepository: MikroOrmRoleRepository,
-		readonly typeOrmUserRepository: TypeOrmUserRepository,
-		readonly mikroOrmUserRepository: MikroOrmUserRepository,
+		@InjectRepository(Tenant)
+		private readonly typeOrmTenantRepository: TypeOrmTenantRepository,
+
+		@InjectRepository(Role)
+		private readonly typeOrmRoleRepository: TypeOrmRoleRepository,
+
+		@InjectRepository(User)
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
+
 		readonly commandBus: CommandBus,
 		readonly configService: ConfigService
 	) {
-		super(typeOrmTenantRepository, mikroOrmTenantRepository);
+		super(typeOrmTenantRepository);
 	}
 
 	/**
@@ -40,8 +50,6 @@ export class TenantService extends CrudService<Tenant> {
 	 * @returns The created ITenant entity.
 	 */
 	public async onboardTenant(entity: ITenantCreateInput, user: IUser): Promise<ITenant> {
-		console.time('On Boarding Tenant');
-
 		// Creates and saves a tenant entity from the given details.
 		const tenant = await this.create(entity);
 
@@ -69,7 +77,6 @@ export class TenantService extends CrudService<Tenant> {
 		// Create Import Records while migrating for relative tenant.
 		await this.importRecords(entity, tenant, user);
 
-		console.timeEnd('On Boarding Tenant');
 		return tenant;
 	}
 
@@ -99,7 +106,7 @@ export class TenantService extends CrudService<Tenant> {
 			// 7. Initializes and sets up the default settings for the new tenant, including configuring the file storage provider. This operation waits for completion before moving to the next step.
 			await this.initializeTenantSettings(tenant);
 		} catch (error) {
-			console.log(error, 'Error occurred while executing tenant create tasks:', error.message);
+			this.logger.error(`Error occurred while executing tenant create tasks: ${error}`);
 		}
 	}
 

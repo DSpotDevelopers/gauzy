@@ -3,18 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ICandidateCriterionsRating, ICandidateCriterionsRatingCreateInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { CandidateCriterionsRating } from './candidate-criterion-rating.entity';
-import { TypeOrmCandidateCriterionsRatingRepository } from './repository/type-orm-candidate-criterions-rating.repository';
-import { MikroOrmCandidateCriterionsRatingRepository } from './repository/mikro-orm-candidate-criterions-rating.repository';
+import { TypeOrmCandidateCriterionsRatingRepository } from './repository';
 
 @Injectable()
 export class CandidateCriterionsRatingService extends TenantAwareCrudService<CandidateCriterionsRating> {
 	constructor(
 		@InjectRepository(CandidateCriterionsRating)
-		typeOrmCandidateCriterionsRatingRepository: TypeOrmCandidateCriterionsRatingRepository,
-
-		mikroOrmCandidateCriterionsRatingRepository: MikroOrmCandidateCriterionsRatingRepository
+		private readonly typeOrmCandidateCriterionsRatingRepository: TypeOrmCandidateCriterionsRatingRepository
 	) {
-		super(typeOrmCandidateCriterionsRatingRepository, mikroOrmCandidateCriterionsRatingRepository);
+		super(typeOrmCandidateCriterionsRatingRepository);
 	}
 
 	/**
@@ -27,7 +24,10 @@ export class CandidateCriterionsRatingService extends TenantAwareCrudService<Can
 		technologyCreateInput: ICandidateCriterionsRatingCreateInput[],
 		qualityCreateInput: ICandidateCriterionsRatingCreateInput[]
 	) {
-		return [await this.typeOrmRepository.save(technologyCreateInput), await this.typeOrmRepository.save(qualityCreateInput)];
+		return [
+			await this.typeOrmRepository.save(technologyCreateInput),
+			await this.typeOrmRepository.save(qualityCreateInput)
+		];
 	}
 
 	/***

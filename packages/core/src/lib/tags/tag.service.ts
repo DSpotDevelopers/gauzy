@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, FindOptionsRelations, IsNull, SelectQueryBuilder, WhereExpressionBuilder } from 'typeorm';
 import { isNotEmpty } from '@gauzy/common';
 import { FileStorageProviderEnum, IPagination, ITag, ITagFindInput } from '@gauzy/contracts';
@@ -8,13 +9,19 @@ import { TenantAwareCrudService } from '../core/crud';
 import { Tag } from './tag.entity';
 import { FileStorage } from './../core/file-storage';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { MikroOrmTagRepository } from './repository/mikro-orm-tag.repository';
-import { TypeOrmTagRepository } from './repository/type-orm-tag.repository';
+import { TypeOrmTagRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class TagService extends TenantAwareCrudService<Tag> {
-	constructor(typeOrmTagRepository: TypeOrmTagRepository, mikroOrmTagRepository: MikroOrmTagRepository) {
-		super(typeOrmTagRepository, mikroOrmTagRepository);
+	@Logger()
+	protected readonly logger: NestLogger;
+
+	constructor(
+		@InjectRepository(Tag)
+		private readonly typeOrmTagRepository: TypeOrmTagRepository
+	) {
+		super(typeOrmTagRepository);
 	}
 
 	/**
@@ -160,7 +167,7 @@ export class TagService extends TenantAwareCrudService<Tag> {
 
 			return { items, total };
 		} catch (error) {
-			console.log('Error while getting tags', error);
+			this.logger.error(`Error while getting tags: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

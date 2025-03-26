@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, SelectQueryBuilder, Brackets, WhereExpressionBuilder } from 'typeorm';
 import * as moment from 'moment';
 import { IGetTimesheetInput, PermissionsEnum, ITimesheet, TimesheetStatus } from '@gauzy/contracts';
@@ -7,16 +8,15 @@ import { TenantAwareCrudService } from './../../core/crud';
 import { getDateRangeFormat } from './../../core/utils';
 import { Timesheet } from './timesheet.entity';
 import { prepareSQLQuery as p } from './../../database/database.helper';
-import { TypeOrmTimesheetRepository } from './repository/type-orm-timesheet.repository';
-import { MikroOrmTimesheetRepository } from './repository/mikro-orm-timesheet.repository';
+import { TypeOrmTimesheetRepository } from './repository';
 
 @Injectable()
 export class TimeSheetService extends TenantAwareCrudService<Timesheet> {
 	constructor(
-		typeOrmTimesheetRepository: TypeOrmTimesheetRepository,
-		mikroOrmTimesheetRepository: MikroOrmTimesheetRepository
+		@InjectRepository(Timesheet)
+		private readonly typeOrmTimesheetRepository: TypeOrmTimesheetRepository
 	) {
-		super(typeOrmTimesheetRepository, mikroOrmTimesheetRepository);
+		super(typeOrmTimesheetRepository);
 	}
 
 	/**
@@ -84,15 +84,8 @@ export class TimeSheetService extends TenantAwareCrudService<Timesheet> {
 	 * @returns
 	 */
 	async getFilterTimesheetQuery(qb: SelectQueryBuilder<Timesheet>, request: IGetTimesheetInput) {
-		let {
-			organizationId,
-			startDate,
-			endDate,
-			onlyMe: isOnlyMeSelected,
-			employeeIds = [],
-			status = [],
-			taskIds = []
-		} = request;
+		const { organizationId, startDate, endDate, onlyMe: isOnlyMeSelected, status = [], taskIds = [] } = request;
+		let employeeIds = request.employeeIds ?? [];
 
 		const tenantId = RequestContext.currentTenantId() ?? request.tenantId; // Retrieve the tenant ID from the request
 		const user = RequestContext.currentUser(); // Retrieve the current user
@@ -117,9 +110,7 @@ export class TimeSheetService extends TenantAwareCrudService<Timesheet> {
 				qb.where({
 					startedAt: Between(start, end),
 					...(status.length > 0
-						? {
-								status: In(status.filter((s) => Object.values(TimesheetStatus).includes(s)))
-						  }
+						? { status: In(status.filter((s) => Object.values(TimesheetStatus).includes(s))) }
 						: {}),
 					...(taskIds.length > 0 ? { taskId: In(taskIds) } : {}),
 					...(employeeIds.length > 0 ? { employeeId: In(employeeIds) } : {})

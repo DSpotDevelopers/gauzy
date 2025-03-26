@@ -1,4 +1,11 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	HttpException,
+	HttpStatus,
+	Injectable,
+	NotFoundException,
+	Logger as NestLogger
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SelectQueryBuilder, UpdateResult } from 'typeorm';
 import {
@@ -17,18 +24,23 @@ import { PaginationParams, TenantAwareCrudService } from '../../core/crud';
 import { RequestContext } from '../../core/context';
 import { EmployeeService } from '../../employee/employee.service';
 import { TaskService } from '../task.service';
-import { MikroOrmDailyPlanRepository, TypeOrmDailyPlanRepository } from './repository';
+import { TypeOrmDailyPlanRepository } from './repository';
 import { DailyPlan } from './daily-plan.entity';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		@InjectRepository(DailyPlan) readonly typeOrmDailyPlanRepository: TypeOrmDailyPlanRepository,
-		readonly mikroOrmDailyPlanRepository: MikroOrmDailyPlanRepository,
+		@InjectRepository(DailyPlan)
+		private readonly typeOrmDailyPlanRepository: TypeOrmDailyPlanRepository,
+
 		private readonly employeeService: EmployeeService,
 		private readonly taskService: TaskService
 	) {
-		super(typeOrmDailyPlanRepository, mikroOrmDailyPlanRepository);
+		super(typeOrmDailyPlanRepository);
 	}
 
 	/**
@@ -83,7 +95,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 
 			return dailyPlan; // Return the created/updated DailyPlan
 		} catch (error) {
-			console.error(error); // Improved logging
+			this.logger.error(`Error while creating daily plan: ${error}`);
 			throw new BadRequestException(error.message); // Clearer error messaging
 		}
 	}
@@ -135,6 +147,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			// Return the pagination result
 			return { items, total };
 		} catch (error) {
+			this.logger.error(`Error while getting all plans: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -152,7 +165,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			// Fetch all daily plans for specific employee
 			return await this.getAllPlans(options, employeeId);
 		} catch (error) {
-			console.log('Error fetching all daily plans');
+			this.logger.error(`Error while fetching all daily plans: ${error}`);
 		}
 	}
 
@@ -199,7 +212,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			// Return the pagination result
 			return { items, total };
 		} catch (error) {
-			console.log('Error while fetching daily plans for team');
+			this.logger.error(`Error while fetching daily plans for team: ${error}`);
 			throw new HttpException(`Failed to fetch daily plans for team: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -218,7 +231,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			// Fetch daily plans for the current employee
 			return await this.getAllPlans(options, currentEmployeeId);
 		} catch (error) {
-			console.error('Error fetching daily plans for me:', error); // Log the error for debugging
+			this.logger.error(`Error fetching daily plans for me: ${error}`);
 		}
 	}
 
@@ -259,6 +272,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			// Save the updated daily plan
 			return await this.save(dailyPlan);
 		} catch (error) {
+			this.logger.error(`Error while adding task to plan: ${error}`);
 			throw new BadRequestException(error.message);
 		}
 	}
@@ -303,6 +317,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			// Save and return the updated daily plan
 			return await this.save(dailyPlan);
 		} catch (error) {
+			this.logger.error(`Error while removing task from plan: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -378,6 +393,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			// save and return the updatedDailyPlan
 			return await this.typeOrmRepository.save(updatedPlans);
 		} catch (error) {
+			this.logger.error(`Error while removing task from many plans: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -418,6 +434,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 			});
 			return await this.save(updatedDailyPlan);
 		} catch (error) {
+			this.logger.error(`Error while updating daily plan: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -459,6 +476,7 @@ export class DailyPlanService extends TenantAwareCrudService<DailyPlan> {
 
 			return { items, total };
 		} catch (error) {
+			this.logger.error(`Error while getting daily plans by task: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

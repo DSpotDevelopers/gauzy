@@ -1,21 +1,25 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere, UpdateResult } from 'typeorm';
 import { ID, IReaction, IReactionCreateInput, IReactionUpdateInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
 import { UserService } from '../user/user.service';
 import { Reaction } from './reaction.entity';
-import { TypeOrmReactionRepository } from './repository/type-orm-reaction.repository';
-import { MikroOrmReactionRepository } from './repository/mikro-orm-reaction.repository';
-
+import { TypeOrmReactionRepository } from './repository';
+import { Logger } from '../logger';
 @Injectable()
 export class ReactionService extends TenantAwareCrudService<Reaction> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmReactionRepository: TypeOrmReactionRepository,
-		readonly mikroOrmReactionRepository: MikroOrmReactionRepository,
+		@InjectRepository(Reaction)
+		private readonly typeOrmReactionRepository: TypeOrmReactionRepository,
+
 		private readonly userService: UserService
 	) {
-		super(typeOrmReactionRepository, mikroOrmReactionRepository);
+		super(typeOrmReactionRepository);
 	}
 
 	/**
@@ -59,7 +63,7 @@ export class ReactionService extends TenantAwareCrudService<Reaction> {
 				creatorId: user.id
 			});
 		} catch (error) {
-			console.log(error); // Debug Logging
+			this.logger.error(`Error while creating reaction: ${error}`);
 			throw new BadRequestException('Reaction post failed', error);
 		}
 	}
@@ -89,7 +93,7 @@ export class ReactionService extends TenantAwareCrudService<Reaction> {
 				id
 			});
 		} catch (error) {
-			console.log(error); // Debug Logging
+			this.logger.error(`Error while updating reaction: ${error}`);
 			throw new BadRequestException('reaction update failed', error);
 		}
 	}
@@ -101,6 +105,7 @@ export class ReactionService extends TenantAwareCrudService<Reaction> {
 				where: { creatorId: userId }
 			});
 		} catch (error) {
+			this.logger.error(`Error while deleting reaction: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

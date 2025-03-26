@@ -1,5 +1,6 @@
 import { EventBus } from '@nestjs/cqrs';
-import { Injectable, BadRequestException, HttpStatus, HttpException } from '@nestjs/common';
+import { Injectable, BadRequestException, HttpStatus, HttpException, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
 	IsNull,
 	SelectQueryBuilder,
@@ -39,25 +40,33 @@ import { MentionService } from '../mention/mention.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CreateSubscriptionEvent } from '../subscription/events';
 import { Task } from './task.entity';
-import { TypeOrmOrganizationSprintTaskHistoryRepository } from './../organization-sprint/repository/type-orm-organization-sprint-task-history.repository';
+import { TypeOrmOrganizationSprintTaskHistoryRepository } from './../organization-sprint/repository';
 import { GetTaskByIdDTO } from './dto';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { TypeOrmTaskRepository } from './repository/type-orm-task.repository';
-import { MikroOrmTaskRepository } from './repository/mikro-orm-task.repository';
+import { OrganizationSprintTaskHistory } from '../organization-sprint/organization-sprint-task-history.entity';
+import { TypeOrmTaskRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class TaskService extends TenantAwareCrudService<Task> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		private readonly _eventBus: EventBus,
-		readonly typeOrmTaskRepository: TypeOrmTaskRepository,
-		readonly mikroOrmTaskRepository: MikroOrmTaskRepository,
-		readonly typeOrmOrganizationSprintTaskHistoryRepository: TypeOrmOrganizationSprintTaskHistoryRepository,
+
+		@InjectRepository(Task)
+		private readonly typeOrmTaskRepository: TypeOrmTaskRepository,
+
+		@InjectRepository(OrganizationSprintTaskHistory)
+		private readonly typeOrmOrganizationSprintTaskHistoryRepository: TypeOrmOrganizationSprintTaskHistoryRepository,
+
 		private readonly taskViewService: TaskViewService,
 		private readonly _subscriptionService: SubscriptionService,
 		private readonly mentionService: MentionService,
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmTaskRepository, mikroOrmTaskRepository);
+		super(typeOrmTaskRepository);
 	}
 
 	/**
@@ -142,7 +151,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 				try {
 					await this.mentionService.updateEntityMentions(BaseEntityEnum.Task, id, mentionUserIds);
 				} catch (error) {
-					console.error('Error synchronizing mentions:', error);
+					this.logger.error(`Error synchronizing mentions: ${error}`);
 				}
 			}
 
@@ -162,7 +171,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 						)
 					);
 				} catch (error) {
-					console.error('Error unsubscribing members from the task:', error);
+					this.logger.error(`Error unsubscribing members from the task: ${error}`);
 				}
 			}
 
@@ -184,7 +193,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 						)
 					);
 				} catch (error) {
-					console.error('Error publishing CreateSubscriptionEvent:', error);
+					this.logger.error(`Error publishing CreateSubscriptionEvent: ${error}`);
 				}
 			}
 
@@ -205,7 +214,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 			// Return the updated Task
 			return updatedTask;
 		} catch (error) {
-			console.error(`Error while updating task: ${error.message}`, error.message);
+			this.logger.error(`Error while updating task: ${error.message}`, error.message);
 			throw new HttpException({ message: error?.message, error }, HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -341,12 +350,12 @@ export class TaskService extends TenantAwareCrudService<Task> {
 					}
 					if (isNotEmpty(title)) {
 						qb.andWhere(p(`"${query.alias}"."title" ${likeOperator} :title`), {
-							title: `%${title}%`
+							title: `%${title as string}%`
 						});
 					}
 					if (isNotEmpty(title)) {
 						qb.andWhere(p(`"${query.alias}"."prefix" ${likeOperator} :prefix`), {
-							prefix: `%${prefix}%`
+							prefix: `%${prefix as string}%`
 						});
 					}
 					if (isNotEmpty(organizationSprintId) && !isUUID(organizationSprintId)) {
@@ -359,11 +368,10 @@ export class TaskService extends TenantAwareCrudService<Task> {
 				})
 			);
 
-			console.log('query.getSql', query.getSql());
 			const [items, total] = await query.getManyAndCount();
 			return { items, total };
 		} catch (error) {
-			console.log(error);
+			this.logger.error(`Error while getting employee tasks: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -430,6 +438,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 
 			return await query.getMany();
 		} catch (error) {
+			this.logger.error(`Error while getting all tasks by employee: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -530,12 +539,12 @@ export class TaskService extends TenantAwareCrudService<Task> {
 					}
 					if (isNotEmpty(title)) {
 						qb.andWhere(p(`"${query.alias}"."title" ${likeOperator} :title`), {
-							title: `%${title}%`
+							title: `%${title as string}%`
 						});
 					}
 					if (isNotEmpty(title)) {
 						qb.andWhere(p(`"${query.alias}"."prefix" ${likeOperator} :prefix`), {
-							prefix: `%${prefix}%`
+							prefix: `%${prefix as string}%`
 						});
 					}
 					if (isNotEmpty(organizationSprintId) && !isUUID(organizationSprintId)) {
@@ -550,6 +559,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 			const [items, total] = await query.getManyAndCount();
 			return { items, total };
 		} catch (error) {
+			this.logger.error(`Error while getting team tasks: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -571,12 +581,12 @@ export class TaskService extends TenantAwareCrudService<Task> {
 
 			// Apply filters for task title with like operator
 			if (where.title) {
-				options.where.title = Raw((alias) => `${alias} ${likeOperator} '%${where.title}%'`);
+				options.where.title = Raw((alias) => `${alias} ${likeOperator} '%${where.title as string}%'`);
 			}
 
 			// Apply filters for task prefix with like operator
 			if (where.prefix) {
-				options.where.prefix = Raw((alias) => `${alias} ${likeOperator} '%${where.prefix}%'`);
+				options.where.prefix = Raw((alias) => `${alias} ${likeOperator} '%${where.prefix as string}%'`);
 			}
 
 			// Apply filters for isDraft, setting null if not a boolean
@@ -645,12 +655,12 @@ export class TaskService extends TenantAwareCrudService<Task> {
 			// Execute the query and parse the result to a number
 			const result = await query.getRawOne();
 			const maxTaskNumber = parseInt(result.maxTaskNumber, 10);
-			console.log('get max task number', maxTaskNumber);
+			this.logger.log('get max task number', maxTaskNumber);
 
 			return maxTaskNumber;
 		} catch (error) {
 			// Log the error and throw a detailed exception
-			console.log(`Error fetching max task number: ${error.message}`, error.stack);
+			this.logger.error(`Error fetching max task number: ${error}`);
 			throw new HttpException({ message: 'Failed to get the max task number', error }, HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -734,6 +744,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 			// Save updated entities to DB
 			await this.typeOrmRepository.save(tasks);
 		} catch (error) {
+			this.logger.error(`Error unassigning employee from team tasks: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -831,10 +842,14 @@ export class TaskService extends TenantAwareCrudService<Task> {
 						qb.andWhere(p(`"${query.alias}"."isDraft" = :isDraft`), { isDraft });
 					}
 					if (isNotEmpty(title)) {
-						qb.andWhere(p(`"${query.alias}"."title" ${likeOperator} :title`), { title: `%${title}%` });
+						qb.andWhere(p(`"${query.alias}"."title" ${likeOperator} :title`), {
+							title: `%${title as string}%`
+						});
 					}
 					if (isNotEmpty(prefix)) {
-						qb.andWhere(p(`"${query.alias}"."prefix" ${likeOperator} :prefix`), { prefix: `%${prefix}%` });
+						qb.andWhere(p(`"${query.alias}"."prefix" ${likeOperator} :prefix`), {
+							prefix: `%${prefix as string}%`
+						});
 					}
 					if (!isUUID(organizationSprintId)) {
 						qb.andWhere(p(`"${query.alias}"."organizationSprintId" IS NULL`));
@@ -847,7 +862,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 			const [items, total] = await query.getManyAndCount();
 			return { items, total };
 		} catch (error) {
-			console.log('Error while retrieving module tasks', error);
+			this.logger.error(`Error while retrieving module tasks: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -876,6 +891,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 					? (JSON.parse(queryParams as string) as IGetTasksByViewFilters)
 					: (queryParams as IGetTasksByViewFilters) || {};
 			} catch (error) {
+				this.logger.error(`Error while parsing query parameters in task view: ${error}`);
 				throw new HttpException('Invalid query parameters in task view', HttpStatus.BAD_REQUEST);
 			}
 
@@ -953,7 +969,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 			// Retrieve tasks using base class method
 			return await super.findAll(findOptions);
 		} catch (error) {
-			console.error(`Error while retrieve view tasks: ${error.message}`, error.message);
+			this.logger.error(`Error while retrieve view tasks: ${error}`);
 			throw new HttpException({ message: error?.message, error }, HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -1051,6 +1067,7 @@ export class TaskService extends TenantAwareCrudService<Task> {
 
 			return { items, total };
 		} catch (error) {
+			this.logger.error(`Error while getting tasks by date filters: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

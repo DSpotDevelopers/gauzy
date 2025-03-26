@@ -4,18 +4,15 @@ import { FindManyOptions } from 'typeorm';
 import { IChangelog, IPagination } from '@gauzy/contracts';
 import { CrudService } from '@gauzy/core';
 import { Changelog } from './changelog.entity';
-import { TypeOrmChangelogRepository } from './repository/type-orm-changelog.repository';
-import { MikroOrmChangelogRepository } from './repository/mikro-orm-changelog.repository';
+import { TypeOrmChangelogRepository } from './repository';
 
 @Injectable()
 export class ChangelogService extends CrudService<Changelog> {
 	constructor(
 		@InjectRepository(Changelog)
-		typeOrmChangelogRepository: TypeOrmChangelogRepository,
-
-		mikroOrmChangelogRepository: MikroOrmChangelogRepository
+		private readonly typeOrmChangelogRepository: TypeOrmChangelogRepository
 	) {
-		super(typeOrmChangelogRepository, mikroOrmChangelogRepository);
+		super(typeOrmChangelogRepository);
 	}
 
 	/**
@@ -24,9 +21,7 @@ export class ChangelogService extends CrudService<Changelog> {
 	 * @param filter
 	 * @returns
 	 */
-	public async findAllChangelogs(
-		filter?: FindManyOptions<Changelog>,
-	): Promise<IPagination<IChangelog>> {
+	public async findAllChangelogs(filter?: FindManyOptions<Changelog>): Promise<IPagination<IChangelog>> {
 		return await this.findAll(filter || {});
 	}
 }

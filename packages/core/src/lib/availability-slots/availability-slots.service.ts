@@ -2,19 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IAvailabilitySlot, IAvailabilitySlotsCreateInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmAvailabilitySlotRepository } from './repository/type-orm-availability-slot.repository';
-import { MikroOrmAvailabilitySlotRepository } from './repository/mikro-orm-availability-slot.repository';
+import { TypeOrmAvailabilitySlotRepository } from './repository';
 import { AvailabilitySlot } from './availability-slots.entity';
 
 @Injectable()
 export class AvailabilitySlotsService extends TenantAwareCrudService<AvailabilitySlot> {
 	constructor(
 		@InjectRepository(AvailabilitySlot)
-		typeOrmAvailabilitySlotRepository: TypeOrmAvailabilitySlotRepository,
-
-		mikroOrmAvailabilitySlotRepository: MikroOrmAvailabilitySlotRepository
+		private readonly typeOrmAvailabilitySlotRepository: TypeOrmAvailabilitySlotRepository
 	) {
-		super(typeOrmAvailabilitySlotRepository, mikroOrmAvailabilitySlotRepository);
+		super(typeOrmAvailabilitySlotRepository);
 	}
 
 	/**

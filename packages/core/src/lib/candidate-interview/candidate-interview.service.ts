@@ -3,19 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ICandidate, ICandidateInterview } from '@gauzy/contracts';
 import { RequestContext } from './../core/context';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmCandidateInterviewRepository } from './repository/type-orm-candidate-interview.repository';
-import { MikroOrmCandidateInterviewRepository } from './repository/mikro-orm-candidate-interview.repository';
+import { TypeOrmCandidateInterviewRepository } from './repository';
 import { CandidateInterview } from './candidate-interview.entity';
 
 @Injectable()
 export class CandidateInterviewService extends TenantAwareCrudService<CandidateInterview> {
 	constructor(
 		@InjectRepository(CandidateInterview)
-		typeOrmCandidateInterviewRepository: TypeOrmCandidateInterviewRepository,
-
-		mikroOrmCandidateInterviewRepository: MikroOrmCandidateInterviewRepository
+		private readonly typeOrmCandidateInterviewRepository: TypeOrmCandidateInterviewRepository
 	) {
-		super(typeOrmCandidateInterviewRepository, mikroOrmCandidateInterviewRepository);
+		super(typeOrmCandidateInterviewRepository);
 	}
 
 	/**
@@ -23,9 +20,7 @@ export class CandidateInterviewService extends TenantAwareCrudService<CandidateI
 	 * @param candidateId
 	 * @returns
 	 */
-	async findByCandidateId(
-		candidateId: ICandidate['id']
-	): Promise<ICandidateInterview[]> {
+	async findByCandidateId(candidateId: ICandidate['id']): Promise<ICandidateInterview[]> {
 		return await super.find({
 			where: {
 				candidateId,

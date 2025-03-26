@@ -4,17 +4,17 @@ import * as moment from 'moment';
 import { IApiCallLog, IPagination } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { ApiCallLog } from './api-call-log.entity';
-import { MikroOrmApiCallLogRepository } from './repository/mikro-orm-api-call-log.repository';
-import { TypeOrmApiCallLogRepository } from './repository/type-orm-api-call-log.repository';
+import { TypeOrmApiCallLogRepository } from './repository';
 import { ApiCallLogFilterDTO } from './dto/api-call-log-filter.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ApiCallLogService extends TenantAwareCrudService<ApiCallLog> {
 	constructor(
-		readonly typeOrmApiCallLogRepository: TypeOrmApiCallLogRepository,
-		readonly mikroOrmApiCallLogRepository: MikroOrmApiCallLogRepository
+		@InjectRepository(ApiCallLog)
+		private readonly typeOrmApiCallLogRepository: TypeOrmApiCallLogRepository
 	) {
-		super(typeOrmApiCallLogRepository, mikroOrmApiCallLogRepository);
+		super(typeOrmApiCallLogRepository);
 	}
 
 	/**

@@ -10,142 +10,115 @@ import { chain } from 'underscore';
 
 @Injectable()
 export class PaymentMapService {
-	constructor() {}
-
 	mapByDate(payments: IPayment[]): IPaymentReportGroupByDate[] {
-		const dailyLogs: any = this.groupByDate(payments).map(
-			(byDatePayment: IPayment[], date) => {
+		const dailyLogs: any = this.groupByDate(payments)
+			.map((byDatePayment: IPayment[], date) => {
 				const sum = this.getDurationSum(byDatePayment);
-				const byClient = this.groupByClient(byDatePayment).map(
-					(byClientPayment: IPayment[]) => {
-						const byProject = this.groupByProject(
-							byClientPayment
-						).map((byProjectPayment: IPayment[]) => {
-							const project =
-								byProjectPayment.length > 0 &&
-								byProjectPayment[0]
-									? byProjectPayment[0].project
-									: null;
+				const byClient = this.groupByClient(byDatePayment)
+					.map((byClientPayment: IPayment[]) => {
+						const byProject = this.groupByProject(byClientPayment)
+							.map((byProjectPayment: IPayment[]) => {
+								const project =
+									byProjectPayment.length > 0 && byProjectPayment[0]
+										? byProjectPayment[0].project
+										: null;
 
-							return {
-								project,
-								payments: byProjectPayment.map((row) =>
-									this.mapPaymentPercentage(row, sum)
-								)
-							};
-						})
-						.value();
+								return {
+									project,
+									payments: byProjectPayment.map((row) => this.mapPaymentPercentage(row, sum))
+								};
+							})
+							.value();
 
 						const employee =
-							byClientPayment.length > 0 && byClientPayment[0]
-								? byClientPayment[0].employee
-								: null;
+							byClientPayment.length > 0 && byClientPayment[0] ? byClientPayment[0].employee : null;
 						return {
 							employee,
 							projects: byProject
 						};
-					}
-				)
-				.value();
+					})
+					.value();
 
 				return {
 					date,
 					clients: byClient
 				};
-			}
-		)
-		.value();
+			})
+			.value();
 		return dailyLogs;
 	}
 
 	mapByClient(payments: IPayment[]): IPaymentReportGroupByClient[] {
-		const byClient: any = this.groupByClient(payments).map(
-			(byClientPayment: IPayment[]) => {
+		const byClient: any = this.groupByClient(payments)
+			.map((byClientPayment: IPayment[]) => {
 				const sum = this.getDurationSum(byClientPayment);
-				const dailyLogs = this.groupByDate(byClientPayment).map(
-					(byDatePayment: IPayment[], date) => {
-						const byProject = this.groupByProject(
-							byDatePayment
-						).map((byProjectPayment: IPayment[]) => {
-							const project =
-								byProjectPayment.length > 0 &&
-								byProjectPayment[0]
-									? byProjectPayment[0].project
-									: null;
-							return {
-								project,
-								payments: byProjectPayment.map((row) =>
-									this.mapPaymentPercentage(row, sum)
-								)
-							};
-						})
-						.value();
+				const dailyLogs = this.groupByDate(byClientPayment)
+					.map((byDatePayment: IPayment[], date) => {
+						const byProject = this.groupByProject(byDatePayment)
+							.map((byProjectPayment: IPayment[]) => {
+								const project =
+									byProjectPayment.length > 0 && byProjectPayment[0]
+										? byProjectPayment[0].project
+										: null;
+								return {
+									project,
+									payments: byProjectPayment.map((row) => this.mapPaymentPercentage(row, sum))
+								};
+							})
+							.value();
 
 						return {
 							date,
 							projects: byProject
 						};
-					}
-				)
-				.value();
+					})
+					.value();
 
 				const client =
-					byClientPayment.length > 0 && byClientPayment[0]
-						? byClientPayment[0].organizationContact
-						: null;
+					byClientPayment.length > 0 && byClientPayment[0] ? byClientPayment[0].organizationContact : null;
 				return {
 					client,
 					dates: dailyLogs
 				};
-			}
-		)
-		.value();
+			})
+			.value();
 		return byClient;
 	}
 
 	mapByProject(payments: IPayment[]): IPaymentReportGroupByProject[] {
-		const byClient: any = this.groupByProject(payments).map(
-			(byProjectPayment: IPayment[]) => {
+		const byClient: any = this.groupByProject(payments)
+			.map((byProjectPayment: IPayment[]) => {
 				const sum = this.getDurationSum(byProjectPayment);
 
-				const dailyLogs = this.groupByDate(byProjectPayment).map(
-					(byDatePayment: IPayment[], date) => {
-						const byProject = this.groupByClient(byDatePayment).map(
-							(byClientPayment: IPayment[]) => {
+				const dailyLogs = this.groupByDate(byProjectPayment)
+					.map((byDatePayment: IPayment[], date) => {
+						const byProject = this.groupByClient(byDatePayment)
+							.map((byClientPayment: IPayment[]) => {
 								const employee =
-									byClientPayment.length > 0 &&
-									byClientPayment[0]
+									byClientPayment.length > 0 && byClientPayment[0]
 										? byClientPayment[0].employee
 										: null;
 								return {
 									employee,
-									payments: byClientPayment.map((row) =>
-										this.mapPaymentPercentage(row, sum)
-									)
+									payments: byClientPayment.map((row) => this.mapPaymentPercentage(row, sum))
 								};
-							}
-						)
-						.value();
+							})
+							.value();
 
 						return {
 							date,
 							clients: byProject
 						};
-					}
-				)
-				.value();
+					})
+					.value();
 
-				const project =
-					byProjectPayment.length > 0 && byProjectPayment[0]
-						? byProjectPayment[0].project
-						: null;
+				const project = byProjectPayment.length > 0 && byProjectPayment[0] ? byProjectPayment[0].project : null;
 				return {
 					project,
 					dates: dailyLogs
 				};
-			}
-		)
-		.value();
+			})
+			.value();
 		return byClient;
 	}
 
@@ -168,8 +141,7 @@ export class PaymentMapService {
 	}
 
 	private mapPaymentPercentage(payments, sum = 0) {
-		payments.duration_percentage =
-			(parseInt(payments.duration, 10) * 100) / sum;
+		payments.duration_percentage = (parseInt(payments.duration, 10) * 100) / sum;
 		return payments;
 	}
 

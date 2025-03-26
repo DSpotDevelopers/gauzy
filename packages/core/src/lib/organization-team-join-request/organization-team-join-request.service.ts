@@ -1,4 +1,11 @@
-import { BadRequestException, ConflictException, Injectable, HttpStatus, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	ConflictException,
+	Injectable,
+	HttpStatus,
+	NotFoundException,
+	Logger as NestLogger
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, SelectQueryBuilder, IsNull, FindManyOptions } from 'typeorm';
 import { JwtPayload, sign } from 'jsonwebtoken';
@@ -26,30 +33,25 @@ import { OrganizationTeamService } from './../organization-team/organization-tea
 import { InviteService } from './../invite/invite.service';
 import { RoleService } from './../role/role.service';
 import { EmployeeService } from './../employee/employee.service';
-import { TypeOrmOrganizationTeamJoinRequestRepository } from './repository/type-orm-organization-team-join-request.repository';
-import { MikroOrmOrganizationTeamJoinRequestRepository } from './repository/mikro-orm-organization-team-join-request.repository';
-import { TypeOrmUserRepository } from '../user/repository/type-orm-user.repository';
-import { MikroOrmUserRepository } from '../user/repository/mikro-orm-user.repository';
-import { TypeOrmOrganizationTeamEmployeeRepository } from '../organization-team-employee/repository/type-orm-organization-team-employee.repository';
-import { MikroOrmOrganizationTeamEmployeeRepository } from '../organization-team-employee/repository/mikro-orm-organization-team-employee.repository';
+import { TypeOrmOrganizationTeamJoinRequestRepository } from './repository';
+import { TypeOrmUserRepository } from '../user/repository';
+import { TypeOrmOrganizationTeamEmployeeRepository } from '../organization-team-employee/repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<OrganizationTeamJoinRequest> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(OrganizationTeamJoinRequest)
-		typeOrmOrganizationTeamJoinRequestRepository: TypeOrmOrganizationTeamJoinRequestRepository,
-
-		mikroOrmOrganizationTeamJoinRequestRepository: MikroOrmOrganizationTeamJoinRequestRepository,
+		private readonly typeOrmOrganizationTeamJoinRequestRepository: TypeOrmOrganizationTeamJoinRequestRepository,
 
 		@InjectRepository(User)
-		private typeOrmUserRepository: TypeOrmUserRepository,
-
-		mikroOrmUserRepository: MikroOrmUserRepository,
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
 
 		@InjectRepository(OrganizationTeamEmployee)
 		protected readonly typeOrmOrganizationTeamEmployeeRepository: TypeOrmOrganizationTeamEmployeeRepository,
-
-		mikroOrmOrganizationTeamEmployeeRepository: MikroOrmOrganizationTeamEmployeeRepository,
 
 		private readonly _employeeService: EmployeeService,
 		private readonly _organizationTeamService: OrganizationTeamService,
@@ -57,7 +59,7 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 		private readonly _inviteService: InviteService,
 		private readonly _roleService: RoleService
 	) {
-		super(typeOrmOrganizationTeamJoinRequestRepository, mikroOrmOrganizationTeamJoinRequestRepository);
+		super(typeOrmOrganizationTeamJoinRequestRepository);
 	}
 
 	/**
@@ -136,7 +138,7 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 			const organizationTeamJoinRequest = await this.typeOrmRepository.save(createEntityLike);
 
 			/** Place here organization team join request email to send verification code*/
-			let { appName, appLogo, appSignature, appLink, companyLink, companyName } = entity;
+			const { appName, appLogo, appSignature, appLink, companyLink, companyName } = entity;
 
 			this._emailService.organizationTeamJoinRequest(
 				organizationTeam,
@@ -155,6 +157,7 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 
 			return organizationTeamJoinRequest;
 		} catch (error) {
+			this.logger.error(`Error while requesting join organization team: ${error}`);
 			throw new BadRequestException('Error while requesting join organization team');
 		}
 	}
@@ -202,6 +205,7 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 			delete record.id;
 			return record;
 		} catch (error) {
+			this.logger.error(`Error while validating organization team join request: ${error}`);
 			throw new BadRequestException();
 		}
 	}
@@ -249,7 +253,7 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 			});
 
 			/** Place here organization team join request email to send verification code*/
-			let { appName, appLogo, appSignature, appLink, companyLink, companyName } = entity;
+			const { appName, appLogo, appSignature, appLink, companyLink, companyName } = entity;
 			this._emailService.organizationTeamJoinRequest(
 				request.organizationTeam,
 				{
@@ -268,12 +272,13 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 					companyName
 				}
 			);
-		} finally {
-			return new Object({
-				status: HttpStatus.OK,
-				message: `OK`
-			});
+		} catch (error) {
+			this.logger.error(`Error while resending confirmation code: ${error}`);
 		}
+		return {
+			status: HttpStatus.OK,
+			message: `OK`
+		};
 	}
 
 	async acceptRequestToJoin(id: string, action: OrganizationTeamJoinRequestStatusEnum, languageCode: LanguagesEnum) {
@@ -297,7 +302,7 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 			/**
 			 * Fetch user if already present in current tenant
 			 */
-			let currentTenantUser: User = await this.typeOrmUserRepository.findOne({
+			const currentTenantUser: User = await this.typeOrmUserRepository.findOne({
 				where: {
 					email: request.email,
 					tenantId
@@ -364,8 +369,8 @@ export class OrganizationTeamJoinRequestService extends TenantAwareCrudService<O
 				const newTenantUser = await this._inviteService.createUser(
 					{
 						user: {
-							firstName: (names && names.length && names[0]) || '',
-							lastName: (names && names.length && names[1]) || '',
+							firstName: (names?.length && names[0]) || '',
+							lastName: (names?.length && names[1]) || '',
 							email: request.email,
 							tenantId: tenantId,
 							role: role

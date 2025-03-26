@@ -1,18 +1,23 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ID, IDeleteScreenshot, IScreenshot, PermissionsEnum } from '@gauzy/contracts';
 import { RequestContext } from './../../core/context';
 import { TenantAwareCrudService } from './../../core/crud';
 import { prepareSQLQuery as p } from '../../database/database.helper';
 import { Screenshot } from './screenshot.entity';
-import { MikroOrmScreenshotRepository, TypeOrmScreenshotRepository } from './repository';
+import { TypeOrmScreenshotRepository } from './repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class ScreenshotService extends TenantAwareCrudService<Screenshot> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		typeOrmScreenshotRepository: TypeOrmScreenshotRepository,
-		mikroOrmScreenshotRepository: MikroOrmScreenshotRepository
+		@InjectRepository(Screenshot)
+		private readonly typeOrmScreenshotRepository: TypeOrmScreenshotRepository
 	) {
-		super(typeOrmScreenshotRepository, mikroOrmScreenshotRepository);
+		super(typeOrmScreenshotRepository);
 	}
 
 	/**
@@ -68,6 +73,7 @@ export class ScreenshotService extends TenantAwareCrudService<Screenshot> {
 				? await this.typeOrmRepository.remove(screenshot)
 				: await this.typeOrmRepository.softRemove(screenshot);
 		} catch (error) {
+			this.logger.error(`Error while deleting screenshot: ${error}`);
 			throw new ForbiddenException('You do not have permission to delete this screenshot.');
 		}
 	}

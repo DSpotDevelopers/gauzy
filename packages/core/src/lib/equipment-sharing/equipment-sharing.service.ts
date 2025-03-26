@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, WhereExpressionBuilder } from 'typeorm';
 import { IEquipmentSharing, IPagination, PermissionsEnum } from '@gauzy/contracts';
@@ -9,27 +9,25 @@ import { EquipmentSharing } from './equipment-sharing.entity';
 import { RequestContext } from '../core/context';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestApproval } from '../request-approval/request-approval.entity';
-import { TypeOrmEquipmentSharingRepository } from './repository/type-orm-equipment-sharing.repository';
-import { MikroOrmEquipmentSharingRepository } from './repository/mikro-orm-equipment-sharing.repository';
-import { TypeOrmRequestApprovalRepository } from './../request-approval/repository/type-orm-request-approval.repository';
-import { MikroOrmRequestApprovalRepository } from './../request-approval/repository/mikro-orm-request-approval.repository';
+import { TypeOrmEquipmentSharingRepository } from './repository';
+import { TypeOrmRequestApprovalRepository } from './../request-approval/repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSharing> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(EquipmentSharing)
-		typeOrmEquipmentSharingRepository: TypeOrmEquipmentSharingRepository,
-
-		mikroOrmEquipmentSharingRepository: MikroOrmEquipmentSharingRepository,
+		private readonly typeOrmEquipmentSharingRepository: TypeOrmEquipmentSharingRepository,
 
 		@InjectRepository(RequestApproval)
-		private typeOrmRequestApprovalRepository: TypeOrmRequestApprovalRepository,
-
-		mikroOrmRequestApprovalRepository: MikroOrmRequestApprovalRepository,
+		private readonly typeOrmRequestApprovalRepository: TypeOrmRequestApprovalRepository,
 
 		private readonly configService: ConfigService
 	) {
-		super(typeOrmEquipmentSharingRepository, mikroOrmEquipmentSharingRepository);
+		super(typeOrmEquipmentSharingRepository);
 	}
 
 	async findEquipmentSharingsByOrgId(organizationId: string): Promise<any> {
@@ -88,6 +86,7 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 				relations: ['equipment', 'employees', 'teams']
 			});
 		} catch (error) {
+			this.logger.error('Error finding request approvals by employee id', error);
 			throw new BadRequestException(error);
 		}
 	}
@@ -106,7 +105,7 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 			const equipmentSharingSaved = await this.typeOrmRepository.save(equipmentSharing);
 			return equipmentSharingSaved;
 		} catch (err) {
-			console.log('err', err);
+			this.logger.error('Error creating equipment sharing', err);
 			throw new BadRequestException(err);
 		}
 	}
@@ -118,6 +117,7 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 
 			return equipmentSharingSaved;
 		} catch (err) {
+			this.logger.error('Error updating equipment sharing', err);
 			throw new BadRequestException(err);
 		}
 	}
@@ -133,6 +133,7 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 
 			return equipmentSharing;
 		} catch (error) {
+			this.logger.error('Error deleting equipment sharing', error);
 			throw new BadRequestException(error);
 		}
 	}
@@ -150,6 +151,7 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 
 			return await this.typeOrmRepository.save(equipmentSharing);
 		} catch (err) {
+			this.logger.error('Error updating status equipment sharing by admin', err);
 			throw new BadRequestException(err);
 		}
 	}
@@ -164,8 +166,8 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 			 * Sets number of entities to skip.
 			 * Sets maximal number of entities to take.
 			 */
-			query.skip(filter && filter.skip ? filter.take * (filter.skip - 1) : 0);
-			query.take(filter && filter.take ? filter.take : 10);
+			query.skip(filter?.skip ? filter.take * (filter.skip - 1) : 0);
+			query.take(filter?.take ? filter.take : 10);
 
 			query.innerJoinAndSelect(`${query.alias}.equipment`, 'equipment');
 			query.leftJoinAndSelect(`${query.alias}.equipmentSharingPolicy`, 'equipmentSharingPolicy');
@@ -223,7 +225,8 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 			query.andWhere(
 				new Brackets((qb: WhereExpressionBuilder) => {
 					if (isNotEmpty(filter.where) && isNotEmpty(filter.where.employeeIds)) {
-						let { employeeIds = [], organizationId } = filter.where;
+						const organizationId = filter.where.organizationId;
+						let employeeIds = filter.where.employeeIds ?? [];
 						const user = RequestContext.currentUser();
 						if (
 							!RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE) &&
@@ -249,6 +252,7 @@ export class EquipmentSharingService extends TenantAwareCrudService<EquipmentSha
 			const [items, total] = await query.getManyAndCount();
 			return { items, total };
 		} catch (error) {
+			this.logger.error('Error paginating equipment sharings', error);
 			throw new BadRequestException(error);
 		}
 	}

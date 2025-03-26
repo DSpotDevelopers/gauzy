@@ -4,18 +4,15 @@ import { ICandidateFeedback, ICandidateInterview } from '@gauzy/contracts';
 import { RequestContext } from './../core/context';
 import { TenantAwareCrudService } from './../core/crud';
 import { CandidateFeedback } from './candidate-feedbacks.entity';
-import { MikroOrmCandidateFeedbackRepository } from './repository/mikro-orm-candidate-feedback.repository';
-import { TypeOrmCandidateFeedbackRepository } from './repository/type-orm-candidate-feedback.repository';
+import { TypeOrmCandidateFeedbackRepository } from './repository';
 
 @Injectable()
 export class CandidateFeedbacksService extends TenantAwareCrudService<CandidateFeedback> {
 	constructor(
 		@InjectRepository(CandidateFeedback)
-		typeOrmCandidateFeedbackRepository: TypeOrmCandidateFeedbackRepository,
-
-		mikroOrmCandidateFeedbackRepository: MikroOrmCandidateFeedbackRepository
+		private readonly typeOrmCandidateFeedbackRepository: TypeOrmCandidateFeedbackRepository
 	) {
-		super(typeOrmCandidateFeedbackRepository, mikroOrmCandidateFeedbackRepository);
+		super(typeOrmCandidateFeedbackRepository);
 	}
 
 	/**
@@ -44,7 +41,7 @@ export class CandidateFeedbacksService extends TenantAwareCrudService<CandidateF
 		});
 		const fbSum = rate.reduce((sum, current) => {
 			return sum + current;
-		});
+		}, 0);
 		return fbSum / feedbacks.length;
 	}
 }

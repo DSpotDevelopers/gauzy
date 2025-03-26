@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, In, Raw, WhereExpressionBuilder } from 'typeorm';
 import { IEmployee, IOrganizationContact, IOrganizationContactFindInput, IPagination } from '@gauzy/contracts';
 import { isPostgres } from '@gauzy/config';
@@ -7,15 +8,15 @@ import { RequestContext } from '../core/context';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { OrganizationContact } from './organization-contact.entity';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { MikroOrmOrganizationContactRepository, TypeOrmOrganizationContactRepository } from './repository';
+import { TypeOrmOrganizationContactRepository } from './repository';
 
 @Injectable()
 export class OrganizationContactService extends TenantAwareCrudService<OrganizationContact> {
 	constructor(
-		readonly typeOrmOrganizationContactRepository: TypeOrmOrganizationContactRepository,
-		readonly mikroOrmOrganizationContactRepository: MikroOrmOrganizationContactRepository
+		@InjectRepository(OrganizationContact)
+		private readonly typeOrmOrganizationContactRepository: TypeOrmOrganizationContactRepository
 	) {
-		super(typeOrmOrganizationContactRepository, mikroOrmOrganizationContactRepository);
+		super(typeOrmOrganizationContactRepository);
 	}
 
 	/**

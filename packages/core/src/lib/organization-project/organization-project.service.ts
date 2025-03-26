@@ -1,5 +1,6 @@
 import { EventBus } from '@nestjs/cqrs';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, IsNull, SelectQueryBuilder } from 'typeorm';
 import {
 	ActionTypeEnum,
@@ -21,7 +22,7 @@ import { getConfig } from '@gauzy/config';
 import { CustomEmbeddedFieldConfig, isNotEmpty } from '@gauzy/common';
 import { PaginationParams, TenantAwareCrudService } from '../core/crud';
 import { RequestContext } from '../core/context';
-import { OrganizationProjectEmployee } from '../core/entities/internal';
+import { Employee, OrganizationProjectEmployee } from '../core/entities/internal';
 import { FavoriteService } from '../core/decorators';
 import { RoleService } from '../role/role.service';
 import { SubscriptionService } from '../subscription/subscription.service';
@@ -31,29 +32,32 @@ import { CreateSubscriptionEvent } from '../subscription/events';
 import { OrganizationProject } from './organization-project.entity';
 import { prepareSQLQuery as p } from './../database/database.helper';
 import { TypeOrmEmployeeRepository } from '../employee/repository';
-import {
-	MikroOrmOrganizationProjectEmployeeRepository,
-	MikroOrmOrganizationProjectRepository,
-	TypeOrmOrganizationProjectEmployeeRepository,
-	TypeOrmOrganizationProjectRepository
-} from './repository';
+import { TypeOrmOrganizationProjectEmployeeRepository, TypeOrmOrganizationProjectRepository } from './repository';
+import { Logger } from '../logger';
 
 @FavoriteService(BaseEntityEnum.OrganizationProject)
 @Injectable()
 export class OrganizationProjectService extends TenantAwareCrudService<OrganizationProject> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
+		@InjectRepository(OrganizationProject)
+		private readonly typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository,
+
+		@InjectRepository(OrganizationProjectEmployee)
+		private readonly typeOrmOrganizationProjectEmployeeRepository: TypeOrmOrganizationProjectEmployeeRepository,
+
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
 		private readonly _eventBus: EventBus,
-		readonly typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository,
-		readonly mikroOrmOrganizationProjectRepository: MikroOrmOrganizationProjectRepository,
-		readonly typeOrmOrganizationProjectEmployeeRepository: TypeOrmOrganizationProjectEmployeeRepository,
-		readonly mikroOrmOrganizationProjectEmployeeRepository: MikroOrmOrganizationProjectEmployeeRepository,
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
 		private readonly _roleService: RoleService,
 		private readonly _employeeService: EmployeeService,
 		private readonly _subscriptionService: SubscriptionService,
 		private readonly _activityLogService: ActivityLogService
 	) {
-		super(typeOrmOrganizationProjectRepository, mikroOrmOrganizationProjectRepository);
+		super(typeOrmOrganizationProjectRepository);
 	}
 
 	/**
@@ -83,7 +87,9 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 					// If not included, add the employeeId to the managerIds array
 					managerIds.push(employeeId);
 				}
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error looking for role to assign employee as project manager: ${error}`);
+			}
 
 			// Combine memberIds and managerIds into a single array
 			const employeeIds = [...memberIds, ...managerIds].filter(Boolean);
@@ -148,7 +154,7 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 					)
 				);
 			} catch (error) {
-				console.error('Error subscribing creators and assignees to the project:', error);
+				this.logger.error(`Error subscribing creators and assignees to the project: ${error}`);
 			}
 
 			// Generate the activity log
@@ -166,6 +172,7 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 			// Return the created project
 			return project;
 		} catch (error) {
+			this.logger.error(`Error while creating organization project: ${error}`);
 			// Handle errors and return an appropriate error response
 			throw new HttpException(`Failed to create organization project: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
@@ -230,6 +237,7 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 
 			return updatedProject;
 		} catch (error) {
+			this.logger.error(`Error while updating organization project: ${error}`);
 			// Handle errors and return an appropriate error response
 			throw new HttpException(`Failed to update organization project: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
@@ -307,7 +315,7 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 					)
 				);
 			} catch (error) {
-				console.error('Error unsubscribing members from the project:', error);
+				this.logger.error(`Error unsubscribing members from the project: ${error}`);
 			}
 		}
 
@@ -357,7 +365,9 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 						)
 					)
 				);
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error subscribing new assignees to the project: ${error}`);
+			}
 
 			await this.typeOrmOrganizationProjectEmployeeRepository.save(newProjectMembers);
 		}
@@ -444,7 +454,7 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 		}
 
 		if (options?.where?.name) {
-			options.where.name = ILike(`%${options.where.name}%`);
+			options.where.name = ILike(`%${options.where.name as string}%`);
 		}
 
 		// Call the parent class's paginate method with the modified options
@@ -491,6 +501,7 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 			// Return the projects
 			return projects;
 		} catch (error) {
+			this.logger.error(`Error while getting projects by github repository: ${error}`);
 			return [];
 		}
 	}
@@ -577,17 +588,14 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 		const query = this.typeOrmRepository.createQueryBuilder(this.tableName);
 
 		// Set find options (skip, take, and relations)
-		query.skip(options && options.skip ? options.take * (options.skip - 1) : 0);
-		query.take(options && options.take ? options.take : 10);
+		query.skip(options?.skip ? options.take * (options.skip - 1) : 0);
+		query.take(options?.take ? options.take : 10);
 
 		// Conditionally add joins based on custom fields
 		this.addCustomFieldJoins(query, customFields);
 
 		// Add where conditions
 		this.addWhereConditions(query, options);
-
-		// Log the SQL query (for debugging)
-		// console.log(await query.getRawMany());
 
 		// Execute the query and return the paginated result
 		const [items, total] = await query.getManyAndCount();
@@ -651,7 +659,7 @@ export class OrganizationProjectService extends TenantAwareCrudService<Organizat
 
 			return true;
 		} catch (error) {
-			console.log('Error while updating project by employee:', error);
+			this.logger.error(`Error while updating project by employee: ${error}`);
 			throw new HttpException({ message: 'Error while updating project by employee' }, HttpStatus.BAD_REQUEST);
 		}
 	}

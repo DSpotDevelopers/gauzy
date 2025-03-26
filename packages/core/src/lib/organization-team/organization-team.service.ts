@@ -4,9 +4,11 @@ import {
 	BadRequestException,
 	UnauthorizedException,
 	ForbiddenException,
-	NotFoundException
+	NotFoundException,
+	Logger as NestLogger
 } from '@nestjs/common';
-import { In, ILike, SelectQueryBuilder, DeleteResult, IsNull, FindManyOptions } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, ILike, SelectQueryBuilder, DeleteResult, IsNull } from 'typeorm';
 import {
 	IOrganizationTeamCreateInput,
 	IOrganizationTeam,
@@ -26,7 +28,6 @@ import {
 import { isNotEmpty, parseToBoolean } from '@gauzy/common';
 import { FavoriteService } from '../core/decorators';
 import { Employee, OrganizationTeamEmployee } from '../core/entities/internal';
-import { MultiORMEnum, enhanceWhereWithTenantId, parseTypeORMFindToMikroOrm } from '../core/utils';
 import { PaginationParams, TenantAwareCrudService } from '../core/crud';
 import { RequestContext } from '../core/context';
 import { RoleService } from '../role/role.service';
@@ -40,19 +41,25 @@ import { TimerService } from '../time-tracking/timer/timer.service';
 import { StatisticService } from '../time-tracking/statistic';
 import { CreateSubscriptionEvent } from '../subscription/events';
 import { GetOrganizationTeamStatisticQuery } from './queries';
-import { MikroOrmOrganizationTeamRepository, TypeOrmOrganizationTeamRepository } from './repository';
+import { TypeOrmOrganizationTeamRepository } from './repository';
 import { OrganizationTeam } from './organization-team.entity';
-import { MikroOrmOrganizationTeamEmployeeRepository } from '../organization-team-employee/repository/mikro-orm-organization-team-employee.repository';
+import { Logger } from '../logger';
 
 @FavoriteService(BaseEntityEnum.OrganizationTeam)
 @Injectable()
 export class OrganizationTeamService extends TenantAwareCrudService<OrganizationTeam> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		private readonly _eventBus: EventBus,
-		readonly typeOrmOrganizationTeamRepository: TypeOrmOrganizationTeamRepository,
-		readonly mikroOrmOrganizationTeamRepository: MikroOrmOrganizationTeamRepository,
-		readonly mikroOrmOrganizationTeamEmployeeRepository: MikroOrmOrganizationTeamEmployeeRepository,
+
+		@InjectRepository(OrganizationTeam)
+		private readonly typeOrmOrganizationTeamRepository: TypeOrmOrganizationTeamRepository,
+
+		@InjectRepository(Employee)
 		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
 		private readonly statisticService: StatisticService,
 		private readonly timerService: TimerService,
 		private readonly roleService: RoleService,
@@ -61,7 +68,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 		private readonly employeeService: EmployeeService,
 		private readonly taskService: TaskService
 	) {
-		super(typeOrmOrganizationTeamRepository, mikroOrmOrganizationTeamRepository);
+		super(typeOrmOrganizationTeamRepository);
 	}
 
 	/**
@@ -94,6 +101,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 
 			return organizationTeam;
 		} catch (error) {
+			this.logger.error(`Error while getting organization team statistic: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -162,7 +170,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 
 			return await Promise.all(memberPromises);
 		} catch (error) {
-			console.error('Error while retrieving team members last worked task', error);
+			this.logger.error(`Error while retrieving team members last worked task: ${error}`);
 			return []; // or handle the error in an appropriate way
 		}
 	}
@@ -194,6 +202,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 
 			return employees;
 		} catch (error) {
+			this.logger.error(`Error while retrieving employees: ${error}`);
 			// Handle any potential errors during the retrieval process
 			throw new Error(`Failed to retrieve employees: ${error}`);
 		}
@@ -225,7 +234,9 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 					// If not included, add the employeeId to the managerIds array
 					managerIds.push(employeeId);
 				}
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error getting role to assign employee as team manager: ${error}`);
+			}
 
 			// Retrieves a collection of employees based on specified criteria.
 			const employees = await this.retrieveEmployees(memberIds, managerIds, organizationId, tenantId);
@@ -282,11 +293,12 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 					)
 				);
 			} catch (error) {
-				console.error('Error publishing CreateSubscriptionEvent:', error);
+				this.logger.error(`Error publishing CreateSubscriptionEvent: ${error}`);
 			}
 
 			return organizationTeam;
 		} catch (error) {
+			this.logger.error(`Error while creating organization team: ${error}`);
 			throw new BadRequestException(`Failed to create a team: ${error}`);
 		}
 	}
@@ -328,6 +340,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 					});
 				}
 			} catch (error) {
+				this.logger.error(`Error looking for employee organization team: ${error}`);
 				throw new ForbiddenException();
 			}
 		}
@@ -363,6 +376,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 				id: organizationTeamId
 			});
 		} catch (error) {
+			this.logger.error(`Error while updating organization team: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -378,6 +392,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 		try {
 			return await this.findAll(options);
 		} catch (error) {
+			this.logger.error(`Error while finding user's teams: ${error}`);
 			throw new UnauthorizedException(`Failed to find user's teams: ${error.message}`);
 		}
 	}
@@ -394,7 +409,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 
 			// Update name filter using ILike
 			if (where.name) {
-				options.where.name = ILike(`%${where.name}%`);
+				options.where.name = ILike(`%${where.name as string}%`);
 			}
 
 			// Update tags filter using In
@@ -417,165 +432,78 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 		// Retrieve tenantId from RequestContext or options
 		const tenantId = RequestContext.currentTenantId() || options?.where?.tenantId;
 
-		// Initialize variables to store the retrieved items and total count.
-		let items: OrganizationTeam[]; // Array to store retrieved items
-		let total: number; // Variable to store total count of items
+		// Create a query builder for the OrganizationTeam entity
+		const typeOrmQueryBuilder = this.typeOrmRepository.createQueryBuilder(this.tableName);
 
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				/**
-				 * Fetches distinct organization team IDs for a given employee.
-				 * Filters based on employee ID, tenant ID, and optionally organization ID.
-				 *
-				 * @param employeeId - The ID of the employee to filter the teams by.
-				 * @returns A Promise that resolves to an array of unique organization team IDs.
-				 */
-				const fetchDistinctOrgTeamIdsForEmployee = async (employeeId: string): Promise<string[]> => {
-					const knex = this.mikroOrmOrganizationTeamEmployeeRepository.getKnex();
+		/**
+		 * Generates a sub-query for selecting organization team IDs based on specified conditions.
+		 * @param cb - The SelectQueryBuilder instance for constructing the sub-query.
+		 * @param employeeId - The employee ID for filtering the teams.
+		 * @returns A SQL condition string to be used in the main query's WHERE clause.
+		 */
+		const subQueryBuilder = (cb: SelectQueryBuilder<OrganizationTeam>, employeeId: string) => {
+			const subQuery = cb.subQuery().select(p('"team"."organizationTeamId"'));
+			subQuery.from('organization_team_employee', 'team');
 
-					// Construct your SQL query using knex
-					let sqlQuery = knex('organization_team_employee').select(
-						knex.raw(`
-							DISTINCT ON ("organization_team_employee"."organizationTeamId")
-							"organization_team_employee"."organizationTeamId"
-						`)
-					);
+			// Apply the tenant filter
+			subQuery.andWhere(p(`"${subQuery.alias}"."tenantId" = :tenantId`), { tenantId });
 
-					// Builds an SQL query with specific where clauses.
-					sqlQuery.andWhere({ tenantId });
-					sqlQuery.andWhere({ employeeId });
-					sqlQuery.andWhere({ isActive: true });
-					sqlQuery.andWhere({ isArchived: false });
+			// Apply the organization filter if available
+			if (options?.where?.organizationId) {
+				const { organizationId } = options.where;
+				subQuery.andWhere(p(`"${subQuery.alias}"."organizationId" = :organizationId`), {
+					organizationId
+				});
+			}
 
-					// Apply the organization filter if available
-					if (options?.where?.organizationId) {
-						const { organizationId } = options.where;
-						sqlQuery.andWhere({ organizationId });
-					}
+			// Additional conditions
+			subQuery.andWhere(p(`"${subQuery.alias}"."isActive" = :isActive`), { isActive: true });
+			subQuery.andWhere(p(`"${subQuery.alias}"."isArchived" = :isArchived`), { isArchived: false });
+			subQuery.andWhere(p(`"${subQuery.alias}"."employeeId" = :employeeId`), { employeeId });
 
-					// Execute the raw SQL query and get the results
-					const rawResults: OrganizationTeamEmployee[] = (await knex.raw(sqlQuery.toString())).rows || [];
-					const organizationTeamIds = rawResults.map(
-						(entry: OrganizationTeamEmployee) => entry.organizationTeamId
-					);
+			return p(`"organization_team"."id" IN ${subQuery.distinct(true).getQuery()}`);
+		};
 
-					// Convert to string for the sub-query
-					return organizationTeamIds || [];
-				};
+		// If admin has login and doesn't have permission to change employee
+		if (RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE)) {
+			const members = options?.where?.members;
+			if (options?.where?.members) {
+				delete options.where['members'];
+			}
 
-				// If admin has login and doesn't have permission to change employee
-				if (RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE)) {
-					const members = options?.where?.members;
-					if ('members' in options?.where) {
-						delete options.where['members'];
-					}
-					if (isNotEmpty(members) && isNotEmpty(members['employeeId'])) {
-						const employeeId = members['employeeId'];
-						// Fetches distinct organization team IDs for a given employee.
-						const organizationTeamIds = await fetchDistinctOrgTeamIdsForEmployee(employeeId);
-						options.where.id = In(organizationTeamIds);
-					}
-				} else {
-					// If employee has login and doesn't have permission to change employee
-					const employeeId = RequestContext.currentEmployeeId();
-					// Fetches distinct organization team IDs for a given employee.
-					const organizationTeamIds = await fetchDistinctOrgTeamIdsForEmployee(employeeId);
-					options.where.id = In(organizationTeamIds);
-				}
-
-				// Converts TypeORM find options to a format compatible with MikroORM for a given entity.
-				const { where, mikroOptions } = parseTypeORMFindToMikroOrm<OrganizationTeam>(
-					options as FindManyOptions
+			if (isNotEmpty(members) && isNotEmpty(members['employeeId'])) {
+				const employeeId = members['employeeId'];
+				// Sub query to get only employee assigned teams
+				typeOrmQueryBuilder.andWhere((cb: SelectQueryBuilder<OrganizationTeam>) =>
+					subQueryBuilder(cb, employeeId)
 				);
-				// Retrieve the items and total count
-				const [entities, totalEntities] = await this.mikroOrmOrganizationTeamRepository.findAndCount(
-					enhanceWhereWithTenantId(tenantId, where), // Add a condition for the tenant ID
-					mikroOptions
-				);
-
-				// Optionally serialize the items
-				items = entities.map((item: OrganizationTeam) => this.serialize(item)) as OrganizationTeam[];
-				total = totalEntities;
-				break;
-			case MultiORMEnum.TypeORM:
-				// Create a query builder for the OrganizationTeam entity
-				const typeOrmQueryBuilder = this.typeOrmRepository.createQueryBuilder(this.tableName);
-
-				/**
-				 * Generates a sub-query for selecting organization team IDs based on specified conditions.
-				 * @param cb - The SelectQueryBuilder instance for constructing the sub-query.
-				 * @param employeeId - The employee ID for filtering the teams.
-				 * @returns A SQL condition string to be used in the main query's WHERE clause.
-				 */
-				const subQueryBuilder = (cb: SelectQueryBuilder<OrganizationTeam>, employeeId: string) => {
-					const subQuery = cb.subQuery().select(p('"team"."organizationTeamId"'));
-					subQuery.from('organization_team_employee', 'team');
-
-					// Apply the tenant filter
-					subQuery.andWhere(p(`"${subQuery.alias}"."tenantId" = :tenantId`), { tenantId });
-
-					// Apply the organization filter if available
-					if (options?.where?.organizationId) {
-						const { organizationId } = options.where;
-						subQuery.andWhere(p(`"${subQuery.alias}"."organizationId" = :organizationId`), {
-							organizationId
-						});
-					}
-
-					// Additional conditions
-					subQuery.andWhere(p(`"${subQuery.alias}"."isActive" = :isActive`), { isActive: true });
-					subQuery.andWhere(p(`"${subQuery.alias}"."isArchived" = :isArchived`), { isArchived: false });
-					subQuery.andWhere(p(`"${subQuery.alias}"."employeeId" = :employeeId`), { employeeId });
-
-					return p(`"organization_team"."id" IN ${subQuery.distinct(true).getQuery()}`);
-				};
-
-				// If admin has login and doesn't have permission to change employee
-				if (RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE)) {
-					const members = options?.where?.members;
-					if ('members' in options?.where) {
-						delete options.where['members'];
-					}
-
-					if (isNotEmpty(members) && isNotEmpty(members['employeeId'])) {
-						const employeeId = members['employeeId'];
-						// Sub query to get only employee assigned teams
-						typeOrmQueryBuilder.andWhere((cb: SelectQueryBuilder<OrganizationTeam>) =>
-							subQueryBuilder(cb, employeeId)
-						);
-					}
-				} else {
-					// If employee has login and doesn't have permission to change employee
-					const employeeId = RequestContext.currentEmployeeId();
-					// Sub query to get only employee assigned teams
-					typeOrmQueryBuilder.andWhere((cb: SelectQueryBuilder<OrganizationTeam>) =>
-						subQueryBuilder(cb, employeeId)
-					);
-				}
-
-				// Set query options
-				if (isNotEmpty(options)) {
-					typeOrmQueryBuilder.setFindOptions({
-						...(options.skip ? { skip: options.take * (options.skip - 1) } : {}),
-						...(options.take ? { take: options.take } : {}),
-						...(options.select ? { select: options.select } : {}),
-						...(options.relations ? { relations: options.relations } : {}),
-						...(options.where ? { where: options.where } : {}),
-						...(options.order ? { order: options.order } : {})
-					});
-				}
-
-				// Apply the tenant filter
-				typeOrmQueryBuilder.andWhere(p(`"${typeOrmQueryBuilder.alias}"."tenantId" = :tenantId`), { tenantId });
-
-				// Retrieve the items and total count
-				[items, total] = await typeOrmQueryBuilder.getManyAndCount();
-				// Return paginated result
-				return { items, total };
-			default:
-				throw new Error(`Not implemented for ${this.ormType}`);
+			}
+		} else {
+			// If employee has login and doesn't have permission to change employee
+			const employeeId = RequestContext.currentEmployeeId();
+			// Sub query to get only employee assigned teams
+			typeOrmQueryBuilder.andWhere((cb: SelectQueryBuilder<OrganizationTeam>) => subQueryBuilder(cb, employeeId));
 		}
 
+		// Set query options
+		if (isNotEmpty(options)) {
+			typeOrmQueryBuilder.setFindOptions({
+				...(options.skip ? { skip: options.take * (options.skip - 1) } : {}),
+				...(options.take ? { take: options.take } : {}),
+				...(options.select ? { select: options.select } : {}),
+				...(options.relations ? { relations: options.relations } : {}),
+				...(options.where ? { where: options.where } : {}),
+				...(options.order ? { order: options.order } : {})
+			});
+		}
+
+		// Apply the tenant filter
+		typeOrmQueryBuilder.andWhere(p(`"${typeOrmQueryBuilder.alias}"."tenantId" = :tenantId`), { tenantId });
+
+		// Retrieve the items and total count
+		const [items, total] = await typeOrmQueryBuilder.getManyAndCount();
+
+		// Return paginated result
 		return { items, total };
 	}
 
@@ -620,6 +548,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 				throw new NotFoundException(`Organization team with ID ${teamId} not found.`);
 			}
 		} catch (error) {
+			this.logger.error(`Error while deleting organization team: ${error}`);
 			throw new ForbiddenException();
 		}
 	}
@@ -668,7 +597,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 			});
 
 			// Unassign this user from all tasks in a team
-			await this.taskService.unassignEmployeeFromTeamTasks(employee.id, undefined);
+			await this.taskService.unassignEmployeeFromTeamTasks(employee.id);
 
 			// Delete the team employee record
 			return await this.organizationTeamEmployeeService.delete({
@@ -676,6 +605,7 @@ export class OrganizationTeamService extends TenantAwareCrudService<Organization
 				roleId: IsNull()
 			});
 		} catch (error) {
+			this.logger.error(`Error checking is the user is a team member or only manager: ${error}`);
 			throw new ForbiddenException('You are not able to removed account where you are only the manager!');
 		}
 	}

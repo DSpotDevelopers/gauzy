@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, FindManyOptions, FindOneOptions, In, SelectQueryBuilder, WhereExpressionBuilder } from 'typeorm';
 import { utc } from 'moment';
 import {
@@ -15,19 +16,22 @@ import {
 import { isNotEmpty } from '@gauzy/common';
 import { RequestContext } from '../core/context';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
-import { MultiORMEnum, getDateRangeFormat, parseTypeORMFindToMikroOrm } from './../core/utils';
+import { getDateRangeFormat } from './../core/utils';
 import { Employee } from './employee.entity';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { MikroOrmEmployeeRepository, TypeOrmEmployeeRepository } from './repository';
+import { TypeOrmEmployeeRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class EmployeeService extends TenantAwareCrudService<Employee> {
-	private readonly logger = new Logger(`GZY - ${EmployeeService.name}`);
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		readonly mikroOrmEmployeeRepository: MikroOrmEmployeeRepository
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository
 	) {
-		super(typeOrmEmployeeRepository, mikroOrmEmployeeRepository);
+		super(typeOrmEmployeeRepository);
 	}
 
 	/**
@@ -144,18 +148,7 @@ export class EmployeeService extends TenantAwareCrudService<Employee> {
 			};
 
 			// Execute the query based on the ORM type
-			switch (this.ormType) {
-				case MultiORMEnum.MikroORM: {
-					const { where, mikroOptions } = parseTypeORMFindToMikroOrm<Employee>(options);
-					const employees = await this.mikroOrmRepository.find(where, mikroOptions);
-					return employees.map((entity: Employee) => this.serialize(entity));
-				}
-				case MultiORMEnum.TypeORM: {
-					return await this.typeOrmRepository.find(options);
-				}
-				default:
-					throw new Error(`Method not implemented for ORM type: ${this.ormType}`);
-			}
+			return await this.typeOrmRepository.find(options);
 		} catch (error) {
 			this.logger.error('Error finding employees by user IDs', error);
 			return []; // Return an empty array if an error occurs
@@ -179,18 +172,8 @@ export class EmployeeService extends TenantAwareCrudService<Employee> {
 				...(tenantId && { tenantId }) // Include tenantId if available
 			};
 
-			switch (this.ormType) {
-				case MultiORMEnum.MikroORM: {
-					const employee = await this.mikroOrmRepository.findOne(whereClause);
-					return employee ? employee.id : null;
-				}
-				case MultiORMEnum.TypeORM: {
-					const employee = await this.typeOrmRepository.findOne({ where: whereClause });
-					return employee ? employee.id : null;
-				}
-				default:
-					throw new Error(`Not implemented for ${this.ormType}`);
-			}
+			const employee = await this.typeOrmRepository.findOne({ where: whereClause });
+			return employee ? employee.id : null;
 		} catch (error) {
 			this.logger.error('Error finding employee by userId', error);
 			return null;
@@ -221,19 +204,7 @@ export class EmployeeService extends TenantAwareCrudService<Employee> {
 				}
 			};
 
-			switch (this.ormType) {
-				case MultiORMEnum.MikroORM: {
-					const { where, mikroOptions } = parseTypeORMFindToMikroOrm<Employee>(
-						queryOptions as FindManyOptions
-					);
-					const item = await this.mikroOrmRepository.findOne(where, mikroOptions);
-					return this.serialize(item as Employee);
-				}
-				case MultiORMEnum.TypeORM:
-					return await this.typeOrmRepository.findOne(queryOptions);
-				default:
-					throw new Error(`Not implemented for ${this.ormType}`);
-			}
+			return await this.typeOrmRepository.findOne(queryOptions);
 		} catch (error) {
 			this.logger.error('Error finding employee by userId', error);
 			return null;

@@ -1,25 +1,18 @@
-import { Injectable, Logger, } from '@nestjs/common';
-import {
-	GetReportMenuItemsInput,
-	IPagination,
-	IReport
-} from '@gauzy/contracts';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { GetReportMenuItemsInput, IPagination, IReport } from '@gauzy/contracts';
 import { CrudService } from '../core/crud';
 import { RequestContext } from './../core/context';
 import { Report } from './report.entity';
-import { MikroOrmReportRepository } from './repository/mikro-orm-report.repository';
-import { TypeOrmReportRepository } from './repository/type-orm-report.repository';
+import { TypeOrmReportRepository } from './repository';
 
 @Injectable()
 export class ReportService extends CrudService<Report> {
-
-	private readonly logger = new Logger(ReportService.name);
-
 	constructor(
-		readonly typeOrmReportRepository: TypeOrmReportRepository,
-		readonly mikroOrmReportRepository: MikroOrmReportRepository
+		@InjectRepository(Report)
+		private readonly typeOrmReportRepository: TypeOrmReportRepository
 	) {
-		super(typeOrmReportRepository, mikroOrmReportRepository);
+		super(typeOrmReportRepository);
 	}
 
 	/**
@@ -29,7 +22,6 @@ export class ReportService extends CrudService<Report> {
 	 * @returns A promise that resolves to an object containing paginated report items and total count.
 	 */
 	public async findAllReports(filter?: any): Promise<IPagination<Report>> {
-		console.time(`ReportService.findAll took seconds`);
 		// Extract organizationId and tenantId from filter
 		const { organizationId } = filter;
 		const tenantId = RequestContext.currentTenantId() || filter.tenantId;
@@ -39,13 +31,18 @@ export class ReportService extends CrudService<Report> {
 		qb.setFindOptions({
 			...(filter.relations ? { relations: filter.relations } : {})
 		});
-		qb.leftJoinAndSelect('report.reportOrganizations', 'ro', 'ro.organizationId = :organizationId AND ro.tenantId = :tenantId AND ro.isEnabled = :isEnabled AND ro.isActive = :isActive AND ro.isArchived = :isArchived', {
-			organizationId,
-			tenantId,
-			isEnabled: true,
-			isActive: true,
-			isArchived: false
-		});
+		qb.leftJoinAndSelect(
+			'report.reportOrganizations',
+			'ro',
+			'ro.organizationId = :organizationId AND ro.tenantId = :tenantId AND ro.isEnabled = :isEnabled AND ro.isActive = :isActive AND ro.isArchived = :isArchived',
+			{
+				organizationId,
+				tenantId,
+				isEnabled: true,
+				isActive: true,
+				isArchived: false
+			}
+		);
 
 		// Execute the query
 		const [items, total] = await qb.getManyAndCount();
@@ -57,7 +54,6 @@ export class ReportService extends CrudService<Report> {
 			return item;
 		});
 
-		console.timeEnd(`ReportService.findAll took seconds`);
 		return { items: reports, total: total };
 	}
 
@@ -72,11 +68,16 @@ export class ReportService extends CrudService<Report> {
 		const tenantId = RequestContext.currentTenantId() || input.tenantId;
 
 		const qb = this.typeOrmRepository.createQueryBuilder('report');
-		qb.innerJoin('report.reportOrganizations', 'ro', 'ro.isEnabled = :isEnabled AND ro.isActive = :isActive AND ro.isArchived = :isArchived', {
-			isEnabled: true,
-			isActive: true,
-			isArchived: false
-		});
+		qb.innerJoin(
+			'report.reportOrganizations',
+			'ro',
+			'ro.isEnabled = :isEnabled AND ro.isActive = :isActive AND ro.isArchived = :isArchived',
+			{
+				isEnabled: true,
+				isActive: true,
+				isArchived: false
+			}
+		);
 		qb.andWhere('ro.organizationId = :organizationId', { organizationId });
 		qb.andWhere('ro.tenantId = :tenantId', { tenantId });
 

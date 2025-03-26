@@ -1,31 +1,30 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult } from 'typeorm';
-import { Knex as KnexConnection } from 'knex';
-import { InjectConnection } from 'nest-knexjs';
-import { IOrganization, IPagination, ITaskPriority, ITaskPriorityCreateInput, ITaskPriorityFindInput, ITenant } from '@gauzy/contracts';
-import { isPostgres } from '@gauzy/config';
+import {
+	IOrganization,
+	IPagination,
+	ITaskPriority,
+	ITaskPriorityCreateInput,
+	ITaskPriorityFindInput,
+	ITenant
+} from '@gauzy/contracts';
 import { RequestContext } from '../../core/context';
-import { MultiORMEnum } from '../../core/utils';
 import { TaskStatusPrioritySizeService } from '../task-status-priority-size.service';
 import { TaskPriority } from './priority.entity';
 import { DEFAULT_GLOBAL_PRIORITIES } from './default-global-priorities';
-import { MikroOrmTaskPriorityRepository } from './repository/mikro-orm-task-priority.repository';
-import { TypeOrmTaskPriorityRepository } from './repository/type-orm-task-priority.repository';
-
+import { TypeOrmTaskPriorityRepository } from './repository';
+import { Logger } from '../../logger';
 @Injectable()
 export class TaskPriorityService extends TaskStatusPrioritySizeService<TaskPriority> {
+	@Logger()
+	protected readonly logger: NestLogger;
 
 	constructor(
 		@InjectRepository(TaskPriority)
-		readonly typeOrmTaskPriorityRepository: TypeOrmTaskPriorityRepository,
-
-		readonly mikroOrmTaskPriorityRepository: MikroOrmTaskPriorityRepository,
-
-		@InjectConnection()
-		readonly knexConnection: KnexConnection
+		private readonly typeOrmTaskPriorityRepository: TypeOrmTaskPriorityRepository
 	) {
-		super(typeOrmTaskPriorityRepository, mikroOrmTaskPriorityRepository, knexConnection);
+		super(typeOrmTaskPriorityRepository);
 	}
 
 	/**
@@ -38,7 +37,7 @@ export class TaskPriorityService extends TaskStatusPrioritySizeService<TaskPrior
 		return await super.delete(id, {
 			where: {
 				isSystem: false
-			},
+			}
 		});
 	}
 
@@ -51,14 +50,13 @@ export class TaskPriorityService extends TaskStatusPrioritySizeService<TaskPrior
 	 */
 	public async fetchAll(params: ITaskPriorityFindInput): Promise<IPagination<ITaskPriority>> {
 		try {
-			if (this.ormType == MultiORMEnum.TypeORM && isPostgres()) {
-				return await super.fetchAllByKnex(params);
-			} else {
-				return await super.fetchAll(params);
-			}
+			return await super.fetchAll(params);
 		} catch (error) {
-			console.log('Failed to retrieve task priorities. Ensure that the provided parameters are valid and complete.', error);
-			throw new BadRequestException('Failed to retrieve task priorities. Ensure that the provided parameters are valid and complete.', error);
+			this.logger.error(`Failed to retrieve task priorities: ${error}`);
+			throw new BadRequestException(
+				'Failed to retrieve task priorities. Ensure that the provided parameters are valid and complete.',
+				error
+			);
 		}
 	}
 
@@ -83,6 +81,7 @@ export class TaskPriorityService extends TaskStatusPrioritySizeService<TaskPrior
 			}
 			return await this.typeOrmRepository.save(priorities);
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task priorities: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -116,6 +115,7 @@ export class TaskPriorityService extends TaskStatusPrioritySizeService<TaskPrior
 			}
 			return await this.typeOrmRepository.save(priorities);
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task priorities: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -151,6 +151,7 @@ export class TaskPriorityService extends TaskStatusPrioritySizeService<TaskPrior
 
 			return priorities;
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task priorities: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
