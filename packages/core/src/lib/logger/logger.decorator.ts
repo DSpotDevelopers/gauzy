@@ -11,7 +11,7 @@ export const prefixesForLoggers: string[] = new Array<string>();
  */
 export function Logger(): PropertyDecorator {
 	return (target: any, propertyKey: string | symbol) => {
-		const loggerInstance = new NestLogger(`GZY - ${target.name}`);
+		const loggerInstance = new NestLogger(`GZY - ${target.constructor?.name}`);
 
 		// Define the property with the logger instance
 		Object.defineProperty(target, propertyKey, {
