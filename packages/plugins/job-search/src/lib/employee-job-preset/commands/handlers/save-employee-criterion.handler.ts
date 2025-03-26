@@ -1,16 +1,21 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { GauzyAIService } from '@gauzy/plugin-integration-ai';
 import { IMatchingCriterions, PermissionsEnum } from '@gauzy/contracts';
-import { RequestContext, TypeOrmEmployeeRepository } from '@gauzy/core';
+import { Employee, RequestContext, TypeOrmEmployeeRepository } from '@gauzy/core';
+import { InjectRepository } from '@nestjs/typeorm';
 import { EmployeeUpworkJobsSearchCriterion } from '../../employee-upwork-jobs-search-criterion.entity';
 import { SaveEmployeeCriterionCommand } from '../save-employee-criterion.command';
-import { TypeOrmEmployeeUpworkJobsSearchCriterionRepository } from '../../repository/type-orm-employee-upwork-jobs-search-criterion.repository';
+import { TypeOrmEmployeeUpworkJobsSearchCriterionRepository } from '../../repository';
 
 @CommandHandler(SaveEmployeeCriterionCommand)
 export class SaveEmployeeCriterionHandler implements ICommandHandler<SaveEmployeeCriterionCommand> {
 	constructor(
+		@InjectRepository(Employee)
 		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
+		@InjectRepository(EmployeeUpworkJobsSearchCriterion)
 		private readonly typeOrmEmployeeUpworkJobsSearchCriterionRepository: TypeOrmEmployeeUpworkJobsSearchCriterionRepository,
+
 		private readonly _gauzyAIService: GauzyAIService
 	) {}
 

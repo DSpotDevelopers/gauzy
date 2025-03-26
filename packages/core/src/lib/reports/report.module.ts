@@ -11,8 +11,8 @@ import { ReportCategoryService } from './report-category.service';
 import { ReportOrganization } from './report-organization.entity';
 import { CommandHandlers } from './commands/handlers';
 import { ReportOrganizationService } from './report-organization.service';
-import { TypeOrmReportOrganizationRepository } from './repository/type-orm-report-organization.repository';
-import { TypeOrmReportRepository } from './repository/type-orm-report.repository';
+import { TypeOrmReportOrganizationRepository } from './repository';
+import { TypeOrmReportRepository } from './repository';
 
 @Module({
 	imports: [
@@ -35,4 +35,4 @@ import { TypeOrmReportRepository } from './repository/type-orm-report.repository
 		...CommandHandlers
 	]
 })
-export class ReportModule { }
+export class ReportModule {}

@@ -3,22 +3,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ID, IOrganization, IPagination, IUser, IUserOrganization, RolesEnum } from '@gauzy/contracts';
 import { RequestContext } from '../core/context';
 import { PaginationParams, TenantAwareCrudService } from '../core/crud';
-import { Employee } from '../core/entities/internal';
+import { Employee, Organization } from '../core/entities/internal';
 import { EmployeeService } from '../employee/employee.service';
 import { TypeOrmOrganizationRepository } from '../organization/repository';
 import { UserOrganization } from './user-organization.entity';
-import { MikroOrmUserOrganizationRepository, TypeOrmUserOrganizationRepository } from './repository';
+import { TypeOrmUserOrganizationRepository } from './repository';
 
 @Injectable()
 export class UserOrganizationService extends TenantAwareCrudService<UserOrganization> {
 	constructor(
 		@InjectRepository(UserOrganization)
-		readonly typeOrmUserOrganizationRepository: TypeOrmUserOrganizationRepository,
-		readonly mikroOrmUserOrganizationRepository: MikroOrmUserOrganizationRepository,
-		readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
+		private readonly typeOrmUserOrganizationRepository: TypeOrmUserOrganizationRepository,
+
+		@InjectRepository(Organization)
+		private readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
+
 		readonly employeeService: EmployeeService
 	) {
-		super(typeOrmUserOrganizationRepository, mikroOrmUserOrganizationRepository);
+		super(typeOrmUserOrganizationRepository);
 	}
 
 	/**
@@ -32,7 +34,7 @@ export class UserOrganizationService extends TenantAwareCrudService<UserOrganiza
 		includeEmployee: boolean
 	): Promise<IPagination<UserOrganization>> {
 		// Call the base class method to find all user organizations
-		let { items, total } = await super.findAll(filter);
+		const { items, total } = await super.findAll(filter);
 
 		// If 'includeEmployee' is set to true, fetch employee details associated with each user organization
 		if (includeEmployee) {
@@ -41,9 +43,10 @@ export class UserOrganizationService extends TenantAwareCrudService<UserOrganiza
 				const tenantId = RequestContext.currentTenantId();
 
 				// Extract user IDs from the items array
-				const userIds = items
-					.filter((organization: IUserOrganization) => organization?.user) // Filter out user organizations without a user object
-					.map((organization: IUserOrganization) => organization?.user?.id) || [];
+				const userIds =
+					items
+						.filter((organization: IUserOrganization) => organization?.user) // Filter out user organizations without a user object
+						.map((organization: IUserOrganization) => organization?.user?.id) || [];
 
 				// Fetch all employee details in bulk for the extracted user IDs
 				const employees = await this.employeeService.findEmployeesByUserIds(userIds, tenantId);

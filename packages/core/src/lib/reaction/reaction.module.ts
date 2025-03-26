@@ -9,7 +9,7 @@ import { CommandHandlers } from './commands/handlers';
 import { ReactionService } from './reaction.service';
 import { ReactionController } from './reaction.controller';
 import { Reaction } from './reaction.entity';
-import { TypeOrmReactionRepository } from './repository/type-orm-reaction.repository';
+import { TypeOrmReactionRepository } from './repository';
 
 @Module({
 	imports: [

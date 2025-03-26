@@ -6,8 +6,8 @@ import { AuthService } from '../../../auth/auth.service';
 import { InviteService } from '../../invite.service';
 import { InviteAcceptCandidateCommand } from '../invite.accept-candidate.command';
 import { Candidate, User } from './../../../core/entities/internal';
-import { TypeOrmUserRepository } from '../../../user/repository/type-orm-user.repository';
-import { TypeOrmCandidateRepository } from '../../../candidate/repository/type-orm-candidate.repository';
+import { TypeOrmUserRepository } from '../../../user/repository';
+import { TypeOrmCandidateRepository } from '../../../candidate/repository';
 
 /**
  * Use this command for registering candidates.
@@ -19,8 +19,12 @@ export class InviteAcceptCandidateHandler implements ICommandHandler<InviteAccep
 	constructor(
 		private readonly inviteService: InviteService,
 		private readonly authService: AuthService,
-		@InjectRepository(User) private readonly typeOrmUserRepository: TypeOrmUserRepository,
-		@InjectRepository(Candidate) private readonly typeOrmCandidateRepository: TypeOrmCandidateRepository
+
+		@InjectRepository(User)
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
+
+		@InjectRepository(Candidate)
+		private readonly typeOrmCandidateRepository: TypeOrmCandidateRepository
 	) {}
 
 	public async execute(command: InviteAcceptCandidateCommand): Promise<IUser> {

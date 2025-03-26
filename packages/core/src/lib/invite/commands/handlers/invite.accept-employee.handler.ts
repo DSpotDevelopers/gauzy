@@ -29,12 +29,12 @@ import {
 	OrganizationTeamEmployee,
 	User
 } from './../../../core/entities/internal';
-import { TypeOrmEmployeeRepository } from '../../../employee/repository/type-orm-employee.repository';
-import { TypeOrmOrganizationContactRepository } from '../../../organization-contact/repository/type-orm-organization-contact.repository';
-import { TypeOrmOrganizationDepartmentRepository } from '../../../organization-department/repository/type-orm-organization-department.repository';
-import { TypeOrmOrganizationProjectRepository } from '../../../organization-project/repository/type-orm-organization-project.repository';
-import { TypeOrmOrganizationTeamRepository } from '../../../organization-team/repository/type-orm-organization-team.repository';
-import { TypeOrmUserRepository } from '../../../user/repository/type-orm-user.repository';
+import { TypeOrmEmployeeRepository } from '../../../employee/repository';
+import { TypeOrmOrganizationContactRepository } from '../../../organization-contact/repository';
+import { TypeOrmOrganizationDepartmentRepository } from '../../../organization-department/repository';
+import { TypeOrmOrganizationProjectRepository } from '../../../organization-project/repository';
+import { TypeOrmOrganizationTeamRepository } from '../../../organization-team/repository';
+import { TypeOrmUserRepository } from '../../../user/repository';
 
 /**
  * Use this command for registering employees.
@@ -46,14 +46,22 @@ export class InviteAcceptEmployeeHandler implements ICommandHandler<InviteAccept
 	constructor(
 		private readonly inviteService: InviteService,
 		private readonly authService: AuthService,
-		@InjectRepository(User) private readonly typeOrmUserRepository: TypeOrmUserRepository,
-		@InjectRepository(Employee) private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
+		@InjectRepository(User)
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
+
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
 		@InjectRepository(OrganizationProject)
 		private readonly typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository,
+
 		@InjectRepository(OrganizationContact)
 		private readonly typeOrmOrganizationContactRepository: TypeOrmOrganizationContactRepository,
+
 		@InjectRepository(OrganizationDepartment)
 		private readonly typeOrmOrganizationDepartmentRepository: TypeOrmOrganizationDepartmentRepository,
+
 		@InjectRepository(OrganizationTeam)
 		private readonly typeOrmOrganizationTeamRepository: TypeOrmOrganizationTeamRepository
 	) {}

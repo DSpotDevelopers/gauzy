@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { ID, IEmployee } from '@gauzy/contracts';
 import { isEmpty } from '@gauzy/common';
 import { RequestContext } from '../../../core/context';
-import { MultiORM, MultiORMEnum, getORMType } from '../../../core/utils';
-import { MikroOrmEmployeeRepository, TypeOrmEmployeeRepository } from '../../../employee/repository';
-
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
+import { TypeOrmEmployeeRepository } from '../../../employee/repository';
+import { Employee } from '../../../employee/employee.entity';
 
 /**
  * Validator constraint for employee belonging to organization validation.
@@ -16,8 +14,8 @@ const ormType: MultiORM = getORMType();
 @Injectable()
 export class EmployeeBelongsToOrganizationConstraint implements ValidatorConstraintInterface {
 	constructor(
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		readonly mikroOrmEmployeeRepository: MikroOrmEmployeeRepository
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository
 	) {}
 
 	/**
@@ -63,14 +61,7 @@ export class EmployeeBelongsToOrganizationConstraint implements ValidatorConstra
 		};
 
 		// Use the appropriate ORM repository based on the type of the application
-		switch (ormType) {
-			case MultiORMEnum.MikroORM:
-				return await this.mikroOrmEmployeeRepository.findOneOrFail(whereClause);
-			case MultiORMEnum.TypeORM:
-				return await this.typeOrmEmployeeRepository.findOneByOrFail(whereClause);
-			default:
-				throw new Error(`Not implemented for ${ormType}`);
-		}
+		return await this.typeOrmEmployeeRepository.findOneByOrFail(whereClause);
 	}
 
 	/**

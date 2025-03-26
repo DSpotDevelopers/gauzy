@@ -8,7 +8,7 @@ import { EventHandlers } from './events/handlers';
 import { SubscriptionService } from './subscription.service';
 import { SubscriptionController } from './subscription.controller';
 import { Subscription } from './subscription.entity';
-import { TypeOrmSubscriptionRepository } from './repository/type-orm-subscription.repository';
+import { TypeOrmSubscriptionRepository } from './repository';
 
 @Global()
 @Module({

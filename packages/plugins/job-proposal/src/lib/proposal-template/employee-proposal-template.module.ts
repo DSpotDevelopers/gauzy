@@ -6,8 +6,7 @@ import { RolePermissionModule } from '@gauzy/core';
 import { EmployeeProposalTemplateController } from './employee-proposal-template.controller';
 import { EmployeeProposalTemplate } from './employee-proposal-template.entity';
 import { EmployeeProposalTemplateService } from './employee-proposal-template.service';
-import { MikroOrmEmployeeProposalTemplateRepository } from './repository/mikro-orm-employee-proposal-template.repository';
-import { TypeOrmEmployeeProposalTemplateRepository } from './repository/type-orm-employee-proposal-template.repository';
+import { TypeOrmEmployeeProposalTemplateRepository } from './repository';
 
 @Module({
 	imports: [
@@ -17,6 +16,6 @@ import { TypeOrmEmployeeProposalTemplateRepository } from './repository/type-orm
 		CqrsModule
 	],
 	controllers: [EmployeeProposalTemplateController],
-	providers: [EmployeeProposalTemplateService, TypeOrmEmployeeProposalTemplateRepository, MikroOrmEmployeeProposalTemplateRepository],
+	providers: [EmployeeProposalTemplateService, TypeOrmEmployeeProposalTemplateRepository]
 })
-export class EmployeeProposalTemplateModule { }
+export class EmployeeProposalTemplateModule {}

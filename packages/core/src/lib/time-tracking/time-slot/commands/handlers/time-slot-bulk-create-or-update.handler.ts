@@ -9,13 +9,12 @@ import { TimeSlotBulkCreateOrUpdateCommand } from './../time-slot-bulk-create-or
 import { RequestContext } from '../../../../core/context';
 import { TimeSlotMergeCommand } from './../time-slot-merge.command';
 import { Employee, TimeLog } from './../../../../core/entities/internal';
-import { TypeOrmTimeLogRepository } from '../../../time-log/repository/type-orm-time-log.repository';
-import { TypeOrmTimeSlotRepository } from '../../repository/type-orm-time-slot.repository';
-import { TypeOrmEmployeeRepository } from '../../../../employee/repository/type-orm-employee.repository';
+import { TypeOrmTimeLogRepository } from '../../../time-log/repository';
+import { TypeOrmTimeSlotRepository } from '../../repository';
+import { TypeOrmEmployeeRepository } from '../../../../employee/repository';
 
 @CommandHandler(TimeSlotBulkCreateOrUpdateCommand)
 export class TimeSlotBulkCreateOrUpdateHandler implements ICommandHandler<TimeSlotBulkCreateOrUpdateCommand> {
-
 	constructor(
 		@InjectRepository(TimeLog)
 		private readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
@@ -27,11 +26,9 @@ export class TimeSlotBulkCreateOrUpdateHandler implements ICommandHandler<TimeSl
 		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
 
 		private readonly commandBus: CommandBus
-	) { }
+	) {}
 
-	public async execute(
-		command: TimeSlotBulkCreateOrUpdateCommand
-	): Promise<TimeSlot[]> {
+	public async execute(command: TimeSlotBulkCreateOrUpdateCommand): Promise<TimeSlot[]> {
 		let { slots, employeeId, organizationId } = command;
 		if (slots.length === 0) {
 			return [];
@@ -64,11 +61,7 @@ export class TimeSlotBulkCreateOrUpdateHandler implements ICommandHandler<TimeSl
 			.map((slot) => _.pluck(slot.timeLogs, 'id'))
 			.flatten()
 			.value();
-		const timeLogIds = _.chain(oldSlotsTimeLogIds)
-			.concat(newSlotsTimeLogIds)
-			.uniq()
-			.values()
-			.value();
+		const timeLogIds = _.chain(oldSlotsTimeLogIds).concat(newSlotsTimeLogIds).uniq().values().value();
 
 		const timeLogs = await this.typeOrmTimeLogRepository.find({
 			where: {
@@ -80,9 +73,8 @@ export class TimeSlotBulkCreateOrUpdateHandler implements ICommandHandler<TimeSl
 			slots = slots.map((slot) => {
 				const oldSlot = insertedSlots.find(
 					(insertedSlot) =>
-						moment(insertedSlot.startedAt).format(
-							'YYYY-MM-DD HH:mm'
-						) === moment(slot.startedAt).format('YYYY-MM-DD HH:mm')
+						moment(insertedSlot.startedAt).format('YYYY-MM-DD HH:mm') ===
+						moment(slot.startedAt).format('YYYY-MM-DD HH:mm')
 				);
 
 				if (oldSlot) {
@@ -93,9 +85,7 @@ export class TimeSlotBulkCreateOrUpdateHandler implements ICommandHandler<TimeSl
 						id: oldSlotsTimeLogIds
 					});
 					if (foundTimeLogs.length > 0) {
-						oldSlot.timeLogs = oldSlot.timeLogs.concat(
-							foundTimeLogs
-						);
+						oldSlot.timeLogs = oldSlot.timeLogs.concat(foundTimeLogs);
 						oldSlot.timeLogs = _.uniq(oldSlot.timeLogs, 'id');
 					}
 					return oldSlot;
@@ -118,13 +108,6 @@ export class TimeSlotBulkCreateOrUpdateHandler implements ICommandHandler<TimeSl
 			return a > b ? a : b;
 		});
 
-		return await this.commandBus.execute(
-			new TimeSlotMergeCommand(
-				organizationId,
-				employeeId,
-				minDate,
-				maxDate
-			)
-		);
+		return await this.commandBus.execute(new TimeSlotMergeCommand(organizationId, employeeId, minDate, maxDate));
 	}
 }

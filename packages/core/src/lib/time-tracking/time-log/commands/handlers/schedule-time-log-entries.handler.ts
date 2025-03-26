@@ -7,12 +7,12 @@ import { ID, ITimeLog, ITimeSlot } from '@gauzy/contracts';
 import { prepareSQLQuery as p } from './../../../../database/database.helper';
 import { TimeLog } from './../../time-log.entity';
 import { ScheduleTimeLogEntriesCommand } from '../schedule-time-log-entries.command';
-import { TypeOrmTimeLogRepository } from '../../repository/type-orm-time-log.repository';
+import { TypeOrmTimeLogRepository } from '../../repository';
 
 @CommandHandler(ScheduleTimeLogEntriesCommand)
 export class ScheduleTimeLogEntriesHandler implements ICommandHandler<ScheduleTimeLogEntriesCommand> {
 	private readonly logger = new Logger(`GZY - ${ScheduleTimeLogEntriesHandler.name}`);
-	constructor(readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository) { }
+	constructor(readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository) {}
 
 	/**
 	 * Executes the scheduling of TimeLog entries based on the given command parameters.
@@ -115,7 +115,9 @@ export class ScheduleTimeLogEntriesHandler implements ICommandHandler<ScheduleTi
 			// If the current time is "2024-09-24 20:15:00", the difference is 15 minutes, which is greater than 10
 
 			const difference = moment.utc().diff(startedAt, 'minutes');
-			this.logger.verbose(`This log was created more than ${difference} minutes ago at ${startedAt.toISOString()}`);
+			this.logger.verbose(
+				`This log was created more than ${difference} minutes ago at ${startedAt.toISOString()}`
+			);
 
 			if (difference > 10) {
 				await this.updateStoppedAtUsingStartedAt(timeLog);
@@ -175,9 +177,7 @@ export class ScheduleTimeLogEntriesHandler implements ICommandHandler<ScheduleTi
 		// then stoppedAt = "2024-09-24 10:15:00"
 
 		// Retrieve the most recent time slot from the last log
-		timeSlots.sort((a: ITimeSlot, b: ITimeSlot) =>
-			moment(b.startedAt).diff(a.startedAt)
-		)
+		timeSlots.sort((a: ITimeSlot, b: ITimeSlot) => moment(b.startedAt).diff(a.startedAt));
 		const lastTimeSlot: ITimeSlot | undefined = timeSlots[0];
 		// Example:
 		// If timeSlots = [{ startedAt: "2024-09-24 10:05:00" }, { startedAt: "2024-09-24 10:10:00" }]
@@ -237,9 +237,7 @@ export class ScheduleTimeLogEntriesHandler implements ICommandHandler<ScheduleTi
 		let stoppedAt = moment.utc(timeLog.stoppedAt).toDate();
 
 		// Retrieve the most recent time slot from the last log
-		timeSlots.sort((a: ITimeSlot, b: ITimeSlot) =>
-			moment(b.startedAt).diff(a.startedAt)
-		)
+		timeSlots.sort((a: ITimeSlot, b: ITimeSlot) => moment(b.startedAt).diff(a.startedAt));
 		const lastTimeSlot: ITimeSlot | undefined = timeSlots[0];
 
 		// Example:
@@ -259,7 +257,9 @@ export class ScheduleTimeLogEntriesHandler implements ICommandHandler<ScheduleTi
 
 			// Calculate the potential stoppedAt time using the total duration
 			const difference = moment.utc().diff(stoppedAt, 'minutes');
-			this.logger.verbose(`Last time slot (${duration}) created ${difference} mins ago at ${startedAt.toISOString()}`);
+			this.logger.verbose(
+				`Last time slot (${duration}) created ${difference} mins ago at ${startedAt.toISOString()}`
+			);
 
 			// Check if the last time slot was created more than 10 minutes ago
 			if (difference > 10) {

@@ -15,7 +15,7 @@ import { RolePermissionModule } from '../role-permission/role-permission.module'
 import { FactoryResetModule } from './factory-reset/factory-reset.module';
 import { TaskModule } from './../tasks/task.module';
 import { EmployeeModule } from './../employee/employee.module';
-import { TypeOrmUserRepository } from './repository/type-orm-user.repository';
+import { TypeOrmUserRepository } from './repository';
 
 @Module({
 	imports: [

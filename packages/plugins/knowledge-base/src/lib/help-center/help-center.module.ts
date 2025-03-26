@@ -1,4 +1,4 @@
-import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -22,8 +22,4 @@ import { TypeOrmHelpCenterRepository } from './repository';
 	providers: [HelpCenterService, TypeOrmHelpCenterRepository, ...CommandHandlers],
 	exports: [HelpCenterService, TypeOrmHelpCenterRepository]
 })
-export class HelpCenterModule implements OnModuleInit {
-	constructor() { }
-
-	onModuleInit() { }
-}
+export class HelpCenterModule {}

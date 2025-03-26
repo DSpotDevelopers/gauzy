@@ -6,29 +6,20 @@ import { IntegrationEntity, ITimeSlot } from '@gauzy/contracts';
 import { TimeSlotCreateCommand } from './../time-slot-create.command';
 import { RequestContext } from './../../../../core/context';
 import { TimeSlot } from './../../../../core/entities/internal';
-import { TypeOrmTimeSlotRepository } from '../../repository/type-orm-time-slot.repository';
+import { TypeOrmTimeSlotRepository } from '../../repository';
 
 @CommandHandler(TimeSlotCreateCommand)
 export class TimeSlotCreateHandler implements ICommandHandler<TimeSlotCreateCommand> {
-
 	constructor(
 		@InjectRepository(TimeSlot)
-		private readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository,
-	) { }
+		private readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository
+	) {}
 
 	public async execute(command: TimeSlotCreateCommand): Promise<ITimeSlot> {
 		const { input } = command;
 		const tenantId = RequestContext.currentTenantId();
 
-		const {
-			employeeId,
-			duration,
-			keyboard,
-			mouse,
-			overall,
-			time_slot,
-			organizationId
-		}: ITimeSlot = input;
+		const { employeeId, duration, keyboard, mouse, overall, time_slot, organizationId }: ITimeSlot = input;
 
 		try {
 			const entity = this.typeOrmTimeSlotRepository.create({

@@ -1,16 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import {
-	ValidationArguments,
-	ValidatorConstraint,
-	ValidatorConstraintInterface
-} from "class-validator";
-import { IRole } from "@gauzy/contracts";
-import { RequestContext } from "../../../core/context";
-import { MultiORM, MultiORMEnum, getORMType } from "../../../core/utils";
-import { MikroOrmRoleRepository, TypeOrmRoleRepository } from "../../../role/repository";
-
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
+import { Injectable } from '@nestjs/common';
+import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
+import { IRole } from '@gauzy/contracts';
+import { RequestContext } from '../../../core/context';
+import { TypeOrmRoleRepository } from '../../../role/repository';
 
 /**
  * Role should existed validation constraint
@@ -18,14 +10,10 @@ const ormType: MultiORM = getORMType();
  * @param validationOptions
  * @returns
  */
-@ValidatorConstraint({ name: "IsRoleShouldExist", async: true })
+@ValidatorConstraint({ name: 'IsRoleShouldExist', async: true })
 @Injectable()
 export class RoleShouldExistConstraint implements ValidatorConstraintInterface {
-
-	constructor(
-		readonly typeOrmRoleRepository: TypeOrmRoleRepository,
-		readonly mikroOrmRoleRepository: MikroOrmRoleRepository,
-	) { }
+	constructor(readonly typeOrmRoleRepository: TypeOrmRoleRepository) {}
 
 	/**
 	 * Validates if the given role exists for the current tenant.
@@ -41,14 +29,7 @@ export class RoleShouldExistConstraint implements ValidatorConstraintInterface {
 
 		const tenantId = RequestContext.currentTenantId();
 		try {
-			switch (ormType) {
-				case MultiORMEnum.MikroORM:
-					return !!await this.mikroOrmRoleRepository.findOneOrFail({ id: roleId, tenantId });
-				case MultiORMEnum.TypeORM:
-					return !!await this.typeOrmRoleRepository.findOneByOrFail({ id: roleId, tenantId });
-				default:
-					throw new Error(`Not implemented for ${ormType}`);
-			}
+			return !!(await this.typeOrmRoleRepository.findOneByOrFail({ id: roleId, tenantId }));
 		} catch (error) {
 			return false; // Role does not exist
 		}
@@ -59,6 +40,8 @@ export class RoleShouldExistConstraint implements ValidatorConstraintInterface {
 	 */
 	defaultMessage(validationArguments?: ValidationArguments): string {
 		const { value } = validationArguments;
-		return `Please provide a valid value for the role. The value '${JSON.stringify(value)}' is not recognized as a valid role identifier.`;
+		return `Please provide a valid value for the role. The value '${JSON.stringify(
+			value
+		)}' is not recognized as a valid role identifier.`;
 	}
 }

@@ -10,8 +10,8 @@ import { RequestContext } from './../../../../core/context';
 import { prepareSQLQuery as p } from './../../../../database/database.helper';
 import { TimeLog } from './../../time-log.entity';
 import { TimeLogUpdateCommand } from '../time-log-update.command';
-import { TypeOrmTimeLogRepository } from '../../repository/type-orm-time-log.repository';
-import { TypeOrmTimeSlotRepository } from '../../../time-slot/repository/type-orm-time-slot.repository';
+import { TypeOrmTimeLogRepository } from '../../repository';
+import { TypeOrmTimeSlotRepository } from '../../../time-slot/repository';
 
 @CommandHandler(TimeLogUpdateCommand)
 export class TimeLogUpdateHandler implements ICommandHandler<TimeLogUpdateCommand> {
@@ -47,7 +47,7 @@ export class TimeLogUpdateHandler implements ICommandHandler<TimeLogUpdateComman
 		this.logger.verbose(`Retrieved TimeLog: ${JSON.stringify(timeLog)}`);
 
 		// Calculate the previous time log duration that was already saved
-		const previousTime =  Math.abs(moment(timeLog.stoppedAt).diff(moment(timeLog.startedAt), 'seconds'));
+		const previousTime = Math.abs(moment(timeLog.stoppedAt).diff(moment(timeLog.startedAt), 'seconds'));
 		this.logger.verbose(`Previous TimeLog Duration: ${previousTime}`);
 
 		const { employeeId, organizationId } = timeLog;

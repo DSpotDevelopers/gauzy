@@ -4,23 +4,20 @@ import { NotFoundException } from '@nestjs/common';
 import { EquipmentSharingStatusCommand } from '../equipment-sharing.status.command';
 import { EquipmentSharing } from '../../equipment-sharing.entity';
 import { RequestApproval } from '../../../request-approval/request-approval.entity';
-import { TypeOrmEquipmentSharingRepository } from '../../repository/type-orm-equipment-sharing.repository';
-import { TypeOrmRequestApprovalRepository } from '../../../request-approval/repository/type-orm-request-approval.repository';
+import { TypeOrmEquipmentSharingRepository } from '../../repository';
+import { TypeOrmRequestApprovalRepository } from '../../../request-approval/repository';
 
 @CommandHandler(EquipmentSharingStatusCommand)
 export class EquipmentSharingStatusHandler implements ICommandHandler<EquipmentSharingStatusCommand> {
-
 	constructor(
 		@InjectRepository(EquipmentSharing)
 		private readonly typeOrmEquipmentSharingRepository: TypeOrmEquipmentSharingRepository,
 
 		@InjectRepository(RequestApproval)
 		private readonly typeOrmRequestApprovalRepository: TypeOrmRequestApprovalRepository
-	) { }
+	) {}
 
-	public async execute(
-		command?: EquipmentSharingStatusCommand
-	): Promise<EquipmentSharing> {
+	public async execute(command?: EquipmentSharingStatusCommand): Promise<EquipmentSharing> {
 		const { id, status } = command;
 
 		const [equipmentSharing, requestApproval] = await Promise.all([

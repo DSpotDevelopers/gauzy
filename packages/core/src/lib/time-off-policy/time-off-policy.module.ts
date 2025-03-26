@@ -6,7 +6,7 @@ import { TimeOffPolicy } from './time-off-policy.entity';
 import { TimeOffPolicyController } from './time-off-policy.controller';
 import { EmployeeModule } from './../employee/employee.module';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
-import { TypeOrmTimeOffPolicyRepository } from './repository/type-orm-time-off-policy.repository';
+import { TypeOrmTimeOffPolicyRepository } from './repository';
 
 @Module({
 	imports: [

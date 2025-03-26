@@ -1,6 +1,6 @@
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
-import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '@gauzy/core';
@@ -22,8 +22,4 @@ import { TypeOrmHelpCenterArticleRepository } from './repository';
 	controllers: [HelpCenterArticleController],
 	exports: [HelpCenterArticleService, TypeOrmHelpCenterArticleRepository]
 })
-export class HelpCenterArticleModule implements OnModuleInit {
-	constructor() { }
-
-	onModuleInit() { }
-}
+export class HelpCenterArticleModule {}

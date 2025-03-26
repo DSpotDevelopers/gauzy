@@ -7,7 +7,7 @@ import { CommandHandlers } from './commands/handlers';
 import { DashboardWidget } from './dashboard-widget.entity';
 import { DashboardWidgetService } from './dashboard-widget.service';
 import { DashboardWidgetController } from './dashboard-widget.controller';
-import { TypeOrmDashboardWidgetRepository } from './repository/type-orm-dashboard-widget.repository';
+import { TypeOrmDashboardWidgetRepository } from './repository';
 
 @Module({
 	imports: [

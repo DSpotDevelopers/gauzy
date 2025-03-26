@@ -11,8 +11,8 @@ import { TimeLogDeleteCommand } from '../time-log-delete.command';
 import { TimeSlotService } from '../../../time-slot/time-slot.service';
 import { TimeSlotBulkDeleteCommand } from './../../../time-slot/commands';
 import { getStartEndIntervals } from './../../../time-slot/utils';
-import { TypeOrmTimeLogRepository } from '../../repository/type-orm-time-log.repository';
-import { TypeOrmTimeSlotRepository } from '../../../time-slot/repository/type-orm-time-slot.repository';
+import { TypeOrmTimeLogRepository } from '../../repository';
+import { TypeOrmTimeSlotRepository } from '../../../time-slot/repository';
 
 @CommandHandler(DeleteTimeSpanCommand)
 export class DeleteTimeSpanHandler implements ICommandHandler<DeleteTimeSpanCommand> {

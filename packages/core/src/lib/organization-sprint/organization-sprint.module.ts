@@ -13,9 +13,9 @@ import { OrganizationSprint } from './organization-sprint.entity';
 import { Task } from '../tasks/task.entity';
 import { CommandHandlers } from './commands/handlers';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
-import { TypeOrmOrganizationSprintRepository } from './repository/type-orm-organization-sprint.repository';
-import { TypeOrmOrganizationSprintEmployeeRepository } from './repository/type-orm-organization-sprint-employee.repository';
-import { TypeOrmOrganizationSprintTaskHistoryRepository } from './repository/type-orm-organization-sprint-task-history.repository';
+import { TypeOrmOrganizationSprintRepository } from './repository';
+import { TypeOrmOrganizationSprintEmployeeRepository } from './repository';
+import { TypeOrmOrganizationSprintTaskHistoryRepository } from './repository';
 
 @Module({
 	imports: [

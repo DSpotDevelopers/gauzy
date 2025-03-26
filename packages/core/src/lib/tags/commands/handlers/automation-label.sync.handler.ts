@@ -6,8 +6,8 @@ import { RequestContext } from '../../../core/context';
 import { Tag } from './../../tag.entity';
 import { TagService } from './../../tag.service';
 import { AutomationLabelSyncCommand } from './../automation-label.sync.command';
-import { TypeOrmTagRepository } from '../../repository/type-orm-tag.repository';
-import { TypeOrmIntegrationMapRepository } from '../../../integration-map/repository/type-orm-integration-map.repository';
+import { TypeOrmTagRepository } from '../../repository';
+import { TypeOrmIntegrationMapRepository } from '../../../integration-map/repository';
 
 @CommandHandler(AutomationLabelSyncCommand)
 export class AutomationLabelSyncHandler implements ICommandHandler<AutomationLabelSyncCommand> {

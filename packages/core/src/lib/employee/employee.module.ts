@@ -13,7 +13,7 @@ import { EmailSendModule } from './../email-send/email-send.module';
 import { UserOrganizationModule } from '../user-organization/user-organization.module';
 import { RoleModule } from './../role/role.module';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
-import { TypeOrmEmployeeRepository } from './repository/type-orm-employee.repository';
+import { TypeOrmEmployeeRepository } from './repository';
 
 @Module({
 	imports: [

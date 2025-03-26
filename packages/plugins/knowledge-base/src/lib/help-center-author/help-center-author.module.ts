@@ -1,5 +1,5 @@
 import { CqrsModule } from '@nestjs/cqrs';
-import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RouterModule } from '@nestjs/core';
@@ -22,8 +22,4 @@ import { TypeOrmHelpCenterAuthorRepository } from './repository';
 	providers: [HelpCenterAuthorService, TypeOrmHelpCenterAuthorRepository, ...CommandHandlers],
 	exports: [HelpCenterAuthorService, TypeOrmHelpCenterAuthorRepository]
 })
-export class HelpCenterAuthorModule implements OnModuleInit {
-	constructor() { }
-
-	onModuleInit() { }
-}
+export class HelpCenterAuthorModule {}

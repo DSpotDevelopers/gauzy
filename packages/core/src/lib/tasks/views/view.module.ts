@@ -8,7 +8,7 @@ import { TaskView } from './view.entity';
 import { CommandHandlers } from './commands/handlers';
 import { TaskViewService } from './view.service';
 import { TaskViewController } from './view.controller';
-import { TypeOrmTaskViewRepository } from './repository/type-orm-task-view.repository';
+import { TypeOrmTaskViewRepository } from './repository';
 
 @Module({
 	imports: [

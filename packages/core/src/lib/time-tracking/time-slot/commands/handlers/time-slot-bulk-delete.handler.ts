@@ -1,15 +1,24 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import * as chalk from 'chalk';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Logger as NestLogger } from '@nestjs/common';
 import { ID, ITimeLog, ITimeSlot } from '@gauzy/contracts';
 import { isEmpty, isNotEmpty } from '@gauzy/common';
 import { TimeSlotBulkDeleteCommand } from '../time-slot-bulk-delete.command';
 import { RequestContext } from '../../../../core/context';
 import { prepareSQLQuery as p } from './../../../../database/database.helper';
-import { TypeOrmTimeSlotRepository } from '../../repository/type-orm-time-slot.repository';
+import { TimeSlot } from '../../time-slot.entity';
+import { TypeOrmTimeSlotRepository } from '../../repository';
+import { Logger } from '../../../../logger';
 
 @CommandHandler(TimeSlotBulkDeleteCommand)
 export class TimeSlotBulkDeleteHandler implements ICommandHandler<TimeSlotBulkDeleteCommand> {
-	constructor(private readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository) {}
+	@Logger()
+	protected readonly logger: NestLogger;
+
+	constructor(
+		@InjectRepository(TimeSlot)
+		private readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository
+	) {}
 
 	/**
 	 * Execute bulk deletion of time slots
@@ -26,7 +35,7 @@ export class TimeSlotBulkDeleteHandler implements ICommandHandler<TimeSlotBulkDe
 
 		// Step 1: Fetch time slots based on input parameters
 		const timeSlots = await this.fetchTimeSlots({ organizationId, employeeId, tenantId, timeSlotsIds });
-		console.log(`fetched time slots for soft delete or hard delete:`, timeSlots);
+		this.logger.log(`fetched time slots for soft delete or hard delete: ${JSON.stringify(timeSlots)}`);
 
 		// If timeSlots is empty, return an empty array
 		if (isEmpty(timeSlots)) {
@@ -76,7 +85,7 @@ export class TimeSlotBulkDeleteHandler implements ICommandHandler<TimeSlotBulkDe
 			query.andWhere(p(`"${query.alias}"."id" IN (:...timeSlotsIds)`), { timeSlotsIds });
 		}
 
-		console.log('fetched time slots by parameters:', query.getParameters());
+		this.logger.log(`fetched time slots by parameters: ${JSON.stringify(query.getParameters())}`);
 		return await query.getMany();
 	}
 
@@ -88,7 +97,7 @@ export class TimeSlotBulkDeleteHandler implements ICommandHandler<TimeSlotBulkDe
 	 * @returns A promise that resolves to the deleted time slots.
 	 */
 	private bulkDeleteTimeSlots(timeSlots: ITimeSlot[], forceDelete: boolean): Promise<ITimeSlot[]> {
-		console.log(`bulk ${forceDelete ? 'hard' : 'soft'} deleting time slots:`, timeSlots);
+		this.logger.log(`bulk ${forceDelete ? 'hard' : 'soft'} deleting time slots: ${JSON.stringify(timeSlots)}`);
 
 		return forceDelete
 			? this.typeOrmTimeSlotRepository.remove(timeSlots)
@@ -110,31 +119,27 @@ export class TimeSlotBulkDeleteHandler implements ICommandHandler<TimeSlotBulkDe
 		timeLog: ITimeLog,
 		forceDelete: boolean
 	): Promise<ITimeSlot> {
-		console.log(`conditional ${forceDelete ? 'hard' : 'soft'} deleting time slots:`, timeSlots);
+		this.logger.log(
+			`conditional ${forceDelete ? 'hard' : 'soft'} deleting time slots: ${JSON.stringify(timeSlots)}`
+		);
 
 		// Loop through each time slot
 		for await (const timeSlot of timeSlots) {
 			const { timeLogs = [] } = timeSlot;
 			const [firstTimeLog] = timeLogs;
 
-			console.log('Matching TimeLog ID:', firstTimeLog.id === timeLog.id);
-			console.log('TimeSlots Ids Will Be Deleted:', timeSlot.id);
+			this.logger.log(`Matching TimeLog ID: ${firstTimeLog.id === timeLog.id}`);
+			this.logger.log(`TimeSlots Ids Will Be Deleted: ${timeSlot.id}`);
 
 			if (timeLogs.length === 1) {
 				const [firstTimeLog] = timeLogs;
 				if (firstTimeLog.id === timeLog.id) {
 					// If the time slot has only one time log and it matches the provided time log, delete the time slot
 					if (forceDelete) {
-						console.log(
-							chalk.red('--------------------hard removing time slot--------------------'),
-							timeSlot.id
-						);
+						this.logger.log(`Hard removing time slot: ${timeSlot.id}`);
 						return await this.typeOrmTimeSlotRepository.remove(timeSlot);
 					} else {
-						console.log(
-							chalk.yellow('--------------------soft removing time slot--------------------'),
-							timeSlot.id
-						);
+						this.logger.log(`Soft removing time slot: ${timeSlot.id}`);
 						return await this.typeOrmTimeSlotRepository.softRemove(timeSlot);
 					}
 				}
