@@ -15,7 +15,7 @@ export function parseTypeORMFindCountOptions<T>(options: FindManyOptions): FindM
     // Use the provided options for 'where' (if available)
     let where: FindOptionsWhere<T> = {};
 
-    // Parses TypeORM `where` option to MikroORM `where` option
+    // Parses TypeORM `where` option
     if (options && options.where) {
         where = options.where as FindOptionsWhere<T>;
     }

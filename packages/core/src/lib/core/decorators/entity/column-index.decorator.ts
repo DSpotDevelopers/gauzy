@@ -1,9 +1,8 @@
 import { Index as TypeOrmIndex, IndexOptions as TypeOrmIndexOptions } from 'typeorm';
-import { Index as MikroOrmIndex, IndexOptions as MikroOrmIndexOptions, Unique as MikroUnique } from '@mikro-orm/core';
 import { ObjectUtils } from '../../../core/util/object-utils';
 
-// Extend your TypeOrmIndexOptions to include MikroOrm options as well
-type CombinedIndexOptions<T> = string | string[] | ((object: any) => any[] | { [key: string]: number }) | TypeOrmIndexOptions | MikroOrmIndexOptions<T>;
+// Extend your TypeOrmIndexOptions
+type CombinedIndexOptions<T> = string | string[] | ((object: any) => any[] | { [key: string]: number }) | TypeOrmIndexOptions;
 
 export function ColumnIndex<T>(options?: CombinedIndexOptions<T>): ClassDecorator & PropertyDecorator;
 export function ColumnIndex<T>(name?: string, options?: CombinedIndexOptions<T>): ClassDecorator & PropertyDecorator;
@@ -11,7 +10,7 @@ export function ColumnIndex<T>(name: string, fields: string[], options?: Combine
 export function ColumnIndex<T>(fields: string[], options?: CombinedIndexOptions<T>): ClassDecorator & PropertyDecorator;
 
 /**
- * ColumnIndex decorator for TypeOrm and MikroOrm.
+ * ColumnIndex decorator for TypeOrm.
  *
  * @param nameOrFieldsOrOptions
  * @param maybeFieldsOrOptions
@@ -35,7 +34,7 @@ export function ColumnIndex<T>(
     }
 
     /**
-     * Decorator for applying indexes in both TypeORM and MikroORM.
+     * Decorator for applying indexes in TypeORM.
      * It can be used to decorate fields in an entity class.
      *
      * @param target The prototype of the class (in case of class decorator) or the constructor of the class (in case of property decorator).
@@ -45,9 +44,6 @@ export function ColumnIndex<T>(
         // Apply TypeORM index. If 'name' and 'fields' are specified it creates a named index on the specified properties.
         // Otherwise, it uses 'options' to determine the indexing strategy.
         applyTypeOrmIndex(target, propertyKey, name, fields, options as TypeOrmIndexOptions);
-
-        // Apply MikroORM index. It behaves similarly to the TypeORM index application, but with specifics to MikroORM.
-        applyMikroOrmIndex(target, propertyKey, name, fields, options as TypeOrmIndexOptions);
     };
 }
 
@@ -83,56 +79,4 @@ export function applyTypeOrmIndex(
         // Applies a default index when no name, properties, or options are specified
         TypeOrmIndex()(target, propertyKey);
     }
-}
-
-/**
- * Applies a MikroORM index to the specified target. If 'unique' option is set,
- * also applies a unique constraint. This function adapts TypeORM index options
- * to MikroORM.
- *
- * @param target The class or class property to which the index will be applied.
- * @param propertyKey The name of the property, if applying to a specific property.
- * @param name Optional name of the index for named indexes.
- * @param properties Optional list of properties to be indexed.
- * @param options Optional TypeORM indexing options that will be adapted for MikroORM.
- */
-export function applyMikroOrmIndex(
-    target: any,
-    propertyKey: string | undefined,
-    name: string | undefined,
-    properties: string[] | undefined,
-    options: TypeOrmIndexOptions | undefined
-) {
-    // Converts provided indexing parameters into MikroORM-compatible index options.
-    const mikroOptions = parseToMikroOrmIndexOptions({ name, properties });
-
-    if (mikroOptions.name && mikroOptions.properties && Array.isArray(properties)) {
-        // Applies a named index on specified properties
-        MikroOrmIndex(mikroOptions)(target, propertyKey);
-    } else if (mikroOptions.name) {
-        // Applies a named index without specific properties
-        MikroOrmIndex({ name: mikroOptions.name })(target, propertyKey);
-    } else {
-        // Applies a default index without specific options or fields
-        MikroOrmIndex()(target, propertyKey);
-    }
-
-    // Apply a MikroORM unique constraint if 'unique' is specified in the options
-    if (options?.unique && Array.isArray(properties)) {
-        MikroUnique({ properties })(target, propertyKey);
-    }
-}
-
-/**
- * Transforms index options from TypeORM format to MikroORM format.
- * This function should be implemented based on the specific requirements and
- * differences between TypeORM and MikroORM index options.
- *
- * @param options The TypeORM index options to be transformed.
- * @returns The transformed MikroORM index options.
- */
-export function parseToMikroOrmIndexOptions<T>(options: MikroOrmIndexOptions<T>): MikroOrmIndexOptions<T> {
-    // Logic to transform options to MikroORM compatible format
-    // This is a placeholder, actual implementation depends on how the options differ.
-    return options;
 }

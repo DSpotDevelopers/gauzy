@@ -1,9 +1,12 @@
 import * as v8 from 'v8';
+import { ConflictException, INestApplication, Type, Logger } from '@nestjs/common';
+
+const logger = new Logger('GZY - Bootstrap');
 
 function logMemoryLimit() {
 	const heapStats = v8.getHeapStatistics();
 	const heapSizeLimit = heapStats.heap_size_limit;
-	console.log(`Heap size limit: ${heapSizeLimit / 1024 / 1024} MB`);
+	logger.log(`Heap size limit: ${heapSizeLimit / 1024 / 1024} MB`);
 }
 
 logMemoryLimit();
@@ -19,26 +22,24 @@ export function startTracing(): void {
 	if (process.env.OTEL_ENABLED === 'true' && tracer) {
 		// Start tracing
 		tracer.start();
-		console.log('OTEL Tracing started');
+		logger.verbose('OTEL Tracing started');
 	} else {
-		console.log('OTEL Tracing not enabled');
+		logger.verbose('OTEL Tracing not enabled');
 	}
 }
 
 startTracing(); // Start tracing if OTEL is enabled.
 
 // import * as csurf from 'csurf';
-import { ConflictException, INestApplication, Type } from '@nestjs/common';
+
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { EventSubscriber } from '@mikro-orm/core';
 import { useContainer } from 'class-validator';
 import * as expressSession from 'express-session';
 import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
 import * as helmet from 'helmet';
-import * as chalk from 'chalk';
 import * as fs from 'fs';
 import * as path from 'path';
 import { urlencoded, json } from 'express';
@@ -48,7 +49,7 @@ import { getConfig, setConfig, environment as env } from '@gauzy/config';
 import { getEntitiesFromPlugins, getPluginConfigurations, getSubscribersFromPlugins } from '@gauzy/plugin';
 import { coreEntities } from '../core/entities';
 import { coreSubscribers } from '../core/entities/subscribers';
-import { registerMikroOrmCustomFields, registerTypeOrmCustomFields } from '../core/entities/custom-entity-fields';
+import { registerTypeOrmCustomFields } from '../core/entities/custom-entity-fields';
 import { AuthGuard } from '../shared/guards';
 import { SharedModule } from '../shared/shared.module';
 import { AppService } from '../app/app.service';
@@ -61,8 +62,6 @@ import { AppModule } from '../app/app.module';
  * @returns A promise that resolves to the initialized NestJS application.
  */
 export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>): Promise<INestApplication> {
-	console.time('✔ Total Application Startup Time');
-
 	// Pre-bootstrap the application configuration
 	const config = await preBootstrapApplicationConfig(pluginConfig);
 
@@ -74,9 +73,6 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
 		logger: ['log', 'error', 'warn', 'debug', 'verbose'], // Set logging levels
 		bufferLogs: env.isElectron ? false : true // Buffer logs to avoid loss during startup // set to false when is electron
 	});
-
-	// Register custom entity fields for Mikro ORM
-	await registerMikroOrmCustomFields(config);
 
 	// Enable Express behind proxies (https://expressjs.com/en/guide/behind-proxies.html)
 	app.set('trust proxy', true);
@@ -143,7 +139,7 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
 
 	// Manage sessions with Redis or in-memory fallback
 	let redisWorked = false;
-	console.log('REDIS_ENABLED: ', process.env.REDIS_ENABLED);
+	logger.verbose(`REDIS_ENABLED: ${process.env.REDIS_ENABLED}`);
 
 	if (process.env.REDIS_ENABLED === 'true') {
 		try {
@@ -153,19 +149,19 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
 					? `rediss://${process.env.REDIS_USER}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
 					: `redis://${process.env.REDIS_USER}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`);
 
-			console.log('REDIS_URL: ', url);
+			logger.verbose(`REDIS_URL: ${url}`);
 
 			let host, port, username, password;
 
 			const isTls = url.startsWith('rediss://');
 
 			// Removing the protocol part
-			let authPart = url.split('://')[1];
+			const authPart = url.split('://')[1];
 
 			// Check if the URL contains '@' (indicating the presence of username/password)
 			if (authPart.includes('@')) {
 				// Splitting user:password and host:port
-				let [userPass, hostPort] = authPart.split('@');
+				const [userPass, hostPort] = authPart.split('@');
 				[username, password] = userPass.split(':');
 				[host, port] = hostPort.split(':');
 			} else {
@@ -195,19 +191,19 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
 
 			const redisClient = createClient(redisConnectionOptions)
 				.on('error', (err) => {
-					console.log('Redis Session Store Client Error: ', err);
+					logger.error(`Redis Session Store Client Error: ${err}`);
 				})
 				.on('connect', () => {
-					console.log('Redis Session Store Client Connected');
+					logger.verbose('Redis Session Store Client Connected');
 				})
 				.on('ready', () => {
-					console.log('Redis Session Store Client Ready');
+					logger.verbose('Redis Session Store Client Ready');
 				})
 				.on('reconnecting', () => {
-					console.log('Redis Session Store Client Reconnecting');
+					logger.verbose('Redis Session Store Client Reconnecting');
 				})
 				.on('end', () => {
-					console.log('Redis Session Store Client End');
+					logger.verbose('Redis Session Store Client End');
 				});
 
 			// connecting to Redis
@@ -215,7 +211,7 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
 
 			// ping Redis
 			const res = await redisClient.ping();
-			console.log('Redis Session Store Client Sessions Ping: ', res);
+			logger.verbose(`Redis Session Store Client Sessions Ping: ${res}`);
 
 			const redisStore = new RedisStore({
 				client: redisClient,
@@ -234,7 +230,7 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
 
 			redisWorked = true;
 		} catch (error) {
-			console.error(error);
+			logger.error(`Redis Session Store Client Error: ${error}`);
 		}
 	}
 
@@ -269,27 +265,27 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
 
 	// Start the server
 	const { port = 3000, host = '0.0.0.0' } = config.apiConfigOptions;
-	console.log(chalk.green(`Configured Host: ${host}`));
-	console.log(chalk.green(`Configured Port: ${port}`));
+	logger.log(`Configured Host: ${host}`);
+	logger.log(`Configured Port: ${port}`);
 
 	// Configure Swagger for API documentation
 	const options = new DocumentBuilder().setTitle('Gauzy API').setVersion(env.gitHash).addBearerAuth().build();
 	const document = SwaggerModule.createDocument(app, options);
 	SwaggerModule.setup('swg', app, document);
-	console.log(chalk.green(`Swagger UI available at http://${host}:${port}/swg`));
+	logger.log(`Swagger UI available at http://${host}:${port}/swg`);
 
 	// Configure Atlassian Connect Express
 	// const addon = ac(express());
 	// app.use(addon.middleware());
 
 	await app.listen(port, host, () => {
-		console.log(`Application is running on http://${host}:${port}`);
+		logger.log(`Application is running on http://${host}:${port}`);
 
 		// Note: do not change this prefix because we may use it to detect the success message from the running server!
 		const successMessagePrefix = 'Listening at http';
 
 		const message = `${successMessagePrefix}://${host}:${port}/${globalPrefix}`;
-		console.log(chalk.magenta(message));
+		logger.verbose(message);
 
 		// Send message to parent process (desktop app)
 		if (process.send) {
@@ -309,7 +305,7 @@ export async function bootstrap(pluginConfig?: Partial<ApplicationPluginConfig>)
  * @param error - The uncaught exception.
  */
 function handleUncaughtException(error: Error) {
-	console.error('Uncaught Exception Handler in Bootstrap:', error);
+	logger.error(`Uncaught Exception Handler in Bootstrap: ${error}`);
 	setTimeout(() => {
 		process.exit(1);
 	}, 3000);
@@ -321,7 +317,7 @@ function handleUncaughtException(error: Error) {
  * @param promise - The rejected promise.
  */
 function handleUnhandledRejection(reason: any, promise: Promise<any>) {
-	console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+	logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
 }
 
 /**
@@ -356,9 +352,6 @@ export async function preBootstrapApplicationConfig(applicationConfig: Partial<A
 		}
 	});
 
-	// Log the current database configuration (for debugging or informational purposes)
-	console.log(chalk.green(`DB Config: ${JSON.stringify(getConfig().dbConnectionOptions)}`));
-
 	// Register core and plugin entities and subscribers
 	const entities = await preBootstrapRegisterEntities(applicationConfig);
 	const subscribers = await preBootstrapRegisterSubscribers(applicationConfig);
@@ -369,10 +362,6 @@ export async function preBootstrapApplicationConfig(applicationConfig: Partial<A
 			entities: entities as Array<Type<any>>, // Core and plugin entities
 			subscribers: subscribers as Array<Type<EntitySubscriberInterface>> // Core and plugin subscribers
 		},
-		dbMikroOrmConnectionOptions: {
-			entities: entities as Array<Type<any>>, // MikroORM entities
-			subscribers: subscribers as Array<EventSubscriber> // MikroORM subscribers
-		}
 	});
 
 	// Apply additional plugin configurations
@@ -443,7 +432,7 @@ async function preBootstrapRegisterEntities(config: Partial<ApplicationPluginCon
 		return coreEntitiesList;
 	} catch (error) {
 		// Log any errors and re-throw for further handling
-		console.error('Error registering entities:', error);
+		logger.error(`Error registering entities: ${error}`);
 		throw error;
 	}
 }
@@ -483,8 +472,7 @@ async function preBootstrapRegisterSubscribers(
 		// Return the updated list of subscribers
 		return subscribers;
 	} catch (error) {
-		// Handle errors and log to console
-		console.error('Error registering subscribers:', error.message);
+		logger.error(`Error registering subscribers: ${error.message}`);
 	}
 }
 
@@ -498,10 +486,10 @@ export function getMigrationsConfig() {
 	const isDist = __dirname.includes('dist');
 	const isElectron = !!env.isElectron; // check if electron
 
-	console.log('Migration isDist: ->', isDist);
-	console.log('Migration isElectron: ->', isElectron);
-	console.log('Migration process.cwd(): ->', process.cwd());
-	console.log('Migration __dirname: ->', __dirname);
+	logger.verbose(`Migration isDist: ${isDist}`);
+	logger.verbose(`Migration isElectron: ${isElectron}`);
+	logger.verbose(`Migration process.cwd(): ${process.cwd()}`);
+	logger.verbose(`Migration __dirname: ${__dirname}`);
 
 	// Base migrations directory
 	const migrationsDir = path.resolve(
@@ -510,18 +498,18 @@ export function getMigrationsConfig() {
 			? './../database/migrations/*.js'           // Only .ts if Electron
 			: './../database/migrations/*{.ts,.js}'      // Otherwise .ts or .js
 	);
-	console.log('Migration migrationsDir: ->', migrationsDir);
+	logger.verbose(`Migration migrationsDir: ${migrationsDir}`);
 
 	if (!fs.existsSync(path.dirname(migrationsDir))) {
-		chalk.red(console.log(`Migrations directory not found: ${migrationsDir}`));
+		logger.error(`Migrations directory not found: ${migrationsDir}`);
 	}
 
 	// CLI Migrations directory path
 	const cliMigrationsDir = path.resolve(__dirname, './../database/migrations'); // Adjusted for src structure
-	console.log('Migration cliMigrationsDir: ->', cliMigrationsDir);
+	logger.verbose(`Migration cliMigrationsDir: ${cliMigrationsDir}`);
 
 	if (!fs.existsSync(path.dirname(cliMigrationsDir))) {
-		chalk.red(console.log(`CLI migrations directory not found: ${cliMigrationsDir}`));
+		logger.error(`CLI migrations directory not found: ${cliMigrationsDir}`);
 	}
 
 	// Return the migration paths

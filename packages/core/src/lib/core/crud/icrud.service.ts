@@ -13,13 +13,6 @@ import {
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { IPagination } from '@gauzy/contracts';
 import { ITryRequest } from './try-request';
-import {
-	FindOptions as MikroFindOptions,
-	FilterQuery as MikroFilterQuery,
-	RequiredEntityData,
-	UpdateOptions,
-	DeleteOptions
-} from '@mikro-orm/core';
 
 export interface ICrudService<T> {
 	count(filter?: IFindManyOptions<T>): Promise<number>;
@@ -41,26 +34,20 @@ export interface ICrudService<T> {
 	softRecover(id: string, ...options: any[]): Promise<T>;
 }
 
-export type IMikroOptions<T> = { where?: MikroFilterQuery<T> } & MikroFindOptions<T>
+export type ICountOptions<T> = FindManyOptions<T>
 
-export type ICountOptions<T> = FindManyOptions<T> | IMikroOptions<T>
+export type ICountByOptions<T> = FindOptionsWhere<T>
 
-export type ICountByOptions<T> = FindOptionsWhere<T> | MikroFilterQuery<T>
+export type IFindManyOptions<T> = FindManyOptions<T>
 
-export type IFindManyOptions<T> = FindManyOptions<T> | IMikroOptions<T>
+export type IFindOneOptions<T> = FindOneOptions<T>
 
-export type IFindOneOptions<T> = FindOneOptions<T> | IMikroOptions<T>
+export type IFindOrFailOptions<T> = FindOneOptions<T>
 
-export type IFindOrFailOptions<T> = FindOneOptions<T> | IMikroOptions<T>
+export type IFindWhereOptions<T> = FindOptionsWhere<T>
 
-export type IFindWhereOptions<T> = FindOptionsWhere<T> | MikroFilterQuery<T>
+export type IPartialEntity<T> = DeepPartial<T>
 
-export type IPartialEntity<T> = DeepPartial<T> | RequiredEntityData<T>
+export type IUpdateCriteria<T> = string | number | FindOptionsWhere<T>
 
-export type IUpdateCriteria<T> = string | number | FindOptionsWhere<T> | (UpdateOptions<T> & {
-	where?: MikroFilterQuery<T>
-})
-
-export type IDeleteCriteria<T> = string | number | FindOptionsWhere<T> | (DeleteOptions<T> & {
-	where?: MikroFilterQuery<T>
-})
+export type IDeleteCriteria<T> = string | number | FindOptionsWhere<T>

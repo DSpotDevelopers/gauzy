@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ILike, Not } from 'typeorm';
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { RequestContext } from '../../../core/context';
-import { MultiORM, MultiORMEnum, getORMType } from '../../../core/utils';
 import { TypeOrmExpenseCategoryRepository } from '../../../expense-categories/repository';
-
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
 
 /**
  * Expense category already existed validation constraint
@@ -17,7 +13,7 @@ const ormType: MultiORM = getORMType();
 @ValidatorConstraint({ name: 'IsExpenseCategoryAlreadyExist', async: true })
 @Injectable()
 export class ExpenseCategoryAlreadyExistConstraint implements ValidatorConstraintInterface {
-	constructor(readonly typeOrmExpenseCategoryRepository: TypeOrmExpenseCategoryRepository) {}
+	constructor(readonly typeOrmExpenseCategoryRepository: TypeOrmExpenseCategoryRepository) { }
 
 	/**
 	 * Validates if a given name for an expense category is unique within the specified organization.

@@ -1,3 +1,4 @@
+import { Logger as NestLogger } from '@nestjs/common';
 import { EventSubscriber } from 'typeorm';
 import { getConfig } from '@gauzy/config';
 import { isJsObject, IDBConnectionOptions } from '@gauzy/common';
@@ -5,14 +6,14 @@ import { BaseEntityEventSubscriber } from '../../core/entities/subscribers/base-
 import { Screenshot } from './screenshot.entity';
 import { FileStorage } from './../../core/file-storage';
 import { isSqliteDB } from './../../core/utils';
-import {
-	MikroOrmEntityManager,
-	MultiOrmEntityManager,
-	TypeOrmEntityManager
-} from '../../core/entities/subscribers/entity-event-subscriber.types';
+import { MultiOrmEntityManager } from '../../core/entities/subscribers/entity-event-subscriber.types';
+import { Logger } from '../../logger';
 
 @EventSubscriber()
 export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	/**
 	 * Indicates that this subscriber only listen to Screenshot events.
 	 */
@@ -26,7 +27,7 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 	 * strings for SQLite databases when using TypeORM.
 	 *
 	 * @param entity The Screenshot entity about to be created.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM. Used for additional database operations if necessary.
+	 * @param em An optional entity manager which can be from TypeORM. Used for additional database operations if necessary.
 	 * @returns {Promise<void>} A promise that resolves when the pre-creation processing is complete.
 	 */
 	async beforeEntityCreate(entity: Screenshot, em?: MultiOrmEntityManager): Promise<void> {
@@ -35,29 +36,20 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 				return; // Early exit if the entity is not a Screenshot
 			}
 			// Handle TypeORM specific logic
-			if (em instanceof TypeOrmEntityManager) {
-				const options: Partial<IDBConnectionOptions> = em.connection.options || getConfig().dbConnectionOptions;
+			const options: Partial<IDBConnectionOptions> = em.connection.options || getConfig().dbConnectionOptions;
 
-				// If the database is SQLite and the entity has an 'apps' property, convert it to a JSON string
-				if (isSqliteDB(options) && isJsObject(entity.apps)) {
-					try {
-						entity.apps = JSON.stringify(entity.apps);
-					} catch (error) {
-						// Handle the error appropriately, set a default value or take another action.
-						entity.apps = JSON.stringify([]);
-					}
+			// If the database is SQLite and the entity has an 'apps' property, convert it to a JSON string
+			if (isSqliteDB(options) && isJsObject(entity.apps)) {
+				try {
+					entity.apps = JSON.stringify(entity.apps);
+				} catch (error) {
+					// Handle the error appropriately, set a default value or take another action.
+					this.logger.error(`ScreenshotSubscriber: An error occurred during the beforeEntityCreate process: ${error}`);
+					entity.apps = JSON.stringify([]);
 				}
 			}
-			// Handle MikroORM specific logic
-			else if (em instanceof MikroOrmEntityManager) {
-				// Placeholder for any MikroORM-specific logic, if needed
-				console.log(em.getConnection());
-			}
 		} catch (error) {
-			console.error(
-				'ScreenshotSubscriber: An error occurred during the beforeEntityCreate process:',
-				error.message
-			);
+			this.logger.error(`ScreenshotSubscriber: An error occurred during the beforeEntityCreate process: ${error}`);
 		}
 	}
 
@@ -66,7 +58,7 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 	 * This method prepares the entity for update, including converting certain properties to JSON strings for specific database types.
 	 *
 	 * @param entity The Screenshot entity about to be updated.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM. Used for additional database operations if necessary.
+	 * @param em An optional entity manager which can be from TypeORM. Used for additional database operations if necessary.
 	 * @returns {Promise<void>} A promise that resolves when the pre-update processing is complete.
 	 */
 	async beforeEntityUpdate(entity: Screenshot, em?: MultiOrmEntityManager): Promise<void> {
@@ -75,29 +67,20 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 				return; // Early exit if the entity is not a Screenshot
 			}
 			// Handle TypeORM specific logic
-			if (em instanceof TypeOrmEntityManager) {
-				const options: Partial<IDBConnectionOptions> = em.connection.options || getConfig().dbConnectionOptions;
+			const options: Partial<IDBConnectionOptions> = em.connection.options || getConfig().dbConnectionOptions;
 
-				// If the database is SQLite and the entity has an 'apps' property, convert it to a JSON string
-				if (isSqliteDB(options) && isJsObject(entity.apps)) {
-					try {
-						entity.apps = JSON.stringify(entity.apps);
-					} catch (error) {
-						// Handle the error appropriately, set a default value or take another action.
-						entity.apps = JSON.stringify([]);
-					}
+			// If the database is SQLite and the entity has an 'apps' property, convert it to a JSON string
+			if (isSqliteDB(options) && isJsObject(entity.apps)) {
+				try {
+					entity.apps = JSON.stringify(entity.apps);
+				} catch (error) {
+					// Handle the error appropriately, set a default value or take another action.
+					this.logger.error(`ScreenshotSubscriber: An error occurred during the beforeEntityUpdate process: ${error}`);
+					entity.apps = JSON.stringify([]);
 				}
 			}
-			// Handle MikroORM specific logic
-			else if (em instanceof MikroOrmEntityManager) {
-				// Placeholder for any MikroORM-specific logic, if needed
-				console.log(em.getConnection());
-			}
 		} catch (error) {
-			console.error(
-				'ScreenshotSubscriber: An error occurred during the beforeEntityUpdate process:',
-				error.message
-			);
+			this.logger.error(`ScreenshotSubscriber: An error occurred during the beforeEntityUpdate process: ${error}`);
 		}
 	}
 
@@ -106,7 +89,7 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 	 * processing such as retrieving file URLs from a storage provider and handling specific data formats based on the database type.
 	 *
 	 * @param entity The loaded Screenshot entity.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM. Used for additional database operations if necessary.
+	 * @param em An optional entity manager which can be from TypeORM. Used for additional database operations if necessary.
 	 * @returns {Promise<void>} A promise that resolves when the additional processing is complete.
 	 */
 	async afterEntityLoad(entity: Screenshot, em?: MultiOrmEntityManager): Promise<void> {
@@ -116,37 +99,28 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 			}
 
 			// Handle TypeORM specific logic
-			if (em instanceof TypeOrmEntityManager) {
-				const { storageProvider, file, thumb, apps } = entity;
-				const instance = new FileStorage().setProvider(storageProvider).getProviderInstance();
+			const { storageProvider, file, thumb, apps } = entity;
+			const instance = new FileStorage().setProvider(storageProvider).getProviderInstance();
 
-				// Retrieve URLs concurrently
-				const [fullUrl, thumbUrl] = await Promise.all([instance.url(file), instance.url(thumb)]);
-				entity.fullUrl = fullUrl;
-				entity.thumbUrl = thumbUrl;
+			// Retrieve URLs concurrently
+			const [fullUrl, thumbUrl] = await Promise.all([instance.url(file), instance.url(thumb)]);
+			entity.fullUrl = fullUrl;
+			entity.thumbUrl = thumbUrl;
 
-				// Additional logic for specific database types
-				const options: Partial<IDBConnectionOptions> = em.connection.options || getConfig().dbConnectionOptions;
+			// Additional logic for specific database types
+			const options: Partial<IDBConnectionOptions> = em.connection.options || getConfig().dbConnectionOptions;
 
-				// If the database is SQLite and the entity has an 'apps' property, convert it to a JSON string
-				if (isSqliteDB(options) && typeof apps === 'string') {
-					try {
-						entity.apps = JSON.parse(apps);
-					} catch (error) {
-						console.error(
-							'ScreenshotSubscriber: JSON parse error during the afterEntityLoad process:',
-							error
-						);
-						entity.apps = [];
-					}
+			// If the database is SQLite and the entity has an 'apps' property, convert it to a JSON string
+			if (isSqliteDB(options) && typeof apps === 'string') {
+				try {
+					entity.apps = JSON.parse(apps);
+				} catch (error) {
+					this.logger.error(`ScreenshotSubscriber: JSON parse error during the afterEntityLoad process: ${error}`);
+					entity.apps = [];
 				}
 			}
-			// Handle MikroORM specific logic
-			else if (em instanceof MikroOrmEntityManager) {
-				// Placeholder for any MikroORM-specific logic, if needed
-			}
 		} catch (error) {
-			console.error('ScreenshotSubscriber: An error occurred during the afterEntityLoad process:', error.message);
+			this.logger.error(`ScreenshotSubscriber: An error occurred during the afterEntityLoad process: ${error}`);
 		}
 	}
 
@@ -163,17 +137,17 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 				return; // Early exit if the entity is not a Screenshot
 			}
 			const { id: entityId, storageProvider, file, thumb } = entity;
-			console.log(`AFTER SCREENSHOT ENTITY WITH ID ${entityId} REMOVED`);
-			console.log('ScreenshotSubscriber: Deleting files...', file, thumb);
+			this.logger.verbose(`AFTER SCREENSHOT ENTITY WITH ID ${entityId} REMOVED`);
+			this.logger.verbose(`ScreenshotSubscriber: Deleting files... ${file} ${thumb}`);
 
 			// Initialize the file storage instance with the provided storage provider.
 			const instance = new FileStorage().setProvider(storageProvider).getProviderInstance();
-			console.log('ScreenshotSubscriber: Instance initialized', instance);
+			this.logger.verbose(`ScreenshotSubscriber: Instance initialized: ${instance}`);
 
 			// Deleting both the main file and the thumbnail, if they exist.
 			await Promise.all([file && instance.deleteFile(file), thumb && instance.deleteFile(thumb)]);
 		} catch (error) {
-			console.error(`ScreenshotSubscriber: Error deleting files for entity ID ${entity?.id}:`, error.message);
+			this.logger.error(`ScreenshotSubscriber: Error deleting files for entity ID ${entity?.id}: ${error}`);
 		}
 	}
 
@@ -190,10 +164,10 @@ export class ScreenshotSubscriber extends BaseEntityEventSubscriber<Screenshot> 
 				return; // Early exit if the entity is not a Screenshot
 			}
 			const { id: entityId, file, thumb } = entity;
-			console.log(`AFTER SCREENSHOT ENTITY WITH ID ${entityId} SOFT REMOVED`);
-			console.log('ScreenshotSubscriber: Soft removing files...', file, thumb);
+			this.logger.verbose(`AFTER SCREENSHOT ENTITY WITH ID ${entityId} SOFT REMOVED`);
+			this.logger.verbose(`ScreenshotSubscriber: Soft removing files... ${file} ${thumb}`);
 		} catch (error) {
-			console.error(`ScreenshotSubscriber: Error soft removing entity ID ${entity?.id}:`, error.message);
+			this.logger.error(`ScreenshotSubscriber: Error soft removing entity ID ${entity?.id}: ${error}`);
 		}
 	}
 }

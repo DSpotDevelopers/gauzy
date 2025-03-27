@@ -1,6 +1,5 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { KnexModule } from 'nest-knexjs';
 import { ConfigModule, ConfigService } from '@gauzy/config';
 import { ConnectionEntityManager } from './connection-entity-manager';
 
@@ -26,18 +25,6 @@ import { ConnectionEntityManager } from './connection-entity-manager';
 				return dbConnectionOptions;
 			}
 		}),
-		/**
-		 * Configure the Knex.js module for the application using asynchronous options.
-		 */
-		KnexModule.forRootAsync({
-			imports: [ConfigModule],
-			inject: [ConfigService],
-			// Use useFactory, useClass, or useExisting
-			useFactory: async (configService: ConfigService) => {
-				const { dbKnexConnectionOptions } = configService.config;
-				return dbKnexConnectionOptions;
-			}
-		})
 	],
 	providers: [ConnectionEntityManager],
 	exports: [TypeOrmModule, ConnectionEntityManager]

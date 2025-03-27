@@ -14,13 +14,10 @@ import {
 	UpdateResult
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { CreateOptions } from '@mikro-orm/core';
-import { AssignOptions } from '@mikro-orm/knex';
 import { IPagination } from '@gauzy/contracts';
 import { BaseEntity } from '../entities/internal';
-import { multiORMCreateQueryBuilder } from '../../core/orm/query-builder/query-builder.factory';
-import { IQueryBuilder } from '../../core/orm/query-builder/iquery-builder';
-import { MultiORM, MultiORMEnum, getORMType } from './../../core/utils';
+import { TypeOrmQueryBuilder } from '../orm/query-builder/typeorm-query-builder';
+import { IQueryBuilder } from '../orm/query-builder/iquery-builder';
 import { parseTypeORMFindCountOptions } from './utils';
 import {
 	ICountByOptions,
@@ -34,14 +31,12 @@ import {
 } from './icrud.service';
 import { ITryRequest } from './try-request';
 import { Logger } from '../../logger';
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
 
 export abstract class CrudService<T extends BaseEntity> implements ICrudService<T> {
 	@Logger()
 	protected readonly logger: NestLogger;
 
-	constructor(protected readonly typeOrmRepository: Repository<T>) {}
+	constructor(protected readonly typeOrmRepository: Repository<T>) { }
 
 	/**
 	 * Get the table name from the repository metadata.
@@ -52,14 +47,6 @@ export abstract class CrudService<T extends BaseEntity> implements ICrudService<
 	}
 
 	/**
-	 * Get the ORM type.
-	 * @returns {MultiORM} The ORM type.
-	 */
-	public get ormType(): MultiORM {
-		return ormType;
-	}
-
-	/**
 	 * Creates a query builder for the repository.
 	 *
 	 * @param alias - Optional alias for the primary table in the query.
@@ -67,7 +54,7 @@ export abstract class CrudService<T extends BaseEntity> implements ICrudService<
 	 * @throws Error if the ORM type is not implemented.
 	 */
 	public createQueryBuilder(alias?: string): IQueryBuilder<T> {
-		return multiORMCreateQueryBuilder<T>(this.typeOrmRepository, this.ormType as MultiORMEnum, alias);
+		return new TypeOrmQueryBuilder(this.typeOrmRepository as Repository<T>)
 	}
 
 	/**
@@ -296,23 +283,11 @@ export abstract class CrudService<T extends BaseEntity> implements ICrudService<
 	 * Creates a new entity or updates an existing one based on the provided entity data.
 	 *
 	 * @param entity The partial entity data for creation or update.
-	 * @param createOptions Options for the creation of the entity in MikroORM.
-	 * @param upsertOptions Options for the upsert operation in MikroORM.
+	 * @param createOptions Options for the creation of the entity.
+	 * @param upsertOptions Options for the upsert operation.
 	 * @returns The created or updated entity.
 	 */
-	public async create(
-		partialEntity: IPartialEntity<T>,
-		createOptions: CreateOptions<boolean> = {
-			/** This option disables the strict typing which requires all mandatory properties to have value, it has no effect on runtime */
-			partial: true,
-			/** Creates a managed entity instance instead, bypassing the constructor call */
-			managed: true
-		},
-		assignOptions: AssignOptions<boolean> = {
-			updateNestedEntities: false,
-			onlyOwnProperties: true
-		}
-	): Promise<T> {
+	public async create(partialEntity: IPartialEntity<T>): Promise<T> {
 		try {
 			const newEntity = this.typeOrmRepository.create(partialEntity as DeepPartial<T>);
 			return await this.typeOrmRepository.save(newEntity);
@@ -394,7 +369,6 @@ export abstract class CrudService<T extends BaseEntity> implements ICrudService<
 	 * Softly removes an entity from the database.
 	 *
 	 * This method handles soft removal of a given entity using different ORM strategies, based on the configured ORM type.
-	 * - For MikroORM, it uses the `removeAndFlush` method to ensure that the soft deletion is properly persisted.
 	 * - For TypeORM, it utilizes the `softRemove` method to perform a soft deletion.
 	 * If the ORM type is not supported, an error is thrown.
 	 *

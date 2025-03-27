@@ -1,11 +1,10 @@
 import { Column, JoinColumn, JoinTable, RelationId } from 'typeorm';
 import { ApplicationPluginConfig, CustomEmbeddedFields, RelationCustomEmbeddedFieldConfig } from '@gauzy/common';
 import { getColumnType } from '../../../core/decorators/entity/column.helper';
-import { ColumnIndex, MultiORMColumn, MultiORMManyToMany, MultiORMManyToOne } from '../../../core/decorators';
+import { ColumnIndex, MultiORMManyToMany, MultiORMManyToOne } from '../../../core/decorators';
 import { ColumnDataType, ColumnOptions } from '../../../core/decorators/entity/column-options.types';
 import { getDBType } from '../../../core/utils';
-import { mikroOrmCustomEntityFieldRegistrations, typeOrmCustomEntityFieldRegistrations } from './custom-entity-fields';
-import { __FIX_RELATIONAL_CUSTOM_FIELDS__ } from './mikro-orm-base-custom-entity-field';
+import { typeOrmCustomEntityFieldRegistrations } from './custom-entity-fields';
 
 /**
  * Defines a column with or without a relation ID and optional indexing.
@@ -23,7 +22,7 @@ const defineColumn = (
 	const { nullable, relationId, index = false } = customField;
 
 	// Get the database type from the connection options
-	let dbEngine = getDBType(config.dbConnectionOptions);
+	const dbEngine = getDBType(config.dbConnectionOptions);
 
 	const options: ColumnDataType | ColumnOptions<any> = {
 		type: getColumnType(dbEngine, customField.type),
@@ -59,12 +58,7 @@ export const registerFields = async (
 	if (customField.type === 'relation') {
 		switch (customField.relationType) {
 			case 'many-to-many': {
-				const options = {
-					...(customField.pivotTable && { pivotTable: customField.pivotTable }),
-					...(customField.joinColumn && { joinColumn: customField.joinColumn }),
-					...(customField.inverseJoinColumn && { inverseJoinColumn: customField.inverseJoinColumn })
-				};
-				MultiORMManyToMany(() => customField.entity, customField.inverseSide, options)(instance, name);
+				MultiORMManyToMany(() => customField.entity, customField.inverseSide)(instance, name);
 				JoinTable({ name: customField.pivotTable })(instance, name);
 				break;
 			}
@@ -96,7 +90,7 @@ export const registerFields = async (
 async function registerCustomFieldsForEntity<T>(
 	config: ApplicationPluginConfig,
 	entityName: keyof CustomEmbeddedFields,
-	ctor: { new (): T }
+	ctor: { new(): T }
 ): Promise<void> {
 	// Get the list of custom fields for the specified entity, defaulting to an empty array if none are found
 	const customFields = config.customFields?.[entityName] ?? [];
@@ -111,18 +105,6 @@ async function registerCustomFieldsForEntity<T>(
 			await registerFields(config, customField, name, instance); // Register the custom column
 		})
 	);
-
-	/**
-	 * If there are only relations are defined for an Entity for customFields, then TypeORM not saving relations for entity ("Cannot set properties of undefined (<fieldName>)").
-	 * So we have to add a "fake" column to the customFields embedded type to prevent this error from occurring.
-	 */
-	if (customFields.length > 0) {
-		MultiORMColumn({
-			type: 'boolean',
-			nullable: true,
-			select: false // This ensures the property is not selected by default
-		})(instance, __FIX_RELATIONAL_CUSTOM_FIELDS__);
-	}
 }
 
 /**
@@ -140,23 +122,5 @@ export async function registerTypeOrmCustomFields(config: ApplicationPluginConfi
 	} catch (error) {
 		console.error('Error registering custom entity fields:', error);
 		throw new Error('Failed to register custom entity fields');
-	}
-}
-
-/**
- * Registers custom fields for MikroORM entities based on a given configuration.
- *
- * @param config The configuration for the application plugins.
- * @throws Error if there's a failure during the registration process.
- */
-export async function registerMikroOrmCustomFields(config: ApplicationPluginConfig): Promise<void> {
-	try {
-		// Loop through the custom field registrations for MikroORM
-		for (const registration of mikroOrmCustomEntityFieldRegistrations) {
-			await registerCustomFieldsForEntity(config, registration.entityName, registration.customFields);
-		}
-	} catch (error) {
-		console.error('Error registering custom entity fields for MikroORM:', error);
-		throw new Error('Failed to register custom entity fields for MikroORM');
 	}
 }

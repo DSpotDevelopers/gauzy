@@ -3,11 +3,7 @@ import { sign } from 'jsonwebtoken';
 import { environment } from '@gauzy/config';
 import { Invoice } from './invoice.entity';
 import { BaseEntityEventSubscriber } from '../core/entities/subscribers/base-entity-event.subscriber';
-import {
-	MikroOrmEntityManager,
-	MultiOrmEntityManager,
-	TypeOrmEntityManager
-} from '../core/entities/subscribers/entity-event-subscriber.types';
+import { MultiOrmEntityManager } from '../core/entities/subscribers/entity-event-subscriber.types';
 
 @EventSubscriber()
 export class InvoiceSubscriber extends BaseEntityEventSubscriber<Invoice> {
@@ -23,7 +19,7 @@ export class InvoiceSubscriber extends BaseEntityEventSubscriber<Invoice> {
 	 * the entity by setting a generated token.
 	 *
 	 * @param entity The newly created Invoice entity.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM.
+	 * @param em An optional entity manager which can be from TypeORM.
 	 *           Used for executing the update operation.
 	 * @returns {Promise<void>} A promise that resolves when the update operation is complete.
 	 */
@@ -36,11 +32,7 @@ export class InvoiceSubscriber extends BaseEntityEventSubscriber<Invoice> {
 			});
 
 			// Update the Invoice entity with the generated token
-			if (em instanceof TypeOrmEntityManager) {
-				await em.update(Invoice, { id: entity.id }, { token });
-			} else if (em instanceof MikroOrmEntityManager) {
-				await em.nativeUpdate(Invoice, { id: entity.id }, { token });
-			}
+			await em.update(Invoice, { id: entity.id }, { token });
 		} catch (error) {
 			console.error('InvoiceSubscriber: Error during the afterEntityCreate process:', error);
 		}

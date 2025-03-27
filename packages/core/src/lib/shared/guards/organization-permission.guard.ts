@@ -1,5 +1,5 @@
 import { environment as env } from '@gauzy/config';
-import { CanActivate, ExecutionContext, Inject, Injectable, Type } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject, Injectable, Type, Logger as NestLogger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
@@ -10,15 +10,18 @@ import { PermissionsEnum, RolesEnum } from '@gauzy/contracts';
 import { isEmpty, PERMISSIONS_METADATA, removeDuplicates } from '@gauzy/common';
 import { RequestContext } from './../../core/context';
 import { TypeOrmEmployeeRepository } from '../../employee/repository';
-import { MultiORMEnum } from '../../core/utils';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class OrganizationPermissionGuard implements CanActivate {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	constructor(
 		@Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 		readonly _reflector: Reflector,
 		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository
-	) {}
+	) { }
 
 	/**
 	 * Checks if the user is authorized based on specified permissions.
@@ -26,7 +29,7 @@ export class OrganizationPermissionGuard implements CanActivate {
 	 * @returns A promise that resolves to a boolean indicating authorization status.
 	 */
 	async canActivate(context: ExecutionContext): Promise<boolean> {
-		console.log('OrganizationPermissionGuard canActivate called');
+		this.logger.verbose('OrganizationPermissionGuard canActivate called');
 
 		// Retrieve permissions from metadata
 		const targets: Array<Function | Type<any>> = [context.getHandler(), context.getClass()];
@@ -61,14 +64,14 @@ export class OrganizationPermissionGuard implements CanActivate {
 
 			const cacheKey = `orgPermissions_${tenantId}_${employeeId}_${permissions.join('_')}`;
 
-			console.log(
+			this.logger.verbose(
 				`Guard: Checking Org Permissions for Employee ID: ${employeeId} from Cache with key ${cacheKey}`
 			);
 
 			const fromCache = await this.cacheManager.get<boolean | null>(cacheKey);
 
 			if (fromCache == null) {
-				console.log('Organization Permissions NOT loaded from Cache with key:', cacheKey);
+				this.logger.verbose(`Organization Permissions NOT loaded from Cache with key: ${cacheKey}`);
 
 				// Check if user has the required permissions
 				isAuthorized = await this.checkOrganizationPermission(tenantId, employeeId, permissions);
@@ -77,7 +80,7 @@ export class OrganizationPermissionGuard implements CanActivate {
 				await this.cacheManager.set(cacheKey, isAuthorized, ttl);
 			} else {
 				isAuthorized = fromCache;
-				console.log(`Organization Permissions loaded from Cache with key: ${cacheKey}. Value: ${isAuthorized}`);
+				this.logger.verbose(`Organization Permissions loaded from Cache with key: ${cacheKey}. Value: ${isAuthorized}`);
 			}
 		} else {
 			// For non-employee roles, consider it authorized
@@ -88,13 +91,13 @@ export class OrganizationPermissionGuard implements CanActivate {
 
 		if (!isAuthorized) {
 			// Log unauthorized access attempts
-			console.log(
+			this.logger.verbose(
 				`Unauthorized access blocked: User ID: ${id}, Role: ${role}, Employee ID: ${employeeId}, Permissions Checked: ${permissions.join(
 					', '
 				)}`
 			);
 		} else {
-			console.log(
+			this.logger.verbose(
 				`Access granted.  User ID: ${id}, Role: ${role}, Employee ID: ${employeeId}, Permissions Checked: ${permissions.join(
 					', '
 				)}`
@@ -134,12 +137,12 @@ export class OrganizationPermissionGuard implements CanActivate {
 				// Returns true if at least one permission is allowed in the organization, false otherwise
 				return count > 0;
 			} catch (error) {
-				console.log(`Error occurred while checking ${MultiORMEnum.TypeORM} organization permission:`, error);
+				this.logger.error(`Error occurred while checking organization permission: ${error}`);
 				return false;
 			}
 		} catch (error) {
 			// Handle any potential errors, log, and optionally rethrow or return a default value.
-			console.error('Error occurred while checking organization permission:', error);
+			this.logger.error(`Error occurred while checking organization permission: ${error}`);
 			return false;
 		}
 	}
