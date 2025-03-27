@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { CandidateTechnologiesController } from './candidate-technologies.controller';
 import { CandidateTechnologiesService } from './candidate-technologies.service';
@@ -18,7 +17,6 @@ import { CandidateTechnologies } from './../core/entities/internal';
 			}
 		]),
 		TypeOrmModule.forFeature([CandidateTechnologies]),
-		MikroOrmModule.forFeature([CandidateTechnologies]),
 		RolePermissionModule,
 		CqrsModule
 	],

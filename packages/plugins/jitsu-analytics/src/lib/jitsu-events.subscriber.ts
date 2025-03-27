@@ -48,7 +48,7 @@ export class JitsuEventsSubscriber extends BaseEntityEventSubscriber {
 	 * It can be used to perform additional operations or processing on the newly persisted entity.
 	 *
 	 * @param entity The entity that has just been created and inserted.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM, used for additional database operations if necessary.
+	 * @param em An optional entity manager which can be from TypeORM, used for additional database operations if necessary.
 	 * @returns {Promise<void>} A promise that resolves when the post-creation processing is complete.
 	 */
 	async afterEntityCreate(entity: any): Promise<void> {

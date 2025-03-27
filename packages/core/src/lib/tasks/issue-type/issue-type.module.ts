@@ -2,7 +2,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../../role-permission/role-permission.module';
 import { IssueTypeController } from './issue-type.controller';
 import { IssueType } from './issue-type.entity';
@@ -14,7 +13,6 @@ import { TypeOrmIssueTypeRepository } from './repository';
 	imports: [
 		RouterModule.register([{ path: '/issue-types', module: IssueTypeModule }]),
 		TypeOrmModule.forFeature([IssueType]),
-		MikroOrmModule.forFeature([IssueType]),
 		RolePermissionModule,
 		CqrsModule
 	],
@@ -22,4 +20,4 @@ import { TypeOrmIssueTypeRepository } from './repository';
 	providers: [IssueTypeService, TypeOrmIssueTypeRepository, ...CommandHandlers],
 	exports: []
 })
-export class IssueTypeModule {}
+export class IssueTypeModule { }

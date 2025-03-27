@@ -1,7 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { CommandHandlers } from './commands/handlers';
 import { QueryHandlers } from './queries/handlers';
 import { EmailReset } from './email-reset.entity';
@@ -16,7 +15,6 @@ import { AuthModule } from './../auth/auth.module';
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([EmailReset]),
-		MikroOrmModule.forFeature([EmailReset]),
 		forwardRef(() => RolePermissionModule),
 		CqrsModule,
 		UserModule,
@@ -26,6 +24,6 @@ import { AuthModule } from './../auth/auth.module';
 	],
 	controllers: [EmailResetController],
 	providers: [EmailResetService, ...CommandHandlers, ...QueryHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, EmailResetService],
+	exports: [TypeOrmModule, EmailResetService],
 })
 export class EmailResetModule { }

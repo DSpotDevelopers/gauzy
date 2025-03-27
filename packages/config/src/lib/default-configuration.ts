@@ -1,6 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+import { Logger } from '@nestjs/common';
+
 import * as path from 'path';
 import {
 	DEFAULT_API_HOST,
@@ -9,48 +11,17 @@ import {
 	DEFAULT_GRAPHQL_API_PATH,
 	ApplicationPluginConfig
 } from '@gauzy/common';
-import { dbTypeOrmConnectionConfig, dbMikroOrmConnectionConfig, dbKnexConnectionConfig } from './database';
+import { dbTypeOrmConnectionConfig } from './database';
 
-process.cwd();
+const logger = new Logger('GZY - Default Config');
 
-let assetPath: string;
-let assetPublicPath: string;
+logger.verbose(`Working directory: ${process.cwd()}`);
 
-console.log('Default Config -> __dirname: ' + __dirname);
-console.log('Default Config -> process.cwd: ' + process.cwd());
+const assetPath = path.join(process.cwd(), 'apps', 'api', 'src', 'assets');
+const assetPublicPath = path.join(process.cwd(), 'apps', 'api', 'public');
 
-// TODO: maybe better to use process.cwd() instead of __dirname?
-
-// For Docker environment
-if (__dirname.startsWith('/srv/gauzy')) {
-    // Set paths specific to Docker deployment
-    assetPath = '/srv/gauzy/apps/api/src/assets';
-    assetPublicPath = '/srv/gauzy/apps/api/public';
-} else {
-    // Determine if running in production (dist) or development (src)
-    const isDist = __dirname.includes(path.join('dist'));
-	console.log('Default Config -> isDist: ' + isDist);
-
-	// Adjust the base path based on the environment
-	const basePath = isDist
-		? path.resolve(process.cwd(), 'dist/apps/api') // For production
-		: path.resolve(__dirname, '../../../../apps/api'); // For development
-
-	console.log('Default Config -> basePath: ' + basePath);
-
-	// Set the asset paths relative to basePath
-	assetPath = isDist
-		? path.join(basePath, 'assets') // In dist, assets are directly under 'assets'
-		: path.join(basePath, 'src', 'assets'); // In dev, assets are under 'src/assets'
-
-	// Default public directory for assets
-	assetPublicPath = isDist
-		? path.resolve(process.cwd(), 'apps/api/public') // Adjusted for dist structure
-		: path.resolve(__dirname, '../../../../apps/api/public');
-}
-
-console.log('Default Config -> assetPath: ' + assetPath);
-console.log('Default Config -> assetPublicPath: ' + assetPublicPath);
+logger.verbose(`AssetPath: ${assetPath}`);
+logger.verbose(`AssetPublicPath: ${assetPublicPath}`);
 
 /**
  * Application plugin default configuration
@@ -74,14 +45,6 @@ export const defaultConfiguration: ApplicationPluginConfig = {
 		migrationsTransactionMode: 'each', // Run migrations automatically in each transaction. i.e."all" | "none" | "each"
 		migrationsRun: process.env.DB_SYNCHRONIZE === 'true' ? false : true, // Run migrations automatically if we don't do DB_SYNCHRONIZE
 		...dbTypeOrmConnectionConfig
-	},
-	dbMikroOrmConnectionOptions: {
-		...dbMikroOrmConnectionConfig
-	},
-	dbKnexConnectionOptions: {
-		retryAttempts: 100, // Number of retry attempts in case of connection failures
-		retryDelay: 3000, // Delay between retry attempts in milliseconds
-		...dbKnexConnectionConfig
 	},
 	plugins: [],
 	customFields: {

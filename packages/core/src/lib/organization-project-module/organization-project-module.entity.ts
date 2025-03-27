@@ -192,10 +192,6 @@ export class OrganizationProjectModule extends TenantOrganizationBaseEntity impl
 	@MultiORMManyToMany(() => OrganizationSprint, (it) => it.modules, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'project_module_sprint',
-		joinColumn: 'organizationProjectModuleId',
-		inverseJoinColumn: 'organizationSprintId'
 	})
 	@JoinTable({
 		name: 'project_module_sprint'
@@ -211,10 +207,6 @@ export class OrganizationProjectModule extends TenantOrganizationBaseEntity impl
 	@MultiORMManyToMany(() => OrganizationTeam, (it) => it.modules, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'project_module_team',
-		joinColumn: 'organizationProjectModuleId',
-		inverseJoinColumn: 'organizationTeamId'
 	})
 	@JoinTable({
 		name: 'project_module_team'

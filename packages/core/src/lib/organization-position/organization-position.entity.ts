@@ -23,10 +23,6 @@ export class OrganizationPosition extends TenantOrganizationBaseEntity implement
 	@MultiORMManyToMany(() => Tag, (tag) => tag.organizationPositions, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_organization_position',
-		joinColumn: 'organizationPositionId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization_position'

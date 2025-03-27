@@ -13,8 +13,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from './../core/decorators/entity';
 
 @MultiORMEntity('organization_team_join_request')
@@ -62,7 +61,6 @@ export class OrganizationTeamJoinRequest extends TenantOrganizationBaseEntity im
 	expiredAt: Date;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	isExpired: boolean;
 
 	/*

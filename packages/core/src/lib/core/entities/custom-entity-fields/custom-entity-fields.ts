@@ -1,10 +1,7 @@
 import { CustomEmbeddedFields } from '@gauzy/common';
-import { MikroOrmEmployeeEntityCustomFields, TypeOrmEmployeeEntityCustomFields } from './employee';
-import { MikroOrmTagEntityCustomFields, TypeOrmTagEntityCustomFields } from './tag';
-import {
-	MikroOrmOrganizationProjectEntityCustomFields,
-	TypeOrmOrganizationProjectEntityCustomFields
-} from './organization-project';
+import { TypeOrmEmployeeEntityCustomFields } from './employee';
+import { TypeOrmTagEntityCustomFields } from './tag';
+import { TypeOrmOrganizationProjectEntityCustomFields } from './organization-project';
 
 /**
  * Defines the structure for entity field registration configuration.
@@ -24,16 +21,4 @@ export const typeOrmCustomEntityFieldRegistrations: EntityFieldRegistrationConfi
 	{ entityName: 'Employee', customFields: TypeOrmEmployeeEntityCustomFields },
 	{ entityName: 'Tag', customFields: TypeOrmTagEntityCustomFields },
 	{ entityName: 'OrganizationProject', customFields: TypeOrmOrganizationProjectEntityCustomFields }
-];
-
-/**
- * Registrations for MikroORM custom entity fields.
- *
- * This array contains the configurations for custom fields in MikroORM entities.
- * Each entry specifies the entity name and the corresponding custom fields.
- */
-export const mikroOrmCustomEntityFieldRegistrations: EntityFieldRegistrationConfig[] = [
-	{ entityName: 'Employee', customFields: MikroOrmEmployeeEntityCustomFields },
-	{ entityName: 'Tag', customFields: MikroOrmTagEntityCustomFields },
-	{ entityName: 'OrganizationProject', customFields: MikroOrmOrganizationProjectEntityCustomFields }
 ];

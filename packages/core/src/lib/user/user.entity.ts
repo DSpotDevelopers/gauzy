@@ -38,8 +38,7 @@ import {
 	MultiORMEntity,
 	MultiORMManyToMany,
 	MultiORMManyToOne,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../core/decorators/entity';
 
 @MultiORMEntity('user')
@@ -170,10 +169,8 @@ export class User extends TenantBaseEntity implements IUser {
 	emailToken?: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	name?: string;
 
-	@VirtualMultiOrmColumn()
 	isEmailVerified?: boolean;
 
 	/*
@@ -320,10 +317,6 @@ export class User extends TenantBaseEntity implements IUser {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.users, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_user',
-		joinColumn: 'userId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_user'

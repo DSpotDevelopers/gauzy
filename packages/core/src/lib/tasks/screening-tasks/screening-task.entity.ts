@@ -40,9 +40,6 @@ export class ScreeningTask extends TenantOrganizationBaseEntity implements IScre
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	task: ITask;

@@ -30,10 +30,6 @@ export class Skill extends TenantOrganizationBaseEntity implements ISkill {
 	@MultiORMManyToMany(() => Employee, (employee) => employee.skills, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'skill_employee',
-		joinColumn: 'skillId',
-		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'skill_employee'
@@ -46,10 +42,6 @@ export class Skill extends TenantOrganizationBaseEntity implements ISkill {
 	@MultiORMManyToMany(() => Organization, (organization) => organization.skills, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'skill_organization',
-		joinColumn: 'skillId',
-		inverseJoinColumn: 'organizationId'
 	})
 	@JoinTable({
 		name: 'skill_organization'

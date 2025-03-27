@@ -5,7 +5,7 @@ import { IIntegration, IIntegrationType, ITag } from '@gauzy/contracts';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
 import { BaseEntity, Tag } from '../core/entities/internal';
 import { IntegrationType } from './integration-type.entity';
-import { MultiORMColumn, MultiORMEntity, MultiORMManyToMany, VirtualMultiOrmColumn } from './../core/decorators/entity';
+import { MultiORMColumn, MultiORMEntity, MultiORMManyToMany } from './../core/decorators/entity';
 
 @MultiORMEntity('integration')
 @Unique(['name'])
@@ -76,7 +76,6 @@ export class Integration extends BaseEntity implements IIntegration {
 	order: number;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullImgUrl?: string;
 	/*
 	|--------------------------------------------------------------------------
@@ -89,10 +88,6 @@ export class Integration extends BaseEntity implements IIntegration {
 	@MultiORMManyToMany(() => IntegrationType, (it) => it.integrations, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'integration_integration_type',
-		joinColumn: 'integrationId',
-		inverseJoinColumn: 'integrationTypeId'
 	})
 	@JoinTable({
 		name: 'integration_integration_type'
@@ -105,10 +100,6 @@ export class Integration extends BaseEntity implements IIntegration {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.integrations, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_integration',
-		joinColumn: 'integrationId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_integration'

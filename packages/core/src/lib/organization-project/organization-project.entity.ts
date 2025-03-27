@@ -64,19 +64,14 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from '../core/decorators/entity';
-import {
-	MikroOrmOrganizationProjectEntityCustomFields,
-	OrganizationProjectEntityCustomFields,
-	TypeOrmOrganizationProjectEntityCustomFields
-} from '../core/entities/custom-entity-fields/organization-project';
+import { OrganizationProjectEntityCustomFields, TypeOrmOrganizationProjectEntityCustomFields } from '../core/entities/custom-entity-fields/organization-project';
 import { HasCustomFields } from '../core/entities/custom-entity-fields';
 import { Taggable } from '../tags/tag.types';
 
 @MultiORMEntity('organization_project')
 export class OrganizationProject
 	extends TenantOrganizationBaseEntity
-	implements IOrganizationProject, Taggable, HasCustomFields
-{
+	implements IOrganizationProject, Taggable, HasCustomFields {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@ColumnIndex()
@@ -449,10 +444,6 @@ export class OrganizationProject
 		onUpdate: 'CASCADE',
 		/** Defines the database cascade action on delete. */
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_organization_project',
-		joinColumn: 'organizationProjectId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization_project'
@@ -467,10 +458,6 @@ export class OrganizationProject
 		onUpdate: 'CASCADE',
 		/** Defines the database cascade action on delete. */
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'organization_project_team',
-		joinColumn: 'organizationProjectId',
-		inverseJoinColumn: 'organizationTeamId'
 	})
 	@JoinTable({
 		name: 'organization_project_team'
@@ -483,7 +470,6 @@ export class OrganizationProject
 	|--------------------------------------------------------------------------
 	*/
 	@EmbeddedColumn({
-		mikroOrmEmbeddableEntity: () => MikroOrmOrganizationProjectEntityCustomFields,
 		typeOrmEmbeddableEntity: () => TypeOrmOrganizationProjectEntityCustomFields
 	})
 	customFields?: OrganizationProjectEntityCustomFields;

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { InvoiceEstimateHistoryController } from './invoice-estimate-history.controller';
 import { InvoiceEstimateHistoryService } from './invoice-estimate-history.service';
 import { InvoiceEstimateHistory } from './invoice-estimate-history.entity';
@@ -17,7 +16,6 @@ import { TaskModule } from '../tasks/task.module';
 			}
 		]),
 		TypeOrmModule.forFeature([InvoiceEstimateHistory]),
-		MikroOrmModule.forFeature([InvoiceEstimateHistory]),
 		RolePermissionModule,
 		TaskModule
 	],

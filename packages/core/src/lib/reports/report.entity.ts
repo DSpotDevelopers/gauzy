@@ -10,8 +10,7 @@ import {
 	MultiORMColumn,
 	MultiORMEntity,
 	MultiORMManyToOne,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../core/decorators/entity';
 
 @MultiORMEntity('report')
@@ -51,7 +50,6 @@ export class Report extends BaseEntity implements IReport {
 	showInMenu?: boolean;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	imageUrl?: string;
 
 	/*

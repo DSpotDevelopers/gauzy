@@ -119,12 +119,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 	 * Organization Projects
 	 */
 	@ApiPropertyOptional({ type: () => OrganizationProject })
-	@MultiORMManyToMany(() => OrganizationProject, {
-		owner: true,
-		pivotTable: 'invite_organization_project',
-		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationProjectId'
-	})
+	@MultiORMManyToMany(() => OrganizationProject, {})
 	@JoinTable({
 		name: 'invite_organization_project'
 	})
@@ -134,12 +129,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 	 * Organization Contacts
 	 */
 	@ApiPropertyOptional({ type: () => OrganizationContact })
-	@MultiORMManyToMany(() => OrganizationContact, {
-		owner: true,
-		pivotTable: 'invite_organization_contact',
-		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationContactId'
-	})
+	@MultiORMManyToMany(() => OrganizationContact, {})
 	@JoinTable({
 		name: 'invite_organization_contact'
 	})
@@ -149,12 +139,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 	 * Organization Departments
 	 */
 	@ApiPropertyOptional({ type: () => OrganizationDepartment })
-	@MultiORMManyToMany(() => OrganizationDepartment, {
-		owner: true,
-		pivotTable: 'invite_organization_department',
-		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationDepartmentId'
-	})
+	@MultiORMManyToMany(() => OrganizationDepartment, {})
 	@JoinTable({
 		name: 'invite_organization_department'
 	})
@@ -164,12 +149,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 	 * Organization Teams
 	 */
 	@ApiPropertyOptional({ type: () => OrganizationTeam })
-	@MultiORMManyToMany(() => OrganizationTeam, {
-		owner: true,
-		pivotTable: 'invite_organization_team',
-		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationTeamId'
-	})
+	@MultiORMManyToMany(() => OrganizationTeam, {})
 	@JoinTable({
 		name: 'invite_organization_team'
 	})

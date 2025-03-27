@@ -45,8 +45,7 @@ import {
 	MultiORMManyToMany,
 	MultiORMManyToOne,
 	MultiORMOneToMany,
-	MultiORMOneToOne,
-	VirtualMultiOrmColumn
+	MultiORMOneToOne
 } from '../core/decorators/entity';
 import {
 	Candidate,
@@ -84,7 +83,6 @@ import {
 import { HasCustomFields } from '../core/entities/custom-entity-fields';
 import {
 	EmployeeEntityCustomFields,
-	MikroOrmEmployeeEntityCustomFields,
 	TypeOrmEmployeeEntityCustomFields
 } from '../core/entities/custom-entity-fields/employee';
 import { Trimmed } from '../shared/decorators';
@@ -416,10 +414,8 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 	linkedInId?: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullName?: string;
 
-	@VirtualMultiOrmColumn()
 	isDeleted?: boolean;
 
 	/*
@@ -436,9 +432,6 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	user: IUser;
@@ -461,9 +454,6 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 
 		/** Database cascade action on delete. */
 		onDelete: 'SET NULL',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	contact?: IContact;
@@ -480,9 +470,6 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 	@MultiORMOneToOne(() => Candidate, (candidate) => candidate.employee, {
 		/** Indicates if relation column value can be nullable or not. */
 		nullable: true,
-
-		/** This column is a boolean flag indicating that this is the inverse side of the relationship, and it doesn't control the foreign key directly  */
-		owner: false
 	})
 	candidate?: ICandidate;
 	/*
@@ -637,10 +624,6 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 	@MultiORMManyToMany(() => Tag, (tag) => tag.employees, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_employee',
-		joinColumn: 'employeeId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_employee'
@@ -689,10 +672,6 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 	@MultiORMManyToMany(() => TimeOffPolicy, (timeOffPolicy) => timeOffPolicy.employees, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		pivotTable: 'time_off_policy_employee',
-		owner: true,
-		joinColumn: 'employeeId',
-		inverseJoinColumn: 'timeOffPolicyId'
 	})
 	@JoinTable({
 		name: 'time_off_policy_employee'
@@ -705,10 +684,6 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 	@MultiORMManyToMany(() => TimeOffRequest, (timeOffRequest) => timeOffRequest.employees, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'time_off_request_employee',
-		joinColumn: 'employeeId',
-		inverseJoinColumn: 'timeOffRequestId'
 	})
 	@JoinTable({
 		name: 'time_off_request_employee'
@@ -751,7 +726,6 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 	|--------------------------------------------------------------------------
 	*/
 	@EmbeddedColumn({
-		mikroOrmEmbeddableEntity: () => MikroOrmEmployeeEntityCustomFields,
 		typeOrmEmbeddableEntity: () => TypeOrmEmployeeEntityCustomFields
 	})
 	customFields?: EmployeeEntityCustomFields;

@@ -19,10 +19,6 @@ export class OrganizationEmploymentType extends TenantOrganizationBaseEntity imp
 	@MultiORMManyToMany(() => Tag, (tag) => tag.organizationEmploymentTypes, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_organization_employment_type',
-		joinColumn: 'organizationEmploymentTypeId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization_employment_type'
@@ -35,10 +31,6 @@ export class OrganizationEmploymentType extends TenantOrganizationBaseEntity imp
 	@ApiPropertyOptional({ type: () => Employee, isArray: true })
 	@MultiORMManyToMany(() => Employee, (employee) => employee.organizationEmploymentTypes, {
 		cascade: ['update'],
-		owner: true,
-		pivotTable: 'organization_employment_type_employee',
-		joinColumn: 'organizationEmploymentTypeId',
-		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'organization_employment_type_employee'
@@ -52,10 +44,6 @@ export class OrganizationEmploymentType extends TenantOrganizationBaseEntity imp
 	@MultiORMManyToMany(() => Candidate, (candidate) => candidate.organizationEmploymentTypes, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'candidate_employment_type',
-		joinColumn: 'organizationEmploymentTypeId',
-		inverseJoinColumn: 'candidateId'
 	})
 	@JoinTable({
 		name: 'candidate_employment_type'

@@ -76,9 +76,6 @@ export class ProductVariant extends TenantOrganizationBaseEntity implements IPro
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating that this is the inverse side of the relationship, and it doesn't control the foreign key directly  */
-		owner: false
 	})
 	@JoinColumn()
 	price: IProductVariantPrice;
@@ -92,9 +89,6 @@ export class ProductVariant extends TenantOrganizationBaseEntity implements IPro
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating that this is the inverse side of the relationship, and it doesn't control the foreign key directly  */
-		owner: false
 	})
 	@JoinColumn()
 	setting: IProductVariantSetting;

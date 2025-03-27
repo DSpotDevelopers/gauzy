@@ -2,7 +2,6 @@ import { forwardRef, Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '@gauzy/core';
 import { HelpCenterController } from './help-center.controller';
 import { HelpCenter } from './help-center.entity';
@@ -14,7 +13,6 @@ import { TypeOrmHelpCenterRepository } from './repository';
 	imports: [
 		RouterModule.register([{ path: '/help-center', module: HelpCenterModule }]),
 		forwardRef(() => TypeOrmModule.forFeature([HelpCenter])),
-		forwardRef(() => MikroOrmModule.forFeature([HelpCenter])),
 		RolePermissionModule,
 		CqrsModule
 	],
@@ -22,4 +20,4 @@ import { TypeOrmHelpCenterRepository } from './repository';
 	providers: [HelpCenterService, TypeOrmHelpCenterRepository, ...CommandHandlers],
 	exports: [HelpCenterService, TypeOrmHelpCenterRepository]
 })
-export class HelpCenterModule {}
+export class HelpCenterModule { }

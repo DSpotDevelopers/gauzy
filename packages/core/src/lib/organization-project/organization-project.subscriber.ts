@@ -3,11 +3,7 @@ import { DatabaseTypeEnum, getConfig } from '@gauzy/config';
 import { getDummyImage, replacePlaceholders } from './../core/utils';
 import { OrganizationProject } from './organization-project.entity';
 import { BaseEntityEventSubscriber } from '../core/entities/subscribers/base-entity-event.subscriber';
-import {
-	MikroOrmEntityManager,
-	MultiOrmEntityManager,
-	TypeOrmEntityManager
-} from '../core/entities/subscribers/entity-event-subscriber.types';
+import { MultiOrmEntityManager } from '../core/entities/subscribers/entity-event-subscriber.types';
 import { prepareSQLQuery as p } from '../database/database.helper';
 
 @EventSubscriber()
@@ -72,7 +68,7 @@ export class OrganizationProjectSubscriber extends BaseEntityEventSubscriber<Org
 	 * the members count of the project.
 	 *
 	 * @param entity The OrganizationProject entity that was just created.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM.
+	 * @param em An optional entity manager which can be from TypeORM.
 	 * @returns {Promise<void>} A promise that resolves when the post-creation processing is complete.
 	 */
 	async afterEntityCreate(entity: OrganizationProject, em?: MultiOrmEntityManager): Promise<void> {
@@ -91,7 +87,7 @@ export class OrganizationProjectSubscriber extends BaseEntityEventSubscriber<Org
 	 * for updating the project's members count to reflect any changes made to the entity.
 	 *
 	 * @param entity The OrganizationProject entity that was just updated.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM. It provides the
+	 * @param em An optional entity manager which can be from TypeORM. It provides the
 	 *           necessary context for database operations.
 	 * @returns {Promise<void>} A promise that resolves when the post-update processing is complete.
 	 */
@@ -110,7 +106,7 @@ export class OrganizationProjectSubscriber extends BaseEntityEventSubscriber<Org
 	 * Updates the members count of an OrganizationProject entity.
 	 *
 	 * @param entity The OrganizationProject entity for which the member count is to be updated.
-	 * @param em An optional entity manager which can be either from TypeORM or MikroORM.
+	 * @param em An optional entity manager which can be from TypeORM.
 	 * @returns {Promise<void>} A promise that resolves when the members count update is complete.
 	 */
 	async updateProjectMembersCount(entity: OrganizationProject, em?: MultiOrmEntityManager): Promise<void> {
@@ -142,29 +138,14 @@ export class OrganizationProjectSubscriber extends BaseEntityEventSubscriber<Org
 			let totalMembers = 0;
 
 			// Handle TypeORM specific logic
-			if (em instanceof TypeOrmEntityManager) {
-				const result = await em.query(query, [projectId, organizationId, tenantId]);
-				// Extract count from result - the structure of this may vary based on the database and driver
-				totalMembers = parseInt(result[0]?.count ?? 0, 10);
-			}
-			// Handle MikroORM specific logic
-			else if (em instanceof MikroOrmEntityManager) {
-				// Replace $ placeholders with ? for MikroORM
-				query = query.replace(/\$\d/g, '?');
-				const result = await em.getConnection().execute(query, [projectId, organizationId, tenantId]);
-				totalMembers = parseInt(result[0]?.count ?? 0, 10);
-			}
+			const result = await em.query(query, [projectId, organizationId, tenantId]);
+			// Extract count from result - the structure of this may vary based on the database and driver
+			totalMembers = parseInt(result[0]?.count ?? 0, 10);
 
-			// Update members count in both TypeORM and MikroORM
+			// Update members count in TypeORM
 			if (totalMembers >= 0) {
 				// Common update logic for both ORMs
-				if (em instanceof TypeOrmEntityManager) {
-					await em.query(updateQuery, [totalMembers, projectId, organizationId, tenantId]);
-				} else if (em instanceof MikroOrmEntityManager) {
-					// Replace $ placeholders with ? for MikroORM
-					updateQuery = updateQuery.replace(/\$\d/g, '?');
-					await em.getConnection().execute(updateQuery, [totalMembers, projectId, organizationId, tenantId]);
-				}
+				await em.query(updateQuery, [totalMembers, projectId, organizationId, tenantId]);
 			}
 		} catch (error) {
 			console.error(

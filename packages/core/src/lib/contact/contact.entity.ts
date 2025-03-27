@@ -110,9 +110,6 @@ export class Contact extends TenantOrganizationBaseEntity implements IContact {
 	@MultiORMOneToOne(() => Employee, (employee) => employee.contact, {
 		/** Database cascade action on delete. */
 		onDelete: 'SET NULL',
-
-		/** This column is a boolean flag indicating that this is the inverse side of the relationship, and it doesn't control the foreign key directly  */
-		owner: false
 	})
 	employee?: IEmployee;
 
@@ -122,9 +119,6 @@ export class Contact extends TenantOrganizationBaseEntity implements IContact {
 	@MultiORMOneToOne(() => Candidate, (candidate) => candidate.contact, {
 		/** Database cascade action on delete. */
 		onDelete: 'SET NULL',
-
-		/** This column is a boolean flag indicating that this is the inverse side of the relationship, and it doesn't control the foreign key directly  */
-		owner: false
 	})
 	candidate?: ICandidate;
 
@@ -134,9 +128,6 @@ export class Contact extends TenantOrganizationBaseEntity implements IContact {
 	@MultiORMOneToOne(() => OrganizationContact, (organizationContact) => organizationContact.contact, {
 		/** Database cascade action on delete. */
 		onDelete: 'SET NULL',
-
-		/** This column is a boolean flag indicating that this is the inverse side of the relationship, and it doesn't control the foreign key directly  */
-		owner: false
 	})
 	organizationContact?: IOrganizationContact;
 }

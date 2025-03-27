@@ -1,16 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import {
-	FindOptions as MikroORMFindOptions,
-	FilterQuery as MikroFilterQuery,
-	OrderDefinition,
-	wrap
-} from '@mikro-orm/core';
-import { SOFT_DELETABLE_FILTER } from 'mikro-orm-soft-delete';
-import { BetterSqliteDriver } from '@mikro-orm/better-sqlite';
-import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { MySqlDriver } from '@mikro-orm/mysql';
-import { FindManyOptions, FindOperator, FindOptionsOrder } from 'typeorm';
+import { FindOperator } from 'typeorm';
 import { sample } from 'underscore';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -216,8 +206,8 @@ export function mergeOverlappingDateRanges(ranges: IDateRange[]): IDateRange[] {
  * @returns
  */
 export function getDateRangeFormat(startDate: moment.Moment, endDate: moment.Moment): DateRange {
-	let start = moment(startDate);
-	let end = moment(endDate);
+	const start = moment(startDate);
+	const end = moment(endDate);
 
 	if (!start.isValid() || !end.isValid()) {
 		return;
@@ -348,71 +338,16 @@ export function isSqliteDB(dbConnection?: IDBConnectionOptions): boolean {
 }
 
 /**
- * Enum representing different ORM types.
- */
-export enum MultiORMEnum {
-	TypeORM = 'typeorm',
-	MikroORM = 'mikro-orm'
-}
-
-/**
- * Type representing the ORM types.
- */
-export type MultiORM = 'typeorm' | 'mikro-orm';
-
-/**
- * Get the Object-Relational Mapping (ORM) type from the environment variable `DB_ORM`.
- * @param {MultiORM} defaultValue - The default ORM type to use if `DB_ORM` is not set or an invalid value is provided.
- * @returns {MultiORM} - The determined ORM type.
- */
-export function getORMType(defaultValue: MultiORM = MultiORMEnum.TypeORM): MultiORM {
-	// Check if the environment variable `DB_ORM` is not set, and return the default value.
-	if (!process.env.DB_ORM) return defaultValue;
-
-	// Determine the ORM type based on the value of `DB_ORM`.
-	switch (process.env.DB_ORM) {
-		case MultiORMEnum.TypeORM:
-			return MultiORMEnum.TypeORM;
-		case MultiORMEnum.MikroORM:
-			return MultiORMEnum.MikroORM;
-		default:
-			// If an invalid value is provided, return the default value.
-			return defaultValue;
-	}
-}
-
-/**
  * Gets the database type based on the provided database connection options or default options.
  *
  * @param {IDBConnectionOptions} [dbConnection] - The optional database connection options.
  * @returns {DatabaseTypeEnum} - The detected database type.
  */
 export function getDBType(dbConnection?: IDBConnectionOptions): any {
-	const dbORM = getORMType();
 	if (!dbConnection) {
 		dbConnection = getConfig().dbConnectionOptions;
 	}
-
-	let dbType: any;
-	switch (dbORM) {
-		case MultiORMEnum.MikroORM:
-			if (dbConnection.driver instanceof BetterSqliteDriver) {
-				dbType = DatabaseTypeEnum.betterSqlite3;
-			} else if (dbConnection.driver instanceof PostgreSqlDriver) {
-				dbType = DatabaseTypeEnum.postgres;
-			} else if (dbConnection.driver instanceof MySqlDriver) {
-				dbType = DatabaseTypeEnum.mysql;
-			} else {
-				dbType = DatabaseTypeEnum.postgres;
-			}
-			break;
-
-		default:
-			dbType = (dbConnection as TypeOrmModuleOptions).type;
-			break;
-	}
-
-	return dbType;
+	return (dbConnection as TypeOrmModuleOptions).type;
 }
 
 /**
@@ -433,7 +368,7 @@ export function isDatabaseType(
 	}
 
 	// Get the database type from the connection options
-	let dbType = getDBType(dbConnection);
+	const dbType = getDBType(dbConnection);
 
 	// Check if the provided types match the database type
 	if (types instanceof Array) {
@@ -465,8 +400,8 @@ export const flatten = (input: any): any => {
 					const newKey = Array.isArray(value)
 						? key
 						: nestedKeys.length > 0
-						? `${key}.${nestedKeys.join('.')}`
-						: key;
+							? `${key}.${nestedKeys.join('.')}`
+							: key;
 					return acc.concat(newKey);
 				}
 			}, []) || []
@@ -476,108 +411,6 @@ export const flatten = (input: any): any => {
 	// If input is neither an array nor an object, return an empty array
 	return [];
 };
-
-/**
- * Concatenate an ID to the given MikroORM where condition.
- *
- * @param id - The ID to concatenate to the where condition.
- * @param where - MikroORM where condition.
- * @returns Concatenated MikroORM where condition.
- */
-export function concatIdToWhere<T>(id: any, where: MikroFilterQuery<T>): MikroFilterQuery<T> {
-	if (where instanceof Array) {
-		where = where.concat({ id } as any);
-	} else {
-		where = {
-			id,
-			...(where ? where : ({} as any))
-		};
-	}
-	return where;
-}
-
-/**
- * Adds 'tenantId' to a 'where' clause, supporting both objects and arrays.
- *
- * @param tenantId - The tenant ID to add.
- * @param where - The current 'where' clause.
- * @returns An updated 'where' clause including the 'tenantId'.
- */
-export function enhanceWhereWithTenantId<T>(tenantId: any, where: MikroFilterQuery<T>): MikroFilterQuery<T> {
-	if (Array.isArray(where)) {
-		// Merge tenantId into each object of the array
-		return where.map((condition) => ({ ...condition, tenantId }));
-	} else {
-		// Merge where with tenantId if where is an object
-		return { ...where, tenantId };
-	}
-}
-
-/**
- * Convert TypeORM's FindManyOptions to MikroORM's equivalent options.
- *
- * @param options - TypeORM's FindManyOptions.
- * @returns An object with MikroORM's where and options.
- */
-export function parseTypeORMFindToMikroOrm<T>(options: FindManyOptions): {
-	where: MikroFilterQuery<T>;
-	mikroOptions: MikroORMFindOptions<T, any, any, any>;
-} {
-	const mikroOptions: MikroORMFindOptions<T, any, any, any> = {
-		disableIdentityMap: true,
-		populate: []
-	};
-	let where: MikroFilterQuery<T> = {};
-
-	// Parses TypeORM `where` option to MikroORM `where` option
-	if (options && options.where) {
-		where = convertTypeORMWhereToMikroORM(options.where as MikroFilterQuery<T>);
-	}
-
-	// Parses TypeORM `select` option to MikroORM `fields` option
-	if (options && options.select) {
-		mikroOptions.fields = flatten(options.select) as string[];
-	}
-
-	// Parses TypeORM `relations` option to MikroORM `populate` option
-	if (options && options.relations) {
-		mikroOptions.populate = flatten(options.relations) as string[];
-	}
-
-	// Parses TypeORM `order` option to MikroORM `orderBy` option
-	if (options && options.order) {
-		mikroOptions.orderBy = parseOrderOptions(options.order) as OrderDefinition<T>;
-	}
-
-	// Parses TypeORM `skip` option to MikroORM `offset` option
-	if (options && options.skip) {
-		mikroOptions.offset = options.take * (options.skip - 1);
-	}
-
-	// Parses TypeORM `take` option to MikroORM `limit` option
-	if (options && options.take) {
-		mikroOptions.limit = options.take;
-	}
-
-	// If options contain 'withDeleted', add the SOFT_DELETABLE_FILTER to existing filters
-	if (options && options.withDeleted) {
-		mikroOptions.filters = { [SOFT_DELETABLE_FILTER]: false };
-	}
-
-	return { where, mikroOptions };
-}
-
-/**
- * Parses TypeORM 'order' option to MikroORM 'orderBy' option.
- * @param order TypeORM 'order' option
- * @returns Parsed MikroORM 'orderBy' option
- */
-export function parseOrderOptions(order: FindOptionsOrder<any>) {
-	return Object.entries(order).reduce((acc, [key, value]) => {
-		acc[key] = `${value}`.toLowerCase();
-		return acc;
-	}, {});
-}
 
 /**
  * Transforms a FindOperator object into a query condition suitable for database operations.
@@ -628,62 +461,6 @@ export function processFindOperator<T>(operator: FindOperator<T>) {
 			return {};
 		}
 	}
-}
-
-/**
- * Converts a TypeORM query condition into a format that is compatible with MikroORM.
- * This function recursively processes each condition, handling both simple key-value
- * pairs and complex nested objects including FindOperators.
- *
- * @param where The TypeORM condition to be converted, typically as a filter query object.
- * @returns An object representing the MikroORM compatible condition.
- */
-export function convertTypeORMConditionToMikroORM<T>(where: MikroFilterQuery<T>) {
-	const mikroORMCondition = {};
-
-	for (const [key, value] of Object.entries(where)) {
-		if (typeof value === 'object' && value !== null && !(value instanceof Array)) {
-			if (value instanceof FindOperator) {
-				// Convert nested FindOperators
-				mikroORMCondition[key] = processFindOperator(value);
-			} else {
-				// Recursively convert nested objects
-				mikroORMCondition[key] = convertTypeORMConditionToMikroORM(value);
-			}
-		} else {
-			// Assign simple key-value pairs directly
-			mikroORMCondition[key] = value;
-		}
-	}
-
-	return mikroORMCondition;
-}
-
-/**
- * Converts TypeORM 'where' conditions into a format compatible with MikroORM.
- * This function can handle both individual condition objects and arrays of conditions,
- * applying the necessary conversion to each condition.
- *
- * @param where The TypeORM 'where' condition or an array of conditions to be converted.
- * @returns A MikroORM compatible condition or array of conditions.
- */
-export function convertTypeORMWhereToMikroORM<T>(where: MikroFilterQuery<T>) {
-	// If 'where' is an array, process each condition in the array
-	if (Array.isArray(where)) {
-		return where.map((condition: MikroFilterQuery<T>) => convertTypeORMConditionToMikroORM(condition));
-	}
-	// Otherwise, just convert the single condition object
-	return convertTypeORMConditionToMikroORM(where);
-}
-
-/**
- * Serializes the provided entity based on the ORM type.
- * @param entity The entity to be serialized.
- * @returns The serialized entity.
- */
-export function wrapSerialize<T extends object>(entity: T): T {
-	// If using MikroORM, use wrap(entity).toJSON() for serialization
-	return wrap(entity).toJSON() as T;
 }
 
 /**

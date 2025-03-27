@@ -12,8 +12,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from './../../core/decorators/entity';
 
 @MultiORMEntity('issue_type')
@@ -56,7 +55,6 @@ export class IssueType extends TenantOrganizationBaseEntity implements IIssueTyp
 	isSystem?: boolean;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullIconUrl?: string;
 
 	/*

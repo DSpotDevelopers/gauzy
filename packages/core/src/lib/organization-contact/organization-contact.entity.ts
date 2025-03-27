@@ -107,9 +107,6 @@ export class OrganizationContact extends TenantOrganizationBaseEntity implements
 
 		/** Database cascade action on delete. */
 		onDelete: 'SET NULL',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	contact?: IContact;
@@ -208,10 +205,6 @@ export class OrganizationContact extends TenantOrganizationBaseEntity implements
 	@MultiORMManyToMany(() => Tag, (tag) => tag.organizationContacts, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_organization_contact',
-		joinColumn: 'organizationContactId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization_contact'
@@ -222,10 +215,6 @@ export class OrganizationContact extends TenantOrganizationBaseEntity implements
 	@MultiORMManyToMany(() => Employee, (it) => it.organizationContacts, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'organization_contact_employee',
-		joinColumn: 'organizationContactId',
-		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'organization_contact_employee'

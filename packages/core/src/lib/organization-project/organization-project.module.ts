@@ -1,7 +1,6 @@
 import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { OrganizationProject } from './organization-project.entity';
 import { OrganizationProjectEmployee } from './organization-project-employee.entity';
 import { OrganizationProjectController } from './organization-project.controller';
@@ -16,9 +15,7 @@ import { TypeOrmOrganizationProjectEmployeeRepository } from './repository';
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([OrganizationProject]),
-		MikroOrmModule.forFeature([OrganizationProject]),
 		TypeOrmModule.forFeature([OrganizationProjectEmployee]),
-		MikroOrmModule.forFeature([OrganizationProjectEmployee]),
 		RoleModule,
 		EmployeeModule,
 		RolePermissionModule,
@@ -33,10 +30,9 @@ import { TypeOrmOrganizationProjectEmployeeRepository } from './repository';
 	],
 	exports: [
 		TypeOrmModule,
-		MikroOrmModule,
 		OrganizationProjectService,
 		TypeOrmOrganizationProjectRepository,
 		TypeOrmOrganizationProjectEmployeeRepository
 	]
 })
-export class OrganizationProjectModule {}
+export class OrganizationProjectModule { }

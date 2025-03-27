@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { InvoiceController } from './invoice.controller';
 import { InvoiceService } from './invoice.service';
 import { Invoice } from './invoice.entity';
@@ -18,7 +17,6 @@ import { TypeOrmInvoiceRepository } from './repository';
 	imports: [
 		RouterModule.register([{ path: '/invoices', module: InvoiceModule }]),
 		TypeOrmModule.forFeature([Invoice]),
-		MikroOrmModule.forFeature([Invoice]),
 		EmailSendModule,
 		EstimateEmailModule,
 		RolePermissionModule,
@@ -27,6 +25,6 @@ import { TypeOrmInvoiceRepository } from './repository';
 	],
 	controllers: [InvoiceController],
 	providers: [InvoiceService, PdfmakerService, TypeOrmInvoiceRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, InvoiceService, PdfmakerService, TypeOrmInvoiceRepository]
+	exports: [TypeOrmModule, InvoiceService, PdfmakerService, TypeOrmInvoiceRepository]
 })
-export class InvoiceModule {}
+export class InvoiceModule { }

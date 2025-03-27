@@ -1,7 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { TimeLog, TimeSlot } from './../core/entities/internal';
 import { Employee } from './employee.entity';
 import { UserModule } from './../user/user.module';
@@ -18,7 +17,6 @@ import { TypeOrmEmployeeRepository } from './repository';
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([Employee, TimeLog, TimeSlot]),
-		MikroOrmModule.forFeature([Employee, TimeLog, TimeSlot]),
 		forwardRef(() => EmailSendModule),
 		forwardRef(() => UserOrganizationModule),
 		forwardRef(() => RolePermissionModule),
@@ -29,6 +27,6 @@ import { TypeOrmEmployeeRepository } from './repository';
 	],
 	controllers: [EmployeeController],
 	providers: [EmployeeService, TypeOrmEmployeeRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, EmployeeService, TypeOrmEmployeeRepository]
+	exports: [TypeOrmModule, EmployeeService, TypeOrmEmployeeRepository]
 })
-export class EmployeeModule {}
+export class EmployeeModule { }

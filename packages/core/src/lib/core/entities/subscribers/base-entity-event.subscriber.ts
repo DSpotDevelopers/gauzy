@@ -1,4 +1,3 @@
-import { EntityName } from '@mikro-orm/core';
 import { EntityEventSubscriber } from './entity-event.subscriber';
 import { IEntityEventSubscriber, MultiOrmEntityManager } from './entity-event-subscriber.types';
 
@@ -23,23 +22,10 @@ export abstract class BaseEntityEventSubscriber<Entity = any>
 	}
 
 	/**
-	 * Returns the array of entities this subscriber is subscribed to.
-	 * If listenTo is not defined, it returns an empty array.
-	 *
-	 * @returns {EntityName<Entity>[]} An array containing the entities to which this subscriber listens.
-	 */
-	getSubscribedEntities(): EntityName<Entity>[] {
-		if (this.listenTo()) {
-			return [this.listenTo()];
-		}
-		return [];
-	}
-
-	/**
 	 * Called before a new entity is persisted. Override in subclasses to define custom pre-creation logic.
 	 *
 	 * @param entity The entity that is about to be created.
-	 * @param em The optional EntityManager, which can be either from TypeORM or MikroORM.
+	 * @param em The optional EntityManager, which can be from TypeORM.
 	 * @returns {Promise<void>}
 	 */
 	async beforeEntityCreate(entity: Entity, em?: MultiOrmEntityManager): Promise<void> {
@@ -50,7 +36,7 @@ export abstract class BaseEntityEventSubscriber<Entity = any>
 	 * Invoked before an entity update. Use in subclasses for specific update preparation.
 	 *
 	 * @param entity The entity being updated.
-	 * @param em The optional EntityManager, which can be either from TypeORM or MikroORM.
+	 * @param em The optional EntityManager, which can be from TypeORM.
 	 * @returns {Promise<void>}
 	 */
 	async beforeEntityUpdate(entity: Entity, em?: MultiOrmEntityManager): Promise<void> {
@@ -61,7 +47,7 @@ export abstract class BaseEntityEventSubscriber<Entity = any>
 	 * Invoked after an entity update. Use in subclasses for specific update preparation.
 	 *
 	 * @param entity The entity being updated.
-	 * @param em The optional EntityManager, which can be either from TypeORM or MikroORM.
+	 * @param em The optional EntityManager, which can be from TypeORM.
 	 * @returns {Promise<void>}
 	 */
 	async afterEntityUpdate(entity: Entity, em?: MultiOrmEntityManager): Promise<void> {
@@ -72,7 +58,7 @@ export abstract class BaseEntityEventSubscriber<Entity = any>
 	 * Executed after an entity is created. Subclasses can override for post-creation actions.
 	 *
 	 * @param entity The newly created entity.
-	 * @param em The optional EntityManager, which can be either from TypeORM or MikroORM.
+	 * @param em The optional EntityManager, which can be from TypeORM.
 	 * @returns {Promise<void>}
 	 */
 	async afterEntityCreate(entity: Entity, em?: MultiOrmEntityManager): Promise<void> {
@@ -83,7 +69,7 @@ export abstract class BaseEntityEventSubscriber<Entity = any>
 	 * Called following the loading of an entity. Ideal for post-load processing in subclasses.
 	 *
 	 * @param entity The entity that was loaded.
-	 * @param em The optional EntityManager, which can be either from TypeORM or MikroORM.
+	 * @param em The optional EntityManager, which can be from TypeORM.
 	 * @returns {Promise<void>}
 	 */
 	async afterEntityLoad(entity: Entity, em?: MultiOrmEntityManager): Promise<void> {
@@ -94,7 +80,7 @@ export abstract class BaseEntityEventSubscriber<Entity = any>
 	 * Called following the deletion of an entity. Ideal for post-deletion processing in subclasses.
 	 *
 	 * @param entity The entity that was deleted.
-	 * @param em The optional EntityManager, which can be either from TypeORM or MikroORM.
+	 * @param em The optional EntityManager, which can be from TypeORM.
 	 * @returns {Promise<void>}
 	 */
 	async afterEntityDelete(entity: Entity, em?: MultiOrmEntityManager): Promise<void> {
@@ -105,7 +91,7 @@ export abstract class BaseEntityEventSubscriber<Entity = any>
 	 * Called following the soft removal of an entity. Ideal for post-deletion processing in subclasses.
 	 *
 	 * @param entity The entity that was soft removed.
-	 * @param em The optional EntityManager, which can be either from TypeORM or MikroORM.
+	 * @param em The optional EntityManager, which can be from TypeORM.
 	 * @returns {Promise<void>}
 	 */
 	async afterEntitySoftRemove(entity: Entity, em?: MultiOrmEntityManager): Promise<void> {

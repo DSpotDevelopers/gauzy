@@ -106,10 +106,6 @@ export class Income extends TenantOrganizationBaseEntity implements IIncome {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.incomes, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_income',
-		joinColumn: 'incomeId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_income'

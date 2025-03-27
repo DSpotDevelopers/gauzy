@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { WarehouseService } from './warehouse.service';
 import { WarehouseController } from './warehouse.controller';
 import { Warehouse } from './warehouse.entity';
@@ -18,11 +17,10 @@ const forFeatureEntities = [Warehouse, Product, WarehouseProduct, WarehouseProdu
 	imports: [
 		RouterModule.register([{ path: '/warehouses', module: WarehouseModule }]),
 		TypeOrmModule.forFeature(forFeatureEntities),
-		MikroOrmModule.forFeature(forFeatureEntities),
 		RolePermissionModule
 	],
 	controllers: [WarehouseController],
 	providers: [WarehouseService, WarehouseProductService, TypeOrmWarehouseRepository],
 	exports: [WarehouseService, WarehouseProductService, TypeOrmWarehouseRepository]
 })
-export class WarehouseModule {}
+export class WarehouseModule { }

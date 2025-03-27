@@ -593,10 +593,6 @@ export class Organization extends TenantBaseEntity implements IOrganization {
 	@MultiORMManyToMany(() => Tag, (it) => it.organizations, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_organization',
-		joinColumn: 'organizationId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization'

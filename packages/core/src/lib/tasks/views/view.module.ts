@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../../role-permission/role-permission.module';
 import { TaskView } from './view.entity';
 import { CommandHandlers } from './commands/handlers';
@@ -14,7 +13,6 @@ import { TypeOrmTaskViewRepository } from './repository';
 	imports: [
 		RouterModule.register([{ path: '/task-views', module: TaskViewModule }]),
 		TypeOrmModule.forFeature([TaskView]),
-		MikroOrmModule.forFeature([TaskView]),
 		RolePermissionModule,
 		CqrsModule
 	],
@@ -22,4 +20,4 @@ import { TypeOrmTaskViewRepository } from './repository';
 	controllers: [TaskViewController],
 	exports: [TaskViewService, TypeOrmTaskViewRepository]
 })
-export class TaskViewModule {}
+export class TaskViewModule { }

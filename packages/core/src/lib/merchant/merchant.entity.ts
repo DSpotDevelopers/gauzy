@@ -57,9 +57,6 @@ export class Merchant extends TenantOrganizationBaseEntity implements IMerchant 
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	contact?: IContact;
@@ -108,10 +105,6 @@ export class Merchant extends TenantOrganizationBaseEntity implements IMerchant 
 	@MultiORMManyToMany(() => Tag, (tag) => tag.merchants, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_merchant',
-		joinColumn: 'merchantId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_merchant'
@@ -124,10 +117,6 @@ export class Merchant extends TenantOrganizationBaseEntity implements IMerchant 
 	@ApiProperty({ type: () => Warehouse, isArray: true })
 	@MultiORMManyToMany(() => Warehouse, (it) => it.merchants, {
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'warehouse_merchant',
-		joinColumn: 'merchantId',
-		inverseJoinColumn: 'warehouseId'
 	})
 	@JoinTable({
 		name: 'warehouse_merchant'

@@ -109,9 +109,6 @@ export class CandidateFeedback extends TenantOrganizationBaseEntity implements I
 	@MultiORMOneToOne(() => CandidateInterviewers, {
 		/** Indicates if relation column value can be nullable or not. */
 		nullable: true,
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	interviewer?: ICandidateInterviewers;

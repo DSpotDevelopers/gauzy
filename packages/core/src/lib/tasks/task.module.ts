@@ -1,7 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EventBusModule } from '../event-bus/event-bus.module';
 import { IntegrationMap, TaskStatus } from '../core/entities/internal';
 import { CommandHandlers } from './commands/handlers';
@@ -20,7 +19,6 @@ import { TypeOrmTaskRepository } from './repository';
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([Task, TaskStatus, IntegrationMap]),
-		MikroOrmModule.forFeature([Task, TaskStatus, IntegrationMap]),
 		RolePermissionModule,
 		forwardRef(() => UserModule),
 		RoleModule,
@@ -33,6 +31,6 @@ import { TypeOrmTaskRepository } from './repository';
 	],
 	controllers: [TaskController],
 	providers: [TaskService, TypeOrmTaskRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, TaskService, TypeOrmTaskRepository]
+	exports: [TypeOrmModule, TaskService, TypeOrmTaskRepository]
 })
-export class TaskModule {}
+export class TaskModule { }

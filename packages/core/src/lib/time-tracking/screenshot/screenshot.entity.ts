@@ -8,8 +8,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from '../../core/decorators/entity';
 import { TenantOrganizationBaseEntity, TimeSlot, User } from './../../core/entities/internal';
 
@@ -90,10 +89,8 @@ export class Screenshot extends TenantOrganizationBaseEntity implements IScreens
 	apps?: string | string[];
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullUrl?: string;
 
-	@VirtualMultiOrmColumn()
 	thumbUrl?: string;
 	/*
 	|--------------------------------------------------------------------------

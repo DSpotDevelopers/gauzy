@@ -7,8 +7,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from './../../core/decorators/entity';
 
 @MultiORMEntity('task_size')
@@ -45,7 +44,6 @@ export class TaskSize extends TenantOrganizationBaseEntity implements ITaskSize 
 	isSystem?: boolean;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullIconUrl?: string;
 	/*
 	|--------------------------------------------------------------------------

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Payment } from './payment.entity';
 import { PaymentController } from './payment.controller';
 import { PaymentService } from './payment.service';
@@ -14,12 +13,11 @@ import { TypeOrmPaymentRepository } from './repository';
 	imports: [
 		RouterModule.register([{ path: '/payments', module: PaymentModule }]),
 		TypeOrmModule.forFeature([Payment]),
-		MikroOrmModule.forFeature([Payment]),
 		RolePermissionModule,
 		EmailSendModule
 	],
 	controllers: [PaymentController],
 	providers: [PaymentService, PaymentMapService, TypeOrmPaymentRepository],
-	exports: [TypeOrmModule, MikroOrmModule, PaymentService, PaymentMapService, TypeOrmPaymentRepository]
+	exports: [TypeOrmModule, PaymentService, PaymentMapService, TypeOrmPaymentRepository]
 })
-export class PaymentModule {}
+export class PaymentModule { }

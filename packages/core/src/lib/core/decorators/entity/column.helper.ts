@@ -1,5 +1,5 @@
 import { DataSourceOptions } from 'typeorm';
-import { ColumnDataType, MikroORMColumnOptions } from './column-options.types';
+import { ColumnDataType } from './column-options.types';
 
 /**
  * Resolve the database column type.
@@ -23,22 +23,4 @@ export function getColumnType(dbEngine: DataSourceOptions['type'], type: string)
 			return 'varchar';
 	}
 	return 'varchar';
-}
-
-/**
- * Parse MikroORM column options.
- * @param param0 - The options for parsing column arguments.
- * @returns MikroORM column options.
- */
-export function parseMikroOrmColumnOptions<T>({ type, options }): MikroORMColumnOptions<T> {
-	if (typeof options?.default === 'function') {
-		options.default = options.default();
-	}
-	if (options?.relationId) {
-		options.persist = false;
-	}
-	return {
-		type: type,
-		...options
-	};
 }

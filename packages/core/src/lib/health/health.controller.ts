@@ -30,7 +30,7 @@ export class HealthController {
 	private readonly checkRedis = true;
 
 	// Note: we disable by default because we notice some connection
-	// related issues with Terminus DB checks (in MikroORM)
+	// related issues with Terminus DB checks
 	private readonly checkDbWithTerminus = false;
 
 	@Public()

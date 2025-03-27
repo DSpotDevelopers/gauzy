@@ -79,9 +79,6 @@ export class Warehouse extends TenantOrganizationBaseEntity implements IWarehous
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	contact?: IContact;
@@ -122,12 +119,6 @@ export class Warehouse extends TenantOrganizationBaseEntity implements IWarehous
 		onUpdate: 'CASCADE',
 		/** Defines the database cascade action on delete. */
 		onDelete: 'CASCADE',
-		/** Indicates that this entity (Warehouse) is the owner side of the relationship. */
-		owner: true,
-		/** Specifies the name of the pivot table in the database. */
-		pivotTable: 'tag_warehouse',
-		joinColumn: 'warehouseId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		/** Specifies the name of the pivot table in the database. */

@@ -1,11 +1,10 @@
-import { Property as MikroORMColumn } from '@mikro-orm/core';
 import { Column as TypeORMColumn } from 'typeorm';
 import { ObjectUtils } from '../../../core/util/object-utils';
 import { ColumnDataType, ColumnOptions } from './column-options.types';
-import { parseMikroOrmColumnOptions, resolveDbType } from './column.helper';
+import { resolveDbType } from './column.helper';
 
 /**
- * Decorator for creating column definitions for both MikroORM and TypeORM.
+ * Decorator for creating column definitions for TypeORM.
  *
  * @template T - The type of the column.
  * @param typeOrOptions - The column type or additional options if provided.
@@ -33,6 +32,5 @@ export function MultiORMColumn<T>(
 
     return (target: any, propertyKey: string) => {
         TypeORMColumn({ type, ...options })(target, propertyKey);
-        MikroORMColumn(parseMikroOrmColumnOptions({ type, options }))(target, propertyKey);
     };
 }

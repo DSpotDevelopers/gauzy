@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IEmailTemplate } from '@gauzy/contracts';
 import { isMySQL } from '@gauzy/config';
 import { TenantOrganizationBaseEntity } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, VirtualMultiOrmColumn } from './../core/decorators/entity';
+import { ColumnIndex, MultiORMColumn, MultiORMEntity } from './../core/decorators/entity';
 
 @MultiORMEntity('email_template')
 export class EmailTemplate extends TenantOrganizationBaseEntity implements IEmailTemplate {
@@ -25,7 +25,6 @@ export class EmailTemplate extends TenantOrganizationBaseEntity implements IEmai
 	hbs: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	title?: string;
 
 	/*

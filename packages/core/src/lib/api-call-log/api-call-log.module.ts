@@ -1,5 +1,4 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { ApiCallLogController } from './api-call-log.controller';
@@ -9,7 +8,7 @@ import { ApiCallLogMiddleware } from './api-call-log-middleware';
 import { TypeOrmApiCallLogRepository } from './repository';
 
 @Module({
-	imports: [TypeOrmModule.forFeature([ApiCallLog]), MikroOrmModule.forFeature([ApiCallLog]), RolePermissionModule],
+	imports: [TypeOrmModule.forFeature([ApiCallLog]), RolePermissionModule],
 	controllers: [ApiCallLogController],
 	providers: [ApiCallLogService, ApiCallLogMiddleware, TypeOrmApiCallLogRepository],
 	exports: [ApiCallLogService]

@@ -7,12 +7,7 @@ import {
 	DEFAULT_API_HOST,
 	DEFAULT_API_BASE_URL
 } from '@gauzy/common';
-import {
-	dbTypeOrmConnectionConfig,
-	dbMikroOrmConnectionConfig,
-	environment,
-	dbKnexConnectionConfig
-} from '@gauzy/config';
+import { dbTypeOrmConnectionConfig, environment } from '@gauzy/config';
 import { SentryService } from '@gauzy/plugin-sentry';
 import { SentryTracing as SentryPlugin } from './sentry';
 import { version } from './../version';
@@ -55,14 +50,6 @@ export const pluginConfig: ApplicationPluginConfig = {
 		migrationsTransactionMode: 'each', // Run migrations automatically in each transaction. i.e."all" | "none" | "each"
 		migrationsRun: process.env.DB_SYNCHRONIZE !== 'true', // Run migrations automatically if we don't do DB_SYNCHRONIZE
 		...dbTypeOrmConnectionConfig
-	},
-	dbMikroOrmConnectionOptions: {
-		...dbMikroOrmConnectionConfig
-	},
-	dbKnexConnectionOptions: {
-		retryAttempts: 100,
-		retryDelay: 3000,
-		...dbKnexConnectionConfig
 	},
 	assetOptions: {
 		assetPath: assetPath,

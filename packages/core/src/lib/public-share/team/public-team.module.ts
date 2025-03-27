@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { StatisticModule } from './../../time-tracking/statistic';
 import { OrganizationTeam } from './../../core/entities/internal';
 import { PublicTeamController } from './public-team.controller';
@@ -13,7 +12,6 @@ import { TypeOrmOrganizationTeamRepository } from '../../organization-team/repos
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([OrganizationTeam]),
-		MikroOrmModule.forFeature([OrganizationTeam]),
 		CqrsModule,
 		StatisticModule,
 		TimerModule

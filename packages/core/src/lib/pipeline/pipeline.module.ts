@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PipelineController } from './pipeline.controller';
 import { PipelineService } from './pipeline.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,7 +16,6 @@ import { TypeOrmPipelineRepository } from './repository';
 			{ path: '/pipelines', module: PipelineModule }
 		]),
 		TypeOrmModule.forFeature([Pipeline]),
-		MikroOrmModule.forFeature([Pipeline]),
 		StageModule,
 		DealModule,
 		RolePermissionModule,

@@ -1,4 +1,3 @@
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -13,7 +12,7 @@ import { VideosController } from './videos.controller';
 
 @Module({
 	controllers: [VideosController],
-	imports: [TypeOrmModule.forFeature([Video]), MikroOrmModule.forFeature([Video]), RolePermissionModule, CqrsModule],
+	imports: [TypeOrmModule.forFeature([Video]), RolePermissionModule, CqrsModule],
 	providers: [VideosService, VideoSubscriber, TypeOrmVideoRepository, ...CommandHandlers, ...QueryHandlers],
 	exports: [VideosService]
 })

@@ -1,5 +1,4 @@
 import { Unique as TypeOrmUnique } from 'typeorm';
-import { Unique as MikroOrmUnique } from '@mikro-orm/core';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 import { ILanguage, IOrganizationLanguage } from '@gauzy/contracts';
@@ -8,7 +7,6 @@ import { MultiORMColumn, MultiORMEntity, MultiORMOneToMany } from './../core/dec
 
 @MultiORMEntity('language')
 @TypeOrmUnique(['code'])
-@MikroOrmUnique({ properties: ['code'] })
 export class Language extends BaseEntity implements ILanguage {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()

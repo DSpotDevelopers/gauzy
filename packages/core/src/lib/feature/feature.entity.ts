@@ -7,8 +7,7 @@ import {
 	MultiORMColumn,
 	MultiORMEntity,
 	MultiORMManyToOne,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../core/decorators/entity';
 
 @MultiORMEntity('feature')
@@ -48,10 +47,8 @@ export class Feature extends BaseEntity implements IFeature {
 	icon: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	isEnabled?: boolean;
 
-	@VirtualMultiOrmColumn()
 	imageUrl?: string;
 
 	/*

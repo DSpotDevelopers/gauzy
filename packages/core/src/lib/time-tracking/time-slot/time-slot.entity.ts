@@ -10,8 +10,7 @@ import {
 	MultiORMEntity,
 	MultiORMManyToMany,
 	MultiORMManyToOne,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../../core/decorators/entity';
 
 @MultiORMEntity('time_slot')
@@ -52,16 +51,12 @@ export class TimeSlot extends TenantOrganizationBaseEntity implements ITimeSlot 
 	/**
 	 * Additional virtual columns
 	 */
-	@VirtualMultiOrmColumn()
 	stoppedAt?: Date;
 
-	@VirtualMultiOrmColumn()
 	percentage?: number;
 
-	@VirtualMultiOrmColumn()
 	keyboardPercentage?: number;
 
-	@VirtualMultiOrmColumn()
 	mousePercentage?: number;
 
 	/*
@@ -129,14 +124,6 @@ export class TimeSlot extends TenantOrganizationBaseEntity implements ITimeSlot 
 		onUpdate: 'CASCADE',
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true,
-		/** Pivot table for many-to-many relationship. */
-		pivotTable: 'time_slot_time_logs',
-		/** Column in pivot table referencing 'time_slot' primary key. */
-		joinColumn: 'timeSlotId',
-		/** Column in pivot table referencing 'time_logs' primary key. */
-		inverseJoinColumn: 'timeLogId'
 	})
 	@JoinTable({ name: 'time_slot_time_logs' })
 	timeLogs?: ITimeLog[];

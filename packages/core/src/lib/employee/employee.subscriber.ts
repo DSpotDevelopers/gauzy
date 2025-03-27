@@ -5,11 +5,7 @@ import { Employee } from './employee.entity';
 import { getUserDummyImage } from '../core/utils';
 import { Organization, UserOrganization } from '../core/entities/internal';
 import { BaseEntityEventSubscriber } from '../core/entities/subscribers/base-entity-event.subscriber';
-import {
-	MikroOrmEntityManager,
-	MultiOrmEntityManager,
-	TypeOrmEntityManager
-} from '../core/entities/subscribers/entity-event-subscriber.types';
+import { MultiOrmEntityManager } from '../core/entities/subscribers/entity-event-subscriber.types';
 
 @EventSubscriber()
 export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
@@ -88,7 +84,7 @@ export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
 	 * Called after an entity is inserted/created in the database.
 	 *
 	 * @param {Employee} entity - The employee entity that was created.
-	 * @param {MultiOrmEntityManager} em - The entity manager, either TypeORM's or MikroORM's.
+	 * @param {MultiOrmEntityManager} em - The entity manager, TypeORM's.
 	 */
 	async afterEntityCreate(entity: Employee, em?: MultiOrmEntityManager): Promise<void> {
 		try {
@@ -104,7 +100,7 @@ export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
 	 * Called after an entity is removed from the database.
 	 *
 	 * @param {Employee} entity - The employee entity that was deleted.
-	 * @param {MultiOrmEntityManager} em - The entity manager, either TypeORM's or MikroORM's.
+	 * @param {MultiOrmEntityManager} em - The entity manager, TypeORM's.
 	 */
 	async afterEntityDelete(entity: Employee, em?: MultiOrmEntityManager): Promise<void> {
 		try {
@@ -146,10 +142,10 @@ export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
 
 	/**
 	 * Calculates and updates the total number of employees for an organization.
-	 * Handles both TypeORM and MikroORM environments.
+	 * Handles TypeORM environment.
 	 *
 	 * @param {Employee} entity - The employee entity containing organizationId and tenantId.
-	 * @param {MultiOrmEntityManager} em - The entity manager, either TypeORM's or MikroORM's.
+	 * @param {MultiOrmEntityManager} em - The entity manager, TypeORM's.
 	 * @returns {Promise<void>} - Returns a promise indicating the completion of the total employee calculation.
 	 */
 	async calculateTotalEmployees(entity: Employee, em: MultiOrmEntityManager): Promise<void> {
@@ -158,20 +154,13 @@ export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
 			if (!organizationId) return; // Early return if organizationId is missing
 
 			// Determine the total number of employees based on the ORM type
-			const totalEmployees =
-				em instanceof TypeOrmEntityManager
-					? await em.countBy(Employee, { organizationId, tenantId })
-					: await em.count(Employee, { organizationId, tenantId });
+			const totalEmployees = await em.countBy(Employee, { organizationId, tenantId });
 
 			// Update the organization with the calculated total employees
 			const criteria = { id: organizationId, tenantId };
 			const partialEntity = { totalEmployees };
 
-			if (em instanceof TypeOrmEntityManager) {
-				await em.update(Organization, criteria, partialEntity);
-			} else {
-				await em.nativeUpdate(Organization, criteria, partialEntity);
-			}
+			await em.update(Organization, criteria, partialEntity);
 		} catch (error) {
 			this.logger.error('EmployeeSubscriber: Error while updating total employee count of the organization:', error);
 		}
@@ -227,9 +216,9 @@ export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
 
 	/**
 	 * Updates the status (active and archived) of a user organization entity based on the associated employee's details.
-	 * Handles both TypeORM and MikroORM environments.
+	 * Handles TypeORM environment.
 	 *
-	 * @param {MultiOrmEntityManager} em - The entity manager, either TypeORM's or MikroORM's, used to interact with the database.
+	 * @param {MultiOrmEntityManager} em - The entity manager, TypeORM's, used to interact with the database.
 	 * @param {Employee} entity - The employee entity containing the user ID, organization ID, and tenant ID information.
 	 * @param {boolean} isActive - The desired active status to set for the user organization.
 	 * @param {boolean} isArchived - The desired archived status to set for the user organization.
@@ -250,10 +239,7 @@ export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
 			const { id, tenantId, organizationId } = entity;
 
 			// Fetch the employee entity based on the ORM being used
-			const employee =
-				em instanceof TypeOrmEntityManager
-					? await em.findOne(Employee, { where: { id, organizationId, tenantId } })
-					: await em.findOne(Employee, { id, organizationId, tenantId });
+			const employee = await em.findOne(Employee, { where: { id, organizationId, tenantId } });
 
 			if (!employee) {
 				this.logger.warn('Employee or associated user not found.');
@@ -264,11 +250,7 @@ export class EmployeeSubscriber extends BaseEntityEventSubscriber<Employee> {
 			const userId = employee.userId;
 
 			// Update the UserOrganization status based on the ORM being used
-			if (em instanceof TypeOrmEntityManager) {
-				await em.update(UserOrganization, { userId, organizationId }, { isActive, isArchived });
-			} else if (em instanceof MikroOrmEntityManager) {
-				await em.nativeUpdate(UserOrganization, { userId, organizationId }, { isActive, isArchived });
-			}
+			await em.update(UserOrganization, { userId, organizationId }, { isActive, isArchived });
 		} catch (error) {
 			// Log the error if an exception occurs during the update process
 			this.logger.error('EmployeeSubscriber: Error while updating user organization as active/inactive:', error);

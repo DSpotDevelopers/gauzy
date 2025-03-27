@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RequestApproval } from './request-approval.entity';
 import { RequestApprovalController } from './request-approval.controller';
 import { RequestApprovalService } from './request-approval.service';
@@ -24,7 +23,6 @@ import { TimerModule } from '../time-tracking/timer/timer.module';
 	imports: [
 		RouterModule.register([{ path: '/request-approval', module: RequestApprovalModule }]),
 		TypeOrmModule.forFeature([RequestApproval]),
-		MikroOrmModule.forFeature([RequestApproval]),
 		CqrsModule,
 		OrganizationTeamEmployeeModule,
 		RolePermissionModule,
@@ -43,4 +41,4 @@ import { TimerModule } from '../time-tracking/timer/timer.module';
 	providers: [RequestApprovalService, ...CommandHandlers],
 	exports: [RequestApprovalService]
 })
-export class RequestApprovalModule {}
+export class RequestApprovalModule { }
