@@ -255,10 +255,6 @@ export class Expense extends TenantOrganizationBaseEntity implements IExpense {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.expenses, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_expense',
-		joinColumn: 'expenseId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_expense'

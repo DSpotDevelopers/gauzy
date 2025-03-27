@@ -15,9 +15,6 @@ export class CandidateSource extends TenantOrganizationBaseEntity implements ICa
     |--------------------------------------------------------------------------
     */
 
-	@MultiORMOneToOne(() => Candidate, (candidate) => candidate.source, {
-		/** This column is a boolean flag indicating that this is the inverse side of the relationship, and it doesn't control the foreign key directly  */
-		owner: false
-	})
+	@MultiORMOneToOne(() => Candidate, (candidate) => candidate.source, {})
 	candidate?: ICandidate;
 }

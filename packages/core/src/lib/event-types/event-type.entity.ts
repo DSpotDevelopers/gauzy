@@ -76,10 +76,6 @@ export class EventType extends TenantOrganizationBaseEntity implements IEventTyp
 	@MultiORMManyToMany(() => Tag, (tag) => tag.eventTypes, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_event_type',
-		joinColumn: 'tagEventId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_event_type'

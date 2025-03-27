@@ -92,10 +92,6 @@ export class DailyPlan extends TenantOrganizationBaseEntity implements IDailyPla
 	@MultiORMManyToMany(() => Task, (dailyPlan) => dailyPlan.dailyPlans, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		pivotTable: 'daily_plan_task',
-		owner: true,
-		joinColumn: 'taskId',
-		inverseJoinColumn: 'dailyPlanId'
 	})
 	@JoinTable({ name: 'daily_plan_task' })
 	tasks?: ITask[];

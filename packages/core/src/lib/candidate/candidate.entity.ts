@@ -160,9 +160,6 @@ export class Candidate extends TenantOrganizationBaseEntity implements ICandidat
 
 		/** Database cascade action on delete. */
 		onDelete: 'SET NULL',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	contact?: IContact;
@@ -207,9 +204,6 @@ export class Candidate extends TenantOrganizationBaseEntity implements ICandidat
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	source?: ICandidateSource;
@@ -229,9 +223,6 @@ export class Candidate extends TenantOrganizationBaseEntity implements ICandidat
 
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	user: IUser;
@@ -248,9 +239,6 @@ export class Candidate extends TenantOrganizationBaseEntity implements ICandidat
 	@MultiORMOneToOne(() => Employee, (employee) => employee.candidate, {
 		/** Indicates if relation column value can be nullable or not. */
 		nullable: true,
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	employee?: IEmployee;
@@ -340,10 +328,6 @@ export class Candidate extends TenantOrganizationBaseEntity implements ICandidat
 	@MultiORMManyToMany(() => Tag, (tag) => tag.candidates, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		pivotTable: 'tag_candidate',
-		owner: true,
-		joinColumn: 'candidateId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_candidate'

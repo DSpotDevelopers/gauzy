@@ -66,11 +66,7 @@ import {
 	MultiORMManyToOne,
 	VirtualMultiOrmColumn
 } from '../core/decorators/entity';
-import {
-	MikroOrmTagEntityCustomFields,
-	TagEntityCustomFields,
-	TypeOrmTagEntityCustomFields
-} from '../core/entities/custom-entity-fields/tag';
+import { TagEntityCustomFields, TypeOrmTagEntityCustomFields } from '../core/entities/custom-entity-fields/tag';
 
 @MultiORMEntity('tag')
 export class Tag extends TenantOrganizationBaseEntity implements ITag {
@@ -373,7 +369,6 @@ export class Tag extends TenantOrganizationBaseEntity implements ITag {
 	|--------------------------------------------------------------------------
 	*/
 	@EmbeddedColumn({
-		mikroOrmEmbeddableEntity: () => MikroOrmTagEntityCustomFields,
 		typeOrmEmbeddableEntity: () => TypeOrmTagEntityCustomFields
 	})
 	customFields?: TagEntityCustomFields;

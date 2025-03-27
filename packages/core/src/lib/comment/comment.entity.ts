@@ -159,10 +159,6 @@ export class Comment extends TenantOrganizationBaseEntity implements IComment {
 	@MultiORMManyToMany(() => Employee, (employee) => employee.assignedComments, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'comment_employee',
-		joinColumn: 'commentId',
-		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'comment_employee'
@@ -178,10 +174,6 @@ export class Comment extends TenantOrganizationBaseEntity implements IComment {
 	@MultiORMManyToMany(() => OrganizationTeam, (team) => team.assignedComments, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'comment_team',
-		joinColumn: 'commentId',
-		inverseJoinColumn: 'organizationTeamId'
 	})
 	@JoinTable({
 		name: 'comment_team'

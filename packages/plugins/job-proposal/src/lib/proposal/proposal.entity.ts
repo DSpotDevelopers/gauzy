@@ -134,14 +134,6 @@ export class Proposal extends TenantOrganizationBaseEntity implements IProposal,
 		onUpdate: 'CASCADE',
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true,
-		/** Pivot table for many-to-many relationship. */
-		pivotTable: 'tag_proposal',
-		/** Column in pivot table referencing 'proposal' primary key. */
-		joinColumn: 'proposalId',
-		/** Column in pivot table referencing 'tag' primary key. */
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({ name: 'tag_proposal' })
 	tags?: Tag[];

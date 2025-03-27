@@ -320,10 +320,6 @@ export class User extends TenantBaseEntity implements IUser {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.users, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_user',
-		joinColumn: 'userId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_user'

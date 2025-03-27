@@ -265,10 +265,6 @@ export class Invoice extends TenantOrganizationBaseEntity implements IInvoice {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.invoices, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_invoice',
-		joinColumn: 'invoiceId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_invoice'

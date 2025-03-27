@@ -39,9 +39,6 @@ export class ProductVariantPrice extends TenantOrganizationBaseEntity implements
 	@MultiORMOneToOne(() => ProductVariant, (productVariant) => productVariant.price, {
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-
-		/** This column is a boolean flag indicating whether the current entity is the 'owning' side of a relationship.  */
-		owner: true
 	})
 	@JoinColumn()
 	productVariant: ProductVariant;

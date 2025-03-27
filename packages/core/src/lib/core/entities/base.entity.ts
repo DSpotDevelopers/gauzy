@@ -5,9 +5,7 @@
 import { PrimaryGeneratedColumn, UpdateDateColumn, CreateDateColumn, DeleteDateColumn } from 'typeorm';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsDateString, IsOptional } from 'class-validator';
-import { SoftDeletable } from 'mikro-orm-soft-delete';
 import { BaseEntityModel as IBaseEntityModel, ID } from '@gauzy/contracts';
-import { PrimaryKey, Property } from '@mikro-orm/core';
 import { MultiORMColumn } from '../decorators/entity';
 import { ColumnIndex } from '../decorators/entity/column-index.decorator';
 
@@ -30,7 +28,6 @@ export abstract class Model {
  * Base entity class with soft-delete functionality.
  * All entities that extend this class will have soft-delete capability.
  */
-@SoftDeletable(() => SoftDeletableBaseEntity, 'deletedAt', () => new Date())
 export abstract class SoftDeletableBaseEntity extends Model {
 	// Soft Delete
 	@ApiPropertyOptional({
@@ -42,7 +39,6 @@ export abstract class SoftDeletableBaseEntity extends Model {
 	@IsDateString()
 	// Soft delete column that records the date/time when the entity was soft-deleted
 	@DeleteDateColumn() // Indicates that this column is used for soft-delete
-	@Property({ nullable: true }) // Allows for Mikro-ORM compatibility
 	deletedAt?: Date;
 }
 
@@ -52,7 +48,6 @@ export abstract class SoftDeletableBaseEntity extends Model {
 export abstract class BaseEntity extends SoftDeletableBaseEntity implements IBaseEntityModel {
 	// Primary key of UUID type
 	@ApiPropertyOptional({ type: () => String })
-	@PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' }) // For Mikro-ORM compatibility
 	@PrimaryGeneratedColumn('uuid')
 	id?: ID;
 
@@ -63,10 +58,6 @@ export abstract class BaseEntity extends SoftDeletableBaseEntity implements IBas
 		example: '2018-11-21T06:20:32.232Z'
 	})
 	@CreateDateColumn() // TypeORM decorator for creation date
-	@Property({
-		// Automatically set the property value when entity gets created, executed during flush operation.
-		onCreate: () => new Date() // Set creation date on record creation
-	})
 	createdAt?: Date;
 
 	// Date when the record was last updated
@@ -76,12 +67,6 @@ export abstract class BaseEntity extends SoftDeletableBaseEntity implements IBas
 		example: '2018-11-21T06:20:32.232Z'
 	})
 	@UpdateDateColumn() // TypeORM decorator for update date
-	@Property({
-		// Automatically set the property value when entity gets created, executed during flush operation.
-		onCreate: () => new Date(), // Set at record creation
-		// Automatically update the property value every time entity gets updated, executed during flush operation.
-		onUpdate: () => new Date() // Update every time the entity is changed
-	})
 	updatedAt?: Date;
 
 	// Indicates if record is active now
@@ -92,7 +77,7 @@ export abstract class BaseEntity extends SoftDeletableBaseEntity implements IBas
 	@IsOptional() // Field can be optional
 	@IsBoolean() // Should be a boolean type
 	@ColumnIndex()
-	@MultiORMColumn({ nullable: true, default: true }) // TypeORM and Mikro-ORM compatibility
+	@MultiORMColumn({ nullable: true, default: true }) // TypeORM compatibility
 	isActive?: boolean;
 
 	// Indicate if record is archived
@@ -103,7 +88,7 @@ export abstract class BaseEntity extends SoftDeletableBaseEntity implements IBas
 	@IsOptional() // Field can be optional
 	@IsBoolean() // Should be a boolean type
 	@ColumnIndex()
-	@MultiORMColumn({ nullable: true, default: false }) // TypeORM and Mikro-ORM compatibility
+	@MultiORMColumn({ nullable: true, default: false }) // TypeORM compatibility
 	isArchived?: boolean;
 
 	// Indicates the date when record was archived

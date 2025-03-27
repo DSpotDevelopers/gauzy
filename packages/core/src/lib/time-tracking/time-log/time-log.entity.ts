@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { OnLoad } from '@mikro-orm/core';
 import { RelationId, JoinColumn, AfterLoad } from 'typeorm';
 import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import * as moment from 'moment';
@@ -280,7 +279,6 @@ export class TimeLog extends TenantOrganizationBaseEntity implements ITimeLog {
 	 * Called after entity is loaded.
 	 */
 	@AfterLoad()
-	@OnLoad()
 	afterEntityLoad?() {
 		const startedAt = moment(this.startedAt, 'YYYY-MM-DD HH:mm:ss');
 		const stoppedAt = moment(this.stoppedAt || new Date(), 'YYYY-MM-DD HH:mm:ss');

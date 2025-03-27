@@ -11,8 +11,6 @@ export class OrganizationLanguage extends TenantOrganizationBaseEntity implement
 	@MultiORMManyToOne(() => Language, {
 		/** Database cascade action on delete. */
 		onDelete: 'CASCADE',
-		referenceColumnName: 'code',
-		joinColumn: 'languageCode'
 	})
 	@JoinColumn({ referencedColumnName: 'code' })
 	language: Language;

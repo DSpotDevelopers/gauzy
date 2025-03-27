@@ -166,10 +166,6 @@ export class Payment extends TenantOrganizationBaseEntity implements IPayment {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.payments, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_payment',
-		joinColumn: 'paymentId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_payment'

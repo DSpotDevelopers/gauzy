@@ -397,10 +397,6 @@ export class Task extends TenantOrganizationBaseEntity implements ITask {
 	@MultiORMManyToMany(() => Tag, (tag) => tag.tasks, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'tag_task',
-		joinColumn: 'taskId',
-		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_task'
@@ -416,10 +412,6 @@ export class Task extends TenantOrganizationBaseEntity implements ITask {
 	@MultiORMManyToMany(() => Employee, (employee) => employee.tasks, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'task_employee',
-		joinColumn: 'taskId',
-		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'task_employee'
@@ -435,10 +427,6 @@ export class Task extends TenantOrganizationBaseEntity implements ITask {
 	@MultiORMManyToMany(() => OrganizationTeam, (team) => team.tasks, {
 		onUpdate: 'CASCADE',
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'task_team',
-		joinColumn: 'taskId',
-		inverseJoinColumn: 'organizationTeamId'
 	})
 	@JoinTable({
 		name: 'task_team'
@@ -456,10 +444,6 @@ export class Task extends TenantOrganizationBaseEntity implements ITask {
 		onUpdate: 'CASCADE',
 		/** Defines the database cascade action on delete. */
 		onDelete: 'CASCADE',
-		owner: true,
-		pivotTable: 'project_module_task',
-		joinColumn: 'taskId',
-		inverseJoinColumn: 'organizationProjectModuleId'
 	})
 	@JoinTable({ name: 'project_module_task' })
 	modules?: IOrganizationProjectModule[];
