@@ -63,8 +63,7 @@ import {
 	MultiORMColumn,
 	MultiORMEntity,
 	MultiORMManyToMany,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from '../core/decorators/entity';
 import { TagEntityCustomFields, TypeOrmTagEntityCustomFields } from '../core/entities/custom-entity-fields/tag';
 
@@ -103,7 +102,6 @@ export class Tag extends TenantOrganizationBaseEntity implements ITag {
 	@MultiORMColumn({ default: false })
 	isSystem?: boolean;
 
-	@VirtualMultiOrmColumn()
 	fullIconUrl?: string;
 
 	/*

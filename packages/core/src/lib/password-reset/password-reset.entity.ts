@@ -4,7 +4,7 @@ import * as moment from 'moment';
 import { IPasswordReset } from '@gauzy/contracts';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { TenantBaseEntity } from './../core/entities/tenant-base.entity';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, VirtualMultiOrmColumn } from './../core/decorators/entity';
+import { ColumnIndex, MultiORMColumn, MultiORMEntity } from './../core/decorators/entity';
 
 @MultiORMEntity('password_reset')
 export class PasswordReset extends TenantBaseEntity implements IPasswordReset {
@@ -38,7 +38,6 @@ export class PasswordReset extends TenantBaseEntity implements IPasswordReset {
 	 *
 	 * @example false
 	 */
-	@VirtualMultiOrmColumn()
 	expired?: boolean;
 
 	/**

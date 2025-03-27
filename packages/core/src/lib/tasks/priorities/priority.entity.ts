@@ -7,8 +7,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from './../../core/decorators/entity';
 
 @MultiORMEntity('task_priority')
@@ -45,7 +44,6 @@ export class TaskPriority extends TenantOrganizationBaseEntity implements ITaskP
 	isSystem?: boolean;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullIconUrl?: string;
 	/*
 	|--------------------------------------------------------------------------

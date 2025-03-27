@@ -10,8 +10,7 @@ import {
 	MultiORMEntity,
 	MultiORMManyToMany,
 	MultiORMManyToOne,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../../core/decorators/entity';
 
 @MultiORMEntity('time_slot')
@@ -52,16 +51,12 @@ export class TimeSlot extends TenantOrganizationBaseEntity implements ITimeSlot 
 	/**
 	 * Additional virtual columns
 	 */
-	@VirtualMultiOrmColumn()
 	stoppedAt?: Date;
 
-	@VirtualMultiOrmColumn()
 	percentage?: number;
 
-	@VirtualMultiOrmColumn()
 	keyboardPercentage?: number;
 
-	@VirtualMultiOrmColumn()
 	mousePercentage?: number;
 
 	/*

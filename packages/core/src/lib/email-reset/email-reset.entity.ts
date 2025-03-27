@@ -8,8 +8,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from './../core/decorators/entity';
 
 @MultiORMEntity('email_reset')
@@ -41,7 +40,6 @@ export class EmailReset extends TenantBaseEntity implements IEmailReset {
 	expiredAt: Date;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	isExpired: boolean;
 
 	/*

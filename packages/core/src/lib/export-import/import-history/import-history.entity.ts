@@ -3,7 +3,7 @@ import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validato
 import { Exclude } from 'class-transformer';
 import { IImportHistory, ImportStatusEnum } from '@gauzy/contracts';
 import { TenantBaseEntity } from '../../core/entities/internal';
-import { MultiORMColumn, MultiORMEntity, VirtualMultiOrmColumn } from '../../core/decorators/entity';
+import { MultiORMColumn, MultiORMEntity } from '../../core/decorators/entity';
 
 @MultiORMEntity('import-history')
 export class ImportHistory extends TenantBaseEntity implements IImportHistory {
@@ -37,6 +37,5 @@ export class ImportHistory extends TenantBaseEntity implements IImportHistory {
 	importDate?: Date;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	public fullUrl?: string;
 }

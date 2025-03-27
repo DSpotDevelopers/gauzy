@@ -9,8 +9,7 @@ import {
 	Product,
 	MultiORMManyToOne,
 	ColumnIndex,
-	User,
-	VirtualMultiOrmColumn
+	User
 } from '@gauzy/core';
 import { IProductReview, ProductReviewStatus, ProductReviewStatusEnum } from '../product-review.types';
 
@@ -64,7 +63,6 @@ export class ProductReview extends TenantOrganizationBaseEntity implements IProd
 	editedAt: Date;
 
 	// Indicates whether the ProductReview has been edited.
-	@VirtualMultiOrmColumn()
 	isEdited: boolean;
 
 	/*

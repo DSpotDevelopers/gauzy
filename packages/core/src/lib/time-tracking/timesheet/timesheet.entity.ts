@@ -7,8 +7,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from './../../core/decorators/entity';
 
 @MultiORMEntity('timesheet')
@@ -99,7 +98,6 @@ export class Timesheet extends TenantOrganizationBaseEntity implements ITimeshee
 	 * If the value is true, it means the Timesheet has been edited.
 	 * If the value is false or undefined, it means the Timesheet has not been edited.
 	 */
-	@VirtualMultiOrmColumn()
 	isEdited?: boolean;
 
 	/*

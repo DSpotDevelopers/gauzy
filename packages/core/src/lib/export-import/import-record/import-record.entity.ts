@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate } from 'class-validator';
 import { IImportRecord } from '@gauzy/contracts';
-import { MultiORMColumn, MultiORMEntity, VirtualMultiOrmColumn } from './../../core/decorators/entity';
+import { MultiORMColumn, MultiORMEntity } from './../../core/decorators/entity';
 import { TenantBaseEntity } from '../../core/entities/internal';
 
 @MultiORMEntity('import-record')
@@ -24,6 +24,5 @@ export class ImportRecord extends TenantBaseEntity implements IImportRecord {
 	importDate?: Date;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	wasCreated?: boolean;
 }

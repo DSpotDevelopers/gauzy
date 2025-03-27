@@ -31,8 +31,7 @@ import {
 	MultiORMColumn,
 	MultiORMEntity,
 	MultiORMManyToMany,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from '../../core/decorators/entity';
 
 @MultiORMEntity('time_log')
@@ -110,7 +109,6 @@ export class TimeLog extends TenantOrganizationBaseEntity implements ITimeLog {
 	version?: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	duration: number;
 
 	/**
@@ -118,7 +116,6 @@ export class TimeLog extends TenantOrganizationBaseEntity implements ITimeLog {
 	 * If the value is true, it means the TimeLog has been edited.
 	 * If the value is false or undefined, it means the TimeLog has not been edited.
 	 */
-	@VirtualMultiOrmColumn()
 	isEdited?: boolean;
 
 	/*

@@ -48,8 +48,7 @@ import {
 	MultiORMManyToMany,
 	MultiORMManyToOne,
 	MultiORMOneToMany,
-	MultiORMOneToOne,
-	VirtualMultiOrmColumn
+	MultiORMOneToOne
 } from './../core/decorators/entity';
 
 @MultiORMEntity('candidate')
@@ -136,10 +135,8 @@ export class Candidate extends TenantOrganizationBaseEntity implements ICandidat
 	cvUrl?: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	ratings?: number;
 
-	@VirtualMultiOrmColumn()
 	alreadyHired?: boolean;
 
 	/*

@@ -38,8 +38,7 @@ import {
 	MultiORMEntity,
 	MultiORMManyToMany,
 	MultiORMManyToOne,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../core/decorators/entity';
 
 @MultiORMEntity('user')
@@ -170,10 +169,8 @@ export class User extends TenantBaseEntity implements IUser {
 	emailToken?: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	name?: string;
 
-	@VirtualMultiOrmColumn()
 	isEmailVerified?: boolean;
 
 	/*

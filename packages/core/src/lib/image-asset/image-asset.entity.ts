@@ -8,8 +8,7 @@ import {
 	MultiORMColumn,
 	MultiORMEntity,
 	MultiORMManyToMany,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../core/decorators/entity';
 
 @MultiORMEntity('image_asset')
@@ -71,10 +70,8 @@ export class ImageAsset extends TenantOrganizationBaseEntity implements IImageAs
 	storageProvider?: FileStorageProvider;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullUrl?: string;
 
-	@VirtualMultiOrmColumn()
 	thumbUrl?: string;
 
 	/*

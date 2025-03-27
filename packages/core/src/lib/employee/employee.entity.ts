@@ -45,8 +45,7 @@ import {
 	MultiORMManyToMany,
 	MultiORMManyToOne,
 	MultiORMOneToMany,
-	MultiORMOneToOne,
-	VirtualMultiOrmColumn
+	MultiORMOneToOne
 } from '../core/decorators/entity';
 import {
 	Candidate,
@@ -415,10 +414,8 @@ export class Employee extends TenantOrganizationBaseEntity implements IEmployee,
 	linkedInId?: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	fullName?: string;
 
-	@VirtualMultiOrmColumn()
 	isDeleted?: boolean;
 
 	/*

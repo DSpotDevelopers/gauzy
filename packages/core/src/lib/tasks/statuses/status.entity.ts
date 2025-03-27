@@ -7,8 +7,7 @@ import {
 	ColumnIndex,
 	MultiORMColumn,
 	MultiORMEntity,
-	MultiORMManyToOne,
-	VirtualMultiOrmColumn
+	MultiORMManyToOne
 } from '../../core/decorators/entity';
 
 @MultiORMEntity('task_status')
@@ -85,10 +84,8 @@ export class TaskStatus extends TenantOrganizationBaseEntity implements ITaskSta
 	@ApiPropertyOptional({ type: () => String, enum: TaskStatusEnum })
 	@IsOptional()
 	@IsEnum(TaskStatusEnum)
-	@VirtualMultiOrmColumn()
 	template?: TaskStatusEnum;
 
-	@VirtualMultiOrmColumn()
 	fullIconUrl?: string;
 	/*
 	|--------------------------------------------------------------------------

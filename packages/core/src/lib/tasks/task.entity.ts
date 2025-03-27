@@ -52,8 +52,7 @@ import {
 	MultiORMEntity,
 	MultiORMManyToMany,
 	MultiORMManyToOne,
-	MultiORMOneToMany,
-	VirtualMultiOrmColumn
+	MultiORMOneToMany
 } from './../core/decorators/entity';
 
 @MultiORMEntity('task')
@@ -161,11 +160,9 @@ export class Task extends TenantOrganizationBaseEntity implements ITask {
 	isScreeningTask?: boolean;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	taskNumber?: string;
 
 	/** Additional virtual columns */
-	@VirtualMultiOrmColumn()
 	rootEpic?: ITask;
 
 	/*
