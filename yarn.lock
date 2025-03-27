@@ -29361,11 +29361,6 @@ nerf-dart@^1.0.0:
   resolved "https://registry.yarnpkg.com/nerf-dart/-/nerf-dart-1.0.0.tgz#e6dab7febf5ad816ea81cf5c629c5a0ebde72c1a"
   integrity sha512-EZSPZB70jiVsivaBLYDCyntd5eH8NTSMOn3rB+HxwdmKThGELLdYv8qVIMWvZEFy9w8ZZpW9h9OB32l1rGtj7g==
 
-nest-knexjs@^0.0.21:
-  version "0.0.21"
-  resolved "https://registry.yarnpkg.com/nest-knexjs/-/nest-knexjs-0.0.21.tgz#75972804b1f6053a312e531a1abfaec89759b947"
-  integrity sha512-nlEG/Ao8gu8IVP1nudpTFXgqxRyYlezxtKAwojwpMMFkthGuNRk3nq46MwpjwQPJoupcjm4TX0jkSpfHQGx7cg==
-
 nestjs-cls@^4.3.0:
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/nestjs-cls/-/nestjs-cls-4.4.1.tgz#ce0affa15e8565cfee74336746c058feaaeb2d9d"
