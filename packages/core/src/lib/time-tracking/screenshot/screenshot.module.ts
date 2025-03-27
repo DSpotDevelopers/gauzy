@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EventBusModule } from '../../event-bus/event-bus.module';
 import { CommandHandlers } from './commands/handlers';
 import { RolePermissionModule } from '../../role-permission/role-permission.module';
@@ -16,7 +15,6 @@ import { TypeOrmScreenshotRepository } from './repository';
 	controllers: [ScreenshotController],
 	imports: [
 		TypeOrmModule.forFeature([Screenshot]),
-		MikroOrmModule.forFeature([Screenshot]),
 		RolePermissionModule,
 		TimeSlotModule,
 		IntegrationTenantModule,
@@ -24,6 +22,6 @@ import { TypeOrmScreenshotRepository } from './repository';
 		EventBusModule
 	],
 	providers: [ScreenshotService, TypeOrmScreenshotRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, ScreenshotService, TypeOrmScreenshotRepository]
+	exports: [TypeOrmModule, ScreenshotService, TypeOrmScreenshotRepository]
 })
-export class ScreenshotModule {}
+export class ScreenshotModule { }

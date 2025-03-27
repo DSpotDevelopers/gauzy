@@ -2,7 +2,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { Module, forwardRef } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { TenantModule } from '../tenant/tenant.module';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { OrganizationModule } from './../organization/organization.module';
@@ -21,7 +20,6 @@ import { CommandHandlers } from './commands/handlers';
 			{ path: '/user-organization', module: UserOrganizationModule }
 		]),
 		forwardRef(() => TypeOrmModule.forFeature([UserOrganization])),
-		forwardRef(() => MikroOrmModule.forFeature([UserOrganization])),
 		forwardRef(() => TenantModule),
 		forwardRef(() => RolePermissionModule),
 		forwardRef(() => OrganizationModule),
@@ -32,6 +30,6 @@ import { CommandHandlers } from './commands/handlers';
 	],
 	controllers: [UserOrganizationController],
 	providers: [UserOrganizationService, TypeOrmUserOrganizationRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, UserOrganizationService, TypeOrmUserOrganizationRepository]
+	exports: [TypeOrmModule, UserOrganizationService, TypeOrmUserOrganizationRepository]
 })
 export class UserOrganizationModule { }

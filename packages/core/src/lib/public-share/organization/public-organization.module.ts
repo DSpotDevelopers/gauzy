@@ -5,17 +5,11 @@ import { Organization, OrganizationContact, OrganizationProject } from './../../
 import { PublicOrganizationController } from './public-organization.controller';
 import { PublicOrganizationService } from './public-organization.service';
 import { QueryHandlers } from './queries/handlers';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 
 @Module({
 	imports: [
 		CqrsModule,
 		TypeOrmModule.forFeature([
-			Organization,
-			OrganizationContact,
-			OrganizationProject
-		]),
-		MikroOrmModule.forFeature([
 			Organization,
 			OrganizationContact,
 			OrganizationProject

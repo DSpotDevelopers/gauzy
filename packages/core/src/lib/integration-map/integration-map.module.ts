@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { TaskModule } from '../tasks/task.module';
 import { TagModule } from '../tags/tag.module';
@@ -20,7 +19,6 @@ import { IntegrationMap } from './integration-map.entity';
 			}
 		]),
 		TypeOrmModule.forFeature([IntegrationMap]),
-		MikroOrmModule.forFeature([IntegrationMap]),
 		RolePermissionModule,
 		TaskModule,
 		TagModule,
@@ -28,6 +26,6 @@ import { IntegrationMap } from './integration-map.entity';
 	],
 	controllers: [IntegrationMapController],
 	providers: [IntegrationMapService, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, IntegrationMapService]
+	exports: [TypeOrmModule, IntegrationMapService]
 })
-export class IntegrationMapModule {}
+export class IntegrationMapModule { }

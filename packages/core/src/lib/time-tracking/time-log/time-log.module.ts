@@ -1,7 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../../role-permission/role-permission.module';
 import { EmployeeModule } from './../../employee/employee.module';
 import { OrganizationProjectModule } from './../../organization-project/organization-project.module';
@@ -18,7 +17,6 @@ import { TimerModule } from '../timer/timer.module';
 	controllers: [TimeLogController],
 	imports: [
 		TypeOrmModule.forFeature([TimeLog]),
-		MikroOrmModule.forFeature([TimeLog]),
 		RolePermissionModule,
 		forwardRef(() => EmployeeModule),
 		forwardRef(() => OrganizationProjectModule),
@@ -28,6 +26,6 @@ import { TimerModule } from '../timer/timer.module';
 		CqrsModule
 	],
 	providers: [TimeLogService, TypeOrmTimeLogRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, TimeLogService, TypeOrmTimeLogRepository]
+	exports: [TypeOrmModule, TimeLogService, TypeOrmTimeLogRepository]
 })
-export class TimeLogModule {}
+export class TimeLogModule { }

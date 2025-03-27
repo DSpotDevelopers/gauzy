@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EmailSendModule } from './../../email-send/email-send.module';
 import { RolePermissionModule } from '../../role-permission/role-permission.module';
 import { EmployeeModule } from './../../employee/employee.module';
@@ -16,7 +15,6 @@ import { TypeOrmTimesheetRepository } from './repository';
 	controllers: [TimeSheetController],
 	imports: [
 		TypeOrmModule.forFeature([Timesheet]),
-		MikroOrmModule.forFeature([Timesheet]),
 		CqrsModule,
 		EmailSendModule,
 		RolePermissionModule,
@@ -24,6 +22,6 @@ import { TypeOrmTimesheetRepository } from './repository';
 		EmployeeModule
 	],
 	providers: [TimeSheetService, TypeOrmTimesheetRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, TimeSheetService, TypeOrmTimesheetRepository]
+	exports: [TypeOrmModule, TimeSheetService, TypeOrmTimesheetRepository]
 })
-export class TimesheetModule {}
+export class TimesheetModule { }

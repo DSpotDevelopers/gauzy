@@ -2,7 +2,6 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { AccountingTemplate } from './accounting-template.entity';
 import { AccountingTemplateController } from './accounting-template.controller';
@@ -13,7 +12,6 @@ import { QueryHandlers } from './queries/handlers';
 	imports: [
 		RouterModule.register([{ path: '/accounting-template', module: AccountingTemplateModule }]),
 		forwardRef(() => TypeOrmModule.forFeature([AccountingTemplate])),
-		forwardRef(() => MikroOrmModule.forFeature([AccountingTemplate])),
 		forwardRef(() => RolePermissionModule),
 		CqrsModule
 	],

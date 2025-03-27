@@ -1,7 +1,6 @@
 import { CqrsModule } from '@nestjs/cqrs';
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { CommandHandlers } from './commands/handlers';
 import { EventHandlers } from './events/handlers';
@@ -14,12 +13,11 @@ import { TypeOrmSubscriptionRepository } from './repository';
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([Subscription]),
-		MikroOrmModule.forFeature([Subscription]),
 		RolePermissionModule,
 		CqrsModule
 	],
 	providers: [SubscriptionService, TypeOrmSubscriptionRepository, ...CommandHandlers, ...EventHandlers],
 	controllers: [SubscriptionController],
-	exports: [TypeOrmModule, MikroOrmModule, SubscriptionService, TypeOrmSubscriptionRepository]
+	exports: [TypeOrmModule, SubscriptionService, TypeOrmSubscriptionRepository]
 })
-export class SubscriptionModule {}
+export class SubscriptionModule { }

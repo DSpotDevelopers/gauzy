@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { OrganizationContact } from './organization-contact.entity';
 import { OrganizationContactController } from './organization-contact.controller';
 import { OrganizationContactService } from './organization-contact.service';
@@ -22,7 +21,6 @@ import { TypeOrmOrganizationContactRepository } from './repository';
 			}
 		]),
 		TypeOrmModule.forFeature([OrganizationContact]),
-		MikroOrmModule.forFeature([OrganizationContact]),
 		RolePermissionModule,
 		OrganizationModule,
 		OrganizationProjectModule,
@@ -31,6 +29,6 @@ import { TypeOrmOrganizationContactRepository } from './repository';
 	],
 	controllers: [OrganizationContactController],
 	providers: [OrganizationContactService, TypeOrmOrganizationContactRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, OrganizationContactService, TypeOrmOrganizationContactRepository]
+	exports: [TypeOrmModule, OrganizationContactService, TypeOrmOrganizationContactRepository]
 })
 export class OrganizationContactModule { }

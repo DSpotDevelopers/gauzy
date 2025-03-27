@@ -1,6 +1,5 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { KnexModule } from 'nest-knexjs';
 import { ConfigModule, ConfigService } from '@gauzy/config';
 import { ConnectionEntityManager } from './connection-entity-manager';
@@ -13,20 +12,6 @@ import { ConnectionEntityManager } from './connection-entity-manager';
 @Global()
 @Module({
 	imports: [
-		/**
-		 * Configuration for MikroORM database connection.
-		 *
-		 * @type {MikroORMModuleOptions}
-		 */
-		MikroOrmModule.forRootAsync({
-			imports: [ConfigModule],
-			inject: [ConfigService],
-			// Use useFactory, useClass, or useExisting
-			useFactory: async (configService: ConfigService) => {
-				const { dbMikroOrmConnectionOptions } = configService.config;
-				return dbMikroOrmConnectionOptions;
-			}
-		}),
 		/**
 		 * Configuration for TypeORM database connection.
 		 *
@@ -55,6 +40,6 @@ import { ConnectionEntityManager } from './connection-entity-manager';
 		})
 	],
 	providers: [ConnectionEntityManager],
-	exports: [TypeOrmModule, MikroOrmModule, ConnectionEntityManager]
+	exports: [TypeOrmModule, ConnectionEntityManager]
 })
 export class DatabaseModule { }

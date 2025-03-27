@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
 import { HttpModule } from '@nestjs/axios';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { SocialAuthModule } from '@gauzy/auth';
 import { EventBusModule } from '../event-bus/event-bus.module';
 import { OrganizationTeam, UserOrganization } from '../core/entities/internal';
@@ -40,7 +39,6 @@ const strategies = [JwtStrategy, JwtRefreshTokenStrategy];
 		SocialAuthModule.registerAsync({
 			imports: [
 				TypeOrmModule.forFeature([OrganizationTeam]),
-				MikroOrmModule.forFeature([OrganizationTeam]),
 				HttpModule,
 				AuthModule,
 				EmailSendModule,
@@ -56,7 +54,6 @@ const strategies = [JwtStrategy, JwtRefreshTokenStrategy];
 			useClass: AuthService
 		}),
 		TypeOrmModule.forFeature([UserOrganization, OrganizationTeam]),
-		MikroOrmModule.forFeature([UserOrganization, OrganizationTeam]),
 		EmailSendModule,
 		UserModule,
 		EmployeeModule,
@@ -71,4 +68,4 @@ const strategies = [JwtStrategy, JwtRefreshTokenStrategy];
 	providers: [...providers, ...CommandHandlers, ...strategies],
 	exports: [...providers]
 })
-export class AuthModule {}
+export class AuthModule { }

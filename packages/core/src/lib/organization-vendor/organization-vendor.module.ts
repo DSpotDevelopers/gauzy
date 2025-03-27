@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { OrganizationVendor } from './organization-vendor.entity';
 import { OrganizationVendorController } from './organization-vendor.controller';
 import { OrganizationVendorService } from './organization-vendor.service';
@@ -12,11 +11,10 @@ import { CommandHandlers } from './commands/handlers';
 	imports: [
 		RouterModule.register([{ path: '/organization-vendors', module: OrganizationVendorModule }]),
 		TypeOrmModule.forFeature([OrganizationVendor]),
-		MikroOrmModule.forFeature([OrganizationVendor]),
 		RolePermissionModule
 	],
 	controllers: [OrganizationVendorController],
 	providers: [OrganizationVendorService, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, OrganizationVendorService]
+	exports: [TypeOrmModule, OrganizationVendorService]
 })
 export class OrganizationVendorModule { }

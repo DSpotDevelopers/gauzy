@@ -2,7 +2,6 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Expense } from './expense.entity';
 import { ExpenseService } from './expense.service';
 import { ExpenseController } from './expense.controller';
@@ -20,7 +19,6 @@ import { OrganizationRecurringExpenseModule } from './../organization-recurring-
 	imports: [
 		RouterModule.register([{ path: '/expense', module: ExpenseModule }]),
 		TypeOrmModule.forFeature([Expense]),
-		MikroOrmModule.forFeature([Expense]),
 		forwardRef(() => EmployeeStatisticsModule),
 		forwardRef(() => EmployeeRecurringExpenseModule),
 		forwardRef(() => OrganizationRecurringExpenseModule),

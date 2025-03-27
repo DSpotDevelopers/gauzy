@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EventType } from './event-type.entity';
 import { EventTypeService } from './event-type.service';
 import { EventTypeController } from './event-type.controller';
@@ -15,7 +14,6 @@ import { RolePermissionModule } from '../role-permission/role-permission.module'
 	imports: [
 		RouterModule.register([{ path: '/event-type', module: EventTypeModule }]),
 		TypeOrmModule.forFeature([EventType]),
-		MikroOrmModule.forFeature([EventType]),
 		RolePermissionModule,
 		EmployeeModule,
 		OrganizationModule,

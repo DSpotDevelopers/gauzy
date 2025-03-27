@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SocialAccountService } from './social-account.service';
 import { RolePermissionModule } from '../../role-permission';
@@ -11,11 +10,10 @@ import { UserModule } from '../../user';
 	imports: [
 		RouterModule.register([{ path: '/social-account', module: SocialAccountModule }]),
 		TypeOrmModule.forFeature([SocialAccount]),
-		MikroOrmModule.forFeature([SocialAccount]),
 		UserModule,
 		RolePermissionModule
 	],
 	providers: [SocialAccountService],
-	exports: [TypeOrmModule, MikroOrmModule, SocialAccountService]
+	exports: [TypeOrmModule, SocialAccountService]
 })
-export class SocialAccountModule {}
+export class SocialAccountModule { }

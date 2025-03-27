@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { TypeOrmEquipmentSharingPolicyRepository } from './repository';
 import { EquipmentSharingPolicyController } from './equipment-sharing-policy.controller';
@@ -10,11 +9,10 @@ import { EquipmentSharingPolicy } from './equipment-sharing-policy.entity';
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([EquipmentSharingPolicy]),
-		MikroOrmModule.forFeature([EquipmentSharingPolicy]),
 		RolePermissionModule
 	],
 	controllers: [EquipmentSharingPolicyController],
 	providers: [EquipmentSharingPolicyService, TypeOrmEquipmentSharingPolicyRepository],
-	exports: [TypeOrmModule, MikroOrmModule, EquipmentSharingPolicyService, TypeOrmEquipmentSharingPolicyRepository]
+	exports: [TypeOrmModule, EquipmentSharingPolicyService, TypeOrmEquipmentSharingPolicyRepository]
 })
-export class EquipmentSharingPolicyModule {}
+export class EquipmentSharingPolicyModule { }

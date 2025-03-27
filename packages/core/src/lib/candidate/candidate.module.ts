@@ -1,7 +1,6 @@
 import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { CandidateController } from './candidate.controller';
 import { CandidateService } from './candidate.service';
 import { EmailSendModule } from './../email-send/email-send.module';
@@ -17,7 +16,6 @@ import { RolePermissionModule } from '../role-permission/role-permission.module'
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([Candidate]),
-		MikroOrmModule.forFeature([Candidate]),
 		EmailSendModule,
 		CqrsModule,
 		UserOrganizationModule,
@@ -29,6 +27,6 @@ import { RolePermissionModule } from '../role-permission/role-permission.module'
 	],
 	controllers: [CandidateController],
 	providers: [CandidateService, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, CandidateService]
+	exports: [TypeOrmModule, CandidateService]
 })
 export class CandidateModule {}

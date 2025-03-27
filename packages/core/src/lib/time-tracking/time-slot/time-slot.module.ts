@@ -1,7 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { CommandHandlers } from './commands/handlers';
 import { RolePermissionModule } from '../../role-permission/role-permission.module';
 import { TimeSlot } from './time-slot.entity';
@@ -18,7 +17,6 @@ import { TypeOrmTimeSlotMinuteRepository } from './repository';
 	controllers: [TimeSlotController],
 	imports: [
 		TypeOrmModule.forFeature([TimeSlot, TimeSlotMinute]),
-		MikroOrmModule.forFeature([TimeSlot, TimeSlotMinute]),
 		RolePermissionModule,
 		forwardRef(() => TimeLogModule),
 		forwardRef(() => EmployeeModule),
@@ -28,10 +26,9 @@ import { TypeOrmTimeSlotMinuteRepository } from './repository';
 	providers: [TimeSlotService, TypeOrmTimeSlotRepository, TypeOrmTimeSlotMinuteRepository, ...CommandHandlers],
 	exports: [
 		TypeOrmModule,
-		MikroOrmModule,
 		TimeSlotService,
 		TypeOrmTimeSlotRepository,
 		TypeOrmTimeSlotMinuteRepository
 	]
 })
-export class TimeSlotModule {}
+export class TimeSlotModule { }

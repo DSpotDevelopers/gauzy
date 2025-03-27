@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ReportCategory } from './report-category.entity';
 import { Report } from './report.entity';
 import { ReportController } from './report.controller';
@@ -23,7 +22,6 @@ import { TypeOrmReportRepository } from './repository';
 			}
 		]),
 		TypeOrmModule.forFeature([Report, ReportCategory, ReportOrganization]),
-		MikroOrmModule.forFeature([Report, ReportCategory, ReportOrganization])
 	],
 	controllers: [ReportCategoryController, ReportController],
 	providers: [
@@ -35,4 +33,4 @@ import { TypeOrmReportRepository } from './repository';
 		...CommandHandlers
 	]
 })
-export class ReportModule {}
+export class ReportModule { }

@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EmployeeRecurringExpense } from '../employee-recurring-expense/employee-recurring-expense.entity';
 import { EmployeeRecurringExpenseService } from '../employee-recurring-expense/employee-recurring-expense.service';
 import { Expense } from '../expense/expense.entity';
@@ -29,7 +28,6 @@ const forFeatureEntities = [
 	imports: [
 		RouterModule.register([{ path: '/employee-statistics', module: EmployeeStatisticsModule }]),
 		TypeOrmModule.forFeature(forFeatureEntities),
-		MikroOrmModule.forFeature(forFeatureEntities),
 		RolePermissionModule,
 		EmployeeModule,
 		OrganizationModule,

@@ -2,7 +2,6 @@ import { HttpModule } from '@nestjs/axios';
 import { MiddlewareConsumer, Module, NestModule, RequestMethod, forwardRef } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import {
 	IntegrationMapModule,
 	IntegrationModule,
@@ -41,7 +40,6 @@ const { github } = environment;
 		HttpModule,
 		ConfigModule,
 		TypeOrmModule.forFeature([OrganizationGithubRepository, OrganizationGithubRepositoryIssue]),
-		MikroOrmModule.forFeature([OrganizationGithubRepository, OrganizationGithubRepositoryIssue]),
 		// Probot Configuration
 		ProbotModule.forRoot({
 			isGlobal: true,

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Deal } from './deal.entity';
 import { DealController } from './deal.controller';
 import { DealService } from './deal.service';
@@ -12,11 +11,10 @@ import { TypeOrmDealRepository } from './repository';
 	imports: [
 		RouterModule.register([{ path: '/deals', module: DealModule }]),
 		TypeOrmModule.forFeature([Deal]),
-		MikroOrmModule.forFeature([Deal]),
 		RolePermissionModule
 	],
 	controllers: [DealController],
 	providers: [DealService, TypeOrmDealRepository],
-	exports: [TypeOrmModule, MikroOrmModule, DealService, TypeOrmDealRepository]
+	exports: [TypeOrmModule, DealService, TypeOrmDealRepository]
 })
-export class DealModule {}
+export class DealModule { }

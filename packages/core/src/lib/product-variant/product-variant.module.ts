@@ -2,7 +2,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { forwardRef, Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ProductVariant } from './product-variant.entity';
 import { ProductVariantController } from './product-variant.controller';
 import { ProductVariantService } from './product-variant.service';
@@ -16,7 +15,6 @@ import { CommandHandlers } from './commands/handlers';
 	imports: [
 		RouterModule.register([{ path: '/product-variants', module: ProductVariantModule }]),
 		TypeOrmModule.forFeature([ProductVariant]),
-		MikroOrmModule.forFeature([ProductVariant]),
 		RolePermissionModule,
 		ProductVariantPriceModule,
 		ProductVariantSettingModule,

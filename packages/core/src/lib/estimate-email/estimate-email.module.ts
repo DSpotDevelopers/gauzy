@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EstimateEmailController } from './estimate-email.controller';
 import { EstimateEmailService } from './estimate-email.service';
 import { Organization } from '../organization/organization.entity';
@@ -15,7 +14,6 @@ import { UserModule } from '../user/user.module';
 	imports: [
 		RouterModule.register([{ path: '/estimate-email', module: EstimateEmailModule }]),
 		TypeOrmModule.forFeature([EstimateEmail, Invoice, Organization]),
-		MikroOrmModule.forFeature([EstimateEmail, Invoice, Organization]),
 		RolePermissionModule,
 		UserModule,
 		TaskModule

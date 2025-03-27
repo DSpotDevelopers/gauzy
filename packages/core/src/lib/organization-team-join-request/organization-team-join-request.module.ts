@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EmailSendModule } from './../email-send/email-send.module';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { InviteModule } from '../invite/invite.module';
@@ -25,7 +24,6 @@ import { OrganizationTeamJoinRequestService } from './organization-team-join-req
 			}
 		]),
 		TypeOrmModule.forFeature([OrganizationTeamJoinRequest, OrganizationTeamEmployee]),
-		MikroOrmModule.forFeature([OrganizationTeamJoinRequest, OrganizationTeamEmployee]),
 		CqrsModule,
 		RolePermissionModule,
 		UserModule,
@@ -37,6 +35,6 @@ import { OrganizationTeamJoinRequestService } from './organization-team-join-req
 	],
 	controllers: [OrganizationTeamJoinRequestController],
 	providers: [OrganizationTeamJoinRequestService, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, OrganizationTeamJoinRequestService]
+	exports: [TypeOrmModule, OrganizationTeamJoinRequestService]
 })
-export class OrganizationTeamJoinRequestModule {}
+export class OrganizationTeamJoinRequestModule { }

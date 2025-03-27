@@ -2,7 +2,6 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EventBusModule } from '../event-bus/event-bus.module';
 import { IntegrationTenantController } from './integration-tenant.controller';
 import { IntegrationTenantService } from './integration-tenant.service';
@@ -18,7 +17,6 @@ import { TypeOrmIntegrationTenantRepository } from './repository';
 	imports: [
 		RouterModule.register([{ path: '/integration-tenant', module: IntegrationTenantModule }]),
 		TypeOrmModule.forFeature([IntegrationTenant]),
-		MikroOrmModule.forFeature([IntegrationTenant]),
 		RoleModule,
 		RolePermissionModule,
 		forwardRef(() => IntegrationSettingModule),
@@ -28,6 +26,6 @@ import { TypeOrmIntegrationTenantRepository } from './repository';
 	],
 	controllers: [IntegrationTenantController],
 	providers: [IntegrationTenantService, TypeOrmIntegrationTenantRepository, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, IntegrationTenantService, TypeOrmIntegrationTenantRepository]
+	exports: [TypeOrmModule, IntegrationTenantService, TypeOrmIntegrationTenantRepository]
 })
-export class IntegrationTenantModule {}
+export class IntegrationTenantModule { }

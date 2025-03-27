@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { CommandHandlers } from './commands/handlers';
 import { OrganizationRecurringExpenseController } from './organization-recurring-expense.controller';
 import { OrganizationRecurringExpense } from './organization-recurring-expense.entity';
@@ -21,7 +20,6 @@ import { RolePermissionModule } from '../role-permission/role-permission.module'
 			}
 		]),
 		TypeOrmModule.forFeature([OrganizationRecurringExpense]),
-		MikroOrmModule.forFeature([OrganizationRecurringExpense]),
 		RolePermissionModule,
 		EmployeeModule,
 		OrganizationModule,

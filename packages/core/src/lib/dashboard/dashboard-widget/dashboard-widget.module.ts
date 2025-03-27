@@ -1,5 +1,4 @@
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolePermissionModule } from '../../role-permission/role-permission.module';
@@ -11,7 +10,6 @@ import { TypeOrmDashboardWidgetRepository } from './repository';
 
 @Module({
 	imports: [
-		MikroOrmModule.forFeature([DashboardWidget]),
 		TypeOrmModule.forFeature([DashboardWidget]),
 		RolePermissionModule,
 		CqrsModule
@@ -20,4 +18,4 @@ import { TypeOrmDashboardWidgetRepository } from './repository';
 	controllers: [DashboardWidgetController],
 	exports: [TypeOrmModule, DashboardWidgetService, TypeOrmDashboardWidgetRepository]
 })
-export class DashboardWidgetModule {}
+export class DashboardWidgetModule { }

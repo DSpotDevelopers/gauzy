@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { CandidateInterviewers } from './candidate-interviewers.entity';
 import { CandidateInterviewersService } from './candidate-interviewers.service';
 import { CandidateInterviewersController } from './candidate-interviewers.controller';
@@ -18,12 +17,11 @@ import { CommandHandlers } from './commands/handlers';
 			}
 		]),
 		TypeOrmModule.forFeature([CandidateInterviewers]),
-		MikroOrmModule.forFeature([CandidateInterviewers]),
 		RolePermissionModule,
 		CqrsModule
 	],
 	controllers: [CandidateInterviewersController],
 	providers: [CandidateInterviewersService, ...CommandHandlers],
-	exports: [TypeOrmModule, MikroOrmModule, CandidateInterviewersService]
+	exports: [TypeOrmModule, CandidateInterviewersService]
 })
 export class CandidateInterviewersModule { }
