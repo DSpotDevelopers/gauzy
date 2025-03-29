@@ -49,6 +49,7 @@ export interface IInvoice extends IBasePerTenantAndOrganizationEntityModel {
 	amountDue?: number;
 	hasRemainingAmountInvoiced?: boolean;
 	token?: string;
+	fromUser?: IUser;
 }
 
 export interface IInvoiceCreateInput extends IBasePerTenantAndOrganizationEntityModel {
@@ -170,6 +171,6 @@ export enum InvoiceTabsEnum {
 }
 
 export enum InvoiceErrors {
-	INVALID_INVOICE = 'invalid-invoice',
+	INVALID_INVOICE = 'invalid-invoice'
 }
 export const EMPLOYEE_INVOICE_STATUSES: string[] = [InvoiceStatusTypesEnum.DRAFT, InvoiceStatusTypesEnum.SENT];

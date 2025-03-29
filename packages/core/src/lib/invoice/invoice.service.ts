@@ -201,6 +201,7 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 		const invoice: IInvoice = await this.findOneByIdString(invoiceId, {
 			relations: [
 				'fromOrganization',
+				'fromUser',
 				'invoiceItems.employee.user',
 				'invoiceItems.employee',
 				'invoiceItems.expense',
