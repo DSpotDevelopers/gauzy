@@ -147,7 +147,7 @@ export class InvoiceController extends CrudController<Invoice> {
 	})
 	@HttpCode(HttpStatus.CREATED)
 	@Post()
-	@Permissions(PermissionsEnum.INVOICES_ORG_EDIT)
+	@Permissions(PermissionsEnum.ORG_INVOICES_EDIT)
 	@UseValidationPipe({ transform: true })
 	async create(@Body() entity: CreateInvoiceDTO): Promise<Invoice> {
 		const userId = RequestContext.currentUserId();

@@ -47,12 +47,9 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 	 * @param filter
 	 */
 	checkIfUserCanAccessInvoice(filter: any) {
-		// Check if the current user has the permission to change the selected employee
-		const hasChangeSelectedEmployeePermission: boolean = RequestContext.hasPermission(
-			PermissionsEnum.CHANGE_SELECTED_EMPLOYEE
-		);
-
-		if (!hasChangeSelectedEmployeePermission) {
+		// Check if the current user has the permission to edit invoices
+		const hasInvoiceEditPermission = RequestContext.hasPermission(PermissionsEnum.INVOICES_EDIT);
+		if (hasInvoiceEditPermission) {
 			filter.fromUserId = RequestContext.currentUserId();
 		}
 	}
@@ -65,10 +62,7 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 	 * @param checkStatus
 	 */
 	async checkIfUserCanAccessInvoiceById(invoiceId: string, checkStatus = false): Promise<IInvoiceAccessCheck> {
-		const hasChangeSelectedEmployeePermission: boolean = RequestContext.hasPermission(
-			PermissionsEnum.CHANGE_SELECTED_EMPLOYEE
-		);
-
+		const hasInvoiceEditPermission = RequestContext.hasPermission(PermissionsEnum.INVOICES_EDIT);
 		const query = this.typeOrmInvoiceRepository
 			.createQueryBuilder('invoice')
 			.select('invoice.id', 'id')
@@ -81,8 +75,8 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 			});
 		}
 
-		// Check if the user has the permission to change the selected employee to validate if the invoice is from the current user
-		if (!hasChangeSelectedEmployeePermission) {
+		// Check if the user has the permission to edit invoices to validate if the invoice is from the current user
+		if (hasInvoiceEditPermission) {
 			// Add parentheses around the OR conditions to properly group them
 			const userId = RequestContext.currentUserId();
 			query.andWhere(
@@ -100,7 +94,7 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 			throw new BadRequestException(InvoiceErrors.INVALID_INVOICE);
 		}
 
-		return { invoice, isOwnInvoice: hasChangeSelectedEmployeePermission };
+		return { invoice, isOwnInvoice: hasInvoiceEditPermission };
 	}
 
 	/**
@@ -202,8 +196,8 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 			relations: [
 				'fromOrganization',
 				'fromUser',
-				'invoiceItems.employee.user',
 				'invoiceItems.employee',
+				'invoiceItems.employee.user',
 				'invoiceItems.expense',
 				'invoiceItems.product',
 				'invoiceItems.product.translations',
