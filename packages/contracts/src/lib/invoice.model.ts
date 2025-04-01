@@ -31,7 +31,6 @@ export interface IInvoice extends IBasePerTenantAndOrganizationEntityModel {
 	totalValue?: number;
 	organizationContactId?: string;
 	organizationContactName?: string;
-	fromUser?: IUser;
 	toOrganization?: IOrganization;
 	fromOrganization?: IOrganization;
 	toContact?: IOrganizationContact;
