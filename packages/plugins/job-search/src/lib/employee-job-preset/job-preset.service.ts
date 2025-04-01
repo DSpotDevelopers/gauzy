@@ -13,8 +13,13 @@ import {
 	PermissionsEnum
 } from '@gauzy/contracts';
 import { isPostgres } from '@gauzy/config';
-import { RequestContext, TenantAwareCrudService, TypeOrmEmployeeRepository } from '@gauzy/core';
-import { prepareSQLQuery as p } from '@gauzy/core';
+import {
+	Employee,
+	RequestContext,
+	TenantAwareCrudService,
+	TypeOrmEmployeeRepository,
+	prepareSQLQuery as p
+} from '@gauzy/core';
 import { JobPreset } from './job-preset.entity';
 import {
 	CreateJobPresetCommand,
@@ -22,22 +27,33 @@ import {
 	SaveEmployeePresetCommand,
 	SavePresetCriterionCommand
 } from './commands';
-import { TypeOrmJobPresetRepository } from './repository/type-orm-job-preset.repository';
-import { MikroOrmJobPresetRepository } from './repository/mikro-orm-job-preset.repository';
-import { TypeOrmJobPresetUpworkJobSearchCriterionRepository } from './repository/type-orm-job-preset-upwork-job-search-criterion.repository';
-import { TypeOrmEmployeeUpworkJobsSearchCriterionRepository } from './repository/type-orm-employee-upwork-jobs-search-criterion.repository';
+import {
+	TypeOrmJobPresetRepository,
+	TypeOrmJobPresetUpworkJobSearchCriterionRepository,
+	TypeOrmEmployeeUpworkJobsSearchCriterionRepository
+} from './repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EmployeeUpworkJobsSearchCriterion } from './employee-upwork-jobs-search-criterion.entity';
+import { JobPresetUpworkJobSearchCriterion } from './job-preset-upwork-job-search-criterion.entity';
 
 @Injectable()
 export class JobPresetService extends TenantAwareCrudService<JobPreset> {
 	constructor(
-		readonly typeOrmJobPresetRepository: TypeOrmJobPresetRepository,
-		readonly mikroOrmJobPresetRepository: MikroOrmJobPresetRepository,
+		@InjectRepository(JobPreset)
+		private readonly typeOrmJobPresetRepository: TypeOrmJobPresetRepository,
+
+		@InjectRepository(JobPresetUpworkJobSearchCriterion)
 		private readonly typeOrmJobPresetUpworkJobSearchCriterionRepository: TypeOrmJobPresetUpworkJobSearchCriterionRepository,
+
+		@InjectRepository(EmployeeUpworkJobsSearchCriterion)
 		private readonly typeOrmEmployeeUpworkJobsSearchCriterionRepository: TypeOrmEmployeeUpworkJobsSearchCriterionRepository,
+
+		@InjectRepository(Employee)
 		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
 		private readonly commandBus: CommandBus
 	) {
-		super(typeOrmJobPresetRepository, mikroOrmJobPresetRepository);
+		super(typeOrmJobPresetRepository);
 	}
 
 	/**
@@ -50,7 +66,8 @@ export class JobPresetService extends TenantAwareCrudService<JobPreset> {
 		// Tenant ID is required for the query
 		const tenantId = RequestContext.currentTenantId() || request?.tenantId;
 		// Extract parameters from the request object
-		let { organizationId, search, employeeId } = request || {};
+		const { organizationId, search } = request || {};
+		let employeeId = request?.employeeId;
 
 		// If the user does not have the permission to change selected employee, use the current employee ID
 		if (!RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE)) {

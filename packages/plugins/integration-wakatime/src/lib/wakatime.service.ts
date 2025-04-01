@@ -1,11 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { Wakatime } from './wakatime.entity';
 import { TypeOrmWakatimeRepository } from './repository';
+import { Logger } from '@gauzy/core';
 
 @Injectable()
 export class WakatimeService {
-	constructor(private readonly typeOrmWakatimeRepository: TypeOrmWakatimeRepository) {}
+	@Logger()
+	private readonly logger: NestLogger;
+
+	constructor(
+		@InjectRepository(Wakatime)
+		private readonly typeOrmWakatimeRepository: TypeOrmWakatimeRepository
+	) {}
 
 	/**
 	 *
@@ -135,7 +143,9 @@ export class WakatimeService {
 				default:
 					break;
 			}
-		} catch (error) {}
+		} catch (error) {
+			this.logger.error(`Error extracting agent: ${error}`);
+		}
 
 		return value;
 	}

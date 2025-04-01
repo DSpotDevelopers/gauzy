@@ -24,9 +24,8 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from './../core/decorators/entity';
-import { MikroOrmCandidateInterviewRepository } from './repository/mikro-orm-candidate-interview.repository';
 
-@MultiORMEntity('candidate_interview', { mikroOrmRepository: () => MikroOrmCandidateInterviewRepository })
+@MultiORMEntity('candidate_interview')
 export class CandidateInterview extends TenantOrganizationBaseEntity implements ICandidateInterview {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()

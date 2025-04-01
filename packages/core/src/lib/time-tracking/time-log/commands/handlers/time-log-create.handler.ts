@@ -8,13 +8,12 @@ import { RequestContext } from '../../../../core/context';
 import { TimeLogService } from '../../time-log.service';
 import { TimeLog } from '../../time-log.entity';
 import { TimeLogCreateCommand } from '../time-log-create.command';
-import { MikroOrmTimeLogRepository, TypeOrmTimeLogRepository } from '../../repository';
+import { TypeOrmTimeLogRepository } from '../../repository';
 
 @CommandHandler(TimeLogCreateCommand)
 export class TimeLogCreateHandler implements ICommandHandler<TimeLogCreateCommand> {
 	constructor(
 		readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
-		readonly mikroOrmTimeLogRepository: MikroOrmTimeLogRepository,
 		private readonly _commandBus: CommandBus,
 		private readonly _timeSlotService: TimeSlotService,
 		private readonly _timeLogService: TimeLogService
@@ -42,7 +41,7 @@ export class TimeLogCreateHandler implements ICommandHandler<TimeLogCreateComman
 		const timeLog = this.createTimeLogEntity(input, tenantId, timesheet);
 
 		// Generate blank time slots if stoppedAt is provided
-		let generatedTimeSlots: ITimeSlot[] = stoppedAt ? this.generateBlankTimeSlots(input, tenantId) : [];
+		const generatedTimeSlots: ITimeSlot[] = stoppedAt ? this.generateBlankTimeSlots(input, tenantId) : [];
 
 		// Merge input time slots with generated blank slots
 		const mergeTimeSlots = this.mergeTimeSlots(

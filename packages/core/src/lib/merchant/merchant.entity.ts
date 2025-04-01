@@ -1,30 +1,18 @@
-import {
-	IMerchant,
-	CurrenciesEnum,
-	IImageAsset,
-	ITag,
-	IWarehouse,
-	IContact
-} from '@gauzy/contracts';
-import {
-	JoinColumn,
-	JoinTable,
-	RelationId
-} from 'typeorm';
+import { IMerchant, CurrenciesEnum, IImageAsset, ITag, IWarehouse, IContact } from '@gauzy/contracts';
+import { JoinColumn, JoinTable, RelationId } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TenantOrganizationBaseEntity, ImageAsset, Tag, Contact, Warehouse } from '../core/entities/internal';
 import {
-	TenantOrganizationBaseEntity,
-	ImageAsset,
-	Tag,
-	Contact,
-	Warehouse,
-} from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToOne } from './../core/decorators/entity';
-import { MikroOrmMerchantRepository } from './repository/mikro-orm-merchant.repository';
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('merchant', { mikroOrmRepository: () => MikroOrmMerchantRepository })
+@MultiORMEntity('merchant')
 export class Merchant extends TenantOrganizationBaseEntity implements IMerchant {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;
@@ -123,7 +111,7 @@ export class Merchant extends TenantOrganizationBaseEntity implements IMerchant 
 		owner: true,
 		pivotTable: 'tag_merchant',
 		joinColumn: 'merchantId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_merchant'
@@ -139,7 +127,7 @@ export class Merchant extends TenantOrganizationBaseEntity implements IMerchant 
 		owner: true,
 		pivotTable: 'warehouse_merchant',
 		joinColumn: 'merchantId',
-		inverseJoinColumn: 'warehouseId',
+		inverseJoinColumn: 'warehouseId'
 	})
 	@JoinTable({
 		name: 'warehouse_merchant'

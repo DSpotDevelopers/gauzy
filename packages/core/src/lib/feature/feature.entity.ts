@@ -1,20 +1,18 @@
-import {
-	JoinColumn,
-	RelationId
-} from 'typeorm';
+import { JoinColumn, RelationId } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-	FeatureEnum,
-	IFeature,
-	IFeatureOrganization
-} from '@gauzy/contracts';
+import { FeatureEnum, IFeature, IFeatureOrganization } from '@gauzy/contracts';
 import { BaseEntity, FeatureOrganization } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany, VirtualMultiOrmColumn } from './../core/decorators/entity';
-import { MikroOrmFeatureRepository } from './repository/mikro-orm-feature.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany,
+	VirtualMultiOrmColumn
+} from './../core/decorators/entity';
 
-@MultiORMEntity('feature', { mikroOrmRepository: () => MikroOrmFeatureRepository })
+@MultiORMEntity('feature')
 export class Feature extends BaseEntity implements IFeature {
-
 	@ApiProperty({ type: () => String })
 	@ColumnIndex()
 	@MultiORMColumn()

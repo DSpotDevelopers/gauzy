@@ -13,12 +13,9 @@ import {
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmCandidateCriterionsRatingRepository } from './repository/mikro-orm-candidate-criterions-rating.repository';
 
-@MultiORMEntity('candidate_criterion_rating', { mikroOrmRepository: () => MikroOrmCandidateCriterionsRatingRepository })
-export class CandidateCriterionsRating extends TenantOrganizationBaseEntity
-	implements ICandidateCriterionsRating {
-
+@MultiORMEntity('candidate_criterion_rating')
+export class CandidateCriterionsRating extends TenantOrganizationBaseEntity implements ICandidateCriterionsRating {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	rating: number;

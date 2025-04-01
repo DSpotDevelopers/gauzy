@@ -3,18 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ICandidateTechnologies, ICandidateTechnologiesCreateInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { CandidateTechnologies } from './candidate-technologies.entity';
-import { TypeOrmCandidateTechnologiesRepository } from './repository/type-orm-candidate-technologies.repository';
-import { MikroOrmCandidateTechnologiesRepository } from './repository/mikro-orm-candidate-technologies.repository';
+import { TypeOrmCandidateTechnologiesRepository } from './repository';
 
 @Injectable()
 export class CandidateTechnologiesService extends TenantAwareCrudService<CandidateTechnologies> {
 	constructor(
 		@InjectRepository(CandidateTechnologies)
-		typeOrmCandidateTechnologiesRepository: TypeOrmCandidateTechnologiesRepository,
-
-		mikroOrmCandidateTechnologiesRepository: MikroOrmCandidateTechnologiesRepository
+		private readonly typeOrmCandidateTechnologiesRepository: TypeOrmCandidateTechnologiesRepository
 	) {
-		super(typeOrmCandidateTechnologiesRepository, mikroOrmCandidateTechnologiesRepository);
+		super(typeOrmCandidateTechnologiesRepository);
 	}
 
 	/**

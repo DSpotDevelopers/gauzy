@@ -3,12 +3,16 @@ import { RelationId } from 'typeorm';
 import { IOrganizationProject, IOrganizationTeam, ITaskVersion } from '@gauzy/contracts';
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { OrganizationProject, OrganizationTeam, TenantOrganizationBaseEntity } from '../../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, VirtualMultiOrmColumn } from '../../core/decorators/entity';
-import { MikroOrmTaskVersionRepository } from './repository/mikro-orm-task-version.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	VirtualMultiOrmColumn
+} from '../../core/decorators/entity';
 
-@MultiORMEntity('task_version', { mikroOrmRepository: () => MikroOrmTaskVersionRepository })
+@MultiORMEntity('task_version')
 export class TaskVersion extends TenantOrganizationBaseEntity implements ITaskVersion {
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsString()

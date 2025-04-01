@@ -1,23 +1,28 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { EventBus } from '@nestjs/cqrs';
 import { In } from 'typeorm';
 import { BaseEntityEnum, ID, IMention, IMentionCreateInput, SubscriptionTypeEnum } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
 import { Mention } from './mention.entity';
-import { TypeOrmMentionRepository } from './repository/type-orm-mention.repository';
-import { MikroOrmMentionRepository } from './repository/mikro-orm-mention.repository';
+import { TypeOrmMentionRepository } from './repository';
 import { CreateMentionEvent } from './events';
 import { CreateSubscriptionEvent } from '../subscription/events';
+import { Logger } from '../logger';
 
 @Injectable()
 export class MentionService extends TenantAwareCrudService<Mention> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmMentionRepository: TypeOrmMentionRepository,
-		readonly mikroOrmMentionRepository: MikroOrmMentionRepository,
+		@InjectRepository(Mention)
+		private readonly typeOrmMentionRepository: TypeOrmMentionRepository,
+
 		private readonly _eventBus: EventBus
 	) {
-		super(typeOrmMentionRepository, mikroOrmMentionRepository);
+		super(typeOrmMentionRepository);
 	}
 
 	/**
@@ -61,7 +66,7 @@ export class MentionService extends TenantAwareCrudService<Mention> {
 			// Return the created mention.
 			return mention;
 		} catch (error) {
-			console.log('Error while creating mention:', error);
+			this.logger.error(`Error while creating mention: ${error}`);
 			throw new BadRequestException('Error while creating mention', error);
 		}
 	}
@@ -139,7 +144,7 @@ export class MentionService extends TenantAwareCrudService<Mention> {
 				});
 			}
 		} catch (error) {
-			console.log(error);
+			this.logger.error(`Error while updating entity mentions: ${error}`);
 		}
 	}
 }

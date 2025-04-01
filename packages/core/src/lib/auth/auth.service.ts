@@ -7,7 +7,7 @@ import {
 	NotAcceptableException,
 	NotFoundException,
 	UnauthorizedException,
-	Logger,
+	Logger as NestLogger,
 	ConflictException
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -49,7 +49,15 @@ import {
 } from '@gauzy/contracts';
 import { environment } from '@gauzy/config';
 import { SocialAuthService } from '@gauzy/auth';
-import { IAppIntegrationConfig, IOAuthCreateUser, IOAuthEmail, IOAuthValidateResponse, createQueryParamsString, deepMerge, isNotEmpty } from '@gauzy/common';
+import {
+	IAppIntegrationConfig,
+	IOAuthCreateUser,
+	IOAuthEmail,
+	IOAuthValidateResponse,
+	createQueryParamsString,
+	deepMerge,
+	isNotEmpty
+} from '@gauzy/common';
 import { AccountRegistrationEvent } from '../event-bus/events';
 import { EventBus } from '../event-bus/event-bus';
 import { ALPHA_NUMERIC_CODE_LENGTH, DEMO_PASSWORD_LESS_MAGIC_CODE } from './../constants';
@@ -65,9 +73,9 @@ import { freshTimestamp, generateRandomAlphaNumericCode } from './../core/utils'
 import { Employee, OrganizationTeam, Tenant, User } from './../core/entities/internal';
 import { EmailConfirmationService } from './email-confirmation.service';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { TypeOrmUserRepository } from '../user/repository/type-orm-user.repository';
-import { TypeOrmEmployeeRepository } from '../employee/repository/type-orm-employee.repository';
-import { TypeOrmOrganizationTeamRepository } from './../organization-team/repository/type-orm-organization-team.repository';
+import { TypeOrmUserRepository } from '../user/repository';
+import { TypeOrmEmployeeRepository } from '../employee/repository';
+import { TypeOrmOrganizationTeamRepository } from './../organization-team/repository';
 import {
 	verifyFacebookToken,
 	verifyGithubToken,
@@ -76,6 +84,7 @@ import {
 } from './social-account/token-verification/verify-oauth-tokens';
 import { SocialAccountService } from './social-account/social-account.service';
 import { OrganizationService } from '../organization/organization.service';
+import { Logger } from '../logger';
 
 /**
  * Default employee settings
@@ -87,12 +96,14 @@ const DEFAULT_EMPLOYEE_SETTINGS = {
 	allowModifyTime: true,
 	allowDeleteTime: true,
 	reWeeklyLimit: 40,
-	payPeriod: PayPeriodEnum.MONTHLY,
-}
+	payPeriod: PayPeriodEnum.MONTHLY
+};
 
 @Injectable()
 export class AuthService extends SocialAuthService {
-	private readonly logger = new Logger(`GZY - ${AuthService.name}`);
+	@Logger()
+	private readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(User)
 		private readonly typeOrmUserRepository: TypeOrmUserRepository,
@@ -167,7 +178,7 @@ export class AuthService extends SocialAuthService {
 			};
 		} catch (error) {
 			// Log the error with a timestamp and the error message for debugging.
-			this.logger.error(`Login failed at ${new Date().toISOString()}: ${error}.`);
+			this.logger.error(`Login failed at ${new Date().toISOString()}: ${error}`);
 			throw new UnauthorizedException(); // Throw a generic error to avoid exposing specific failure reasons.
 		}
 	}
@@ -494,6 +505,7 @@ export class AuthService extends SocialAuthService {
 			// Return success status
 			return true;
 		} catch (error) {
+			this.logger.error(`Error while requesting password reset: ${error}`);
 			// Throw a BadRequestException in case of failure
 			this.logger.error(`Error while requesting password reset: ${error}`);
 			throw new BadRequestException('Forgot password request failed!');
@@ -624,7 +636,9 @@ export class AuthService extends SocialAuthService {
 		// 2. Ensure the user has assigned a role, if not, assign the employee role
 		if (!input.user.roleId || !input.user.role) {
 			// Get the employee role
-			const role: IRole = await this.roleService.findOneByOptions({ where: { name: RolesEnum.EMPLOYEE, tenantId: tenant.id } });
+			const role: IRole = await this.roleService.findOneByOptions({
+				where: { name: RolesEnum.EMPLOYEE, tenantId: tenant.id }
+			});
 			input.user.roleId = role.id;
 		}
 
@@ -792,6 +806,7 @@ export class AuthService extends SocialAuthService {
 			// Check if the role has any of the specified roles
 			return role ? roles.includes(role.name) : false;
 		} catch (err) {
+			this.logger.error(`Error while checking if the current user has any of the specified roles: ${err}`);
 			if (err instanceof JsonWebTokenError) {
 				return false;
 			}
@@ -856,6 +871,7 @@ export class AuthService extends SocialAuthService {
 			}
 			return response;
 		} catch (err) {
+			this.logger.error(`Error while validating OAuth login email: ${err}`);
 			throw new InternalServerErrorException('validateOAuthLoginEmail', err.message);
 		}
 	}
@@ -870,7 +886,7 @@ export class AuthService extends SocialAuthService {
 		try {
 			// Iterate all emails to get the first that match with an organization
 			for (const { value, verified } of emails) {
-				const organization = await this.organizationService.findByEmailDomain(value.split("@")[1]);
+				const organization = await this.organizationService.findByEmailDomain(value.split('@')[1]);
 				if (organization) {
 					// Set the register data with the organization details and flag to create an employee record
 					const fullName = `${userInfo.firstName} ${userInfo.lastName}`;
@@ -887,7 +903,7 @@ export class AuthService extends SocialAuthService {
 						},
 						organizationId: organization.id,
 						featureAsEmployee: true,
-						inviteId: verified ? "non-required-id" : null // Used to mark the email as verified
+						inviteId: verified ? 'non-required-id' : null // Used to mark the email as verified
 					};
 					// Call to register the new user
 					const createdUser = await this.register(input, LanguagesEnum.ENGLISH);
@@ -943,7 +959,7 @@ export class AuthService extends SocialAuthService {
 
 			// Throw an error if the user is not found
 			if (!user) {
-				this.logger.warn(`User not found: ${request.id}`);
+				this.logger.error(`User not found: ${request.id}`);
 				throw new UnauthorizedException();
 			}
 
@@ -1051,7 +1067,7 @@ export class AuthService extends SocialAuthService {
 
 			// If no user found with the email, return
 			if (count === 0) {
-				this.logger.warn(
+				this.logger.error(
 					`Error while sending workspace magic login code: No user found with the email ${email}`
 				);
 				return;
@@ -1451,10 +1467,10 @@ export class AuthService extends SocialAuthService {
 			lastLoginAt: user.lastLoginAt || null, // Sets last logout timestamp to null if it's undefined
 			tenant: user.tenant
 				? new Tenant({
-					id: user.tenant.id, // Assuming tenantId is a direct property of tenant
-					name: user.tenant.name || '', // Defaulting to an empty string if name is undefined
-					logo: user.tenant.logo || '' // Defaulting to an empty string if logo is undefined
-				})
+						id: user.tenant.id, // Assuming tenantId is a direct property of tenant
+						name: user.tenant.name || '', // Defaulting to an empty string if name is undefined
+						logo: user.tenant.logo || '' // Defaulting to an empty string if logo is undefined
+				  })
 				: null // Sets tenant to null if user.tenant is undefined
 		});
 	}

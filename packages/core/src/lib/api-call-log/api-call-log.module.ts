@@ -6,7 +6,7 @@ import { ApiCallLogController } from './api-call-log.controller';
 import { ApiCallLog } from './api-call-log.entity';
 import { ApiCallLogService } from './api-call-log.service';
 import { ApiCallLogMiddleware } from './api-call-log-middleware';
-import { TypeOrmApiCallLogRepository } from './repository/type-orm-api-call-log.repository';
+import { TypeOrmApiCallLogRepository } from './repository';
 
 @Module({
 	imports: [TypeOrmModule.forFeature([ApiCallLog]), MikroOrmModule.forFeature([ApiCallLog]), RolePermissionModule],

@@ -3,10 +3,15 @@ import { RelationId } from 'typeorm';
 import { IOrganizationProject, IOrganizationTeam, ITaskPriority } from '@gauzy/contracts';
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { OrganizationProject, OrganizationTeam, TenantOrganizationBaseEntity } from './../../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, VirtualMultiOrmColumn } from './../../core/decorators/entity';
-import { MikroOrmTaskPriorityRepository } from './repository/mikro-orm-task-priority.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	VirtualMultiOrmColumn
+} from './../../core/decorators/entity';
 
-@MultiORMEntity('task_priority', { mikroOrmRepository: () => MikroOrmTaskPriorityRepository })
+@MultiORMEntity('task_priority')
 export class TaskPriority extends TenantOrganizationBaseEntity implements ITaskPriority {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()

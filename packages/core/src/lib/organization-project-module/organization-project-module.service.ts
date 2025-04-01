@@ -1,4 +1,5 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, FindManyOptions, SelectQueryBuilder, UpdateResult, WhereExpressionBuilder } from 'typeorm';
 import {
 	BaseEntityEnum,
@@ -22,26 +23,32 @@ import { RequestContext } from '../core/context';
 import { OrganizationProjectModule } from './organization-project-module.entity';
 import { prepareSQLQuery as p } from './../database/database.helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
-import { TypeOrmOrganizationProjectModuleRepository } from './repository/type-orm-organization-project-module.repository';
-import { MikroOrmOrganizationProjectModuleRepository } from './repository/mikro-orm-organization-project-module.repository';
 import { RoleService } from '../role/role.service';
 import { EmployeeService } from '../employee/employee.service';
 import { OrganizationProjectModuleEmployee } from './organization-project-module-employee.entity';
-import { TypeOrmOrganizationProjectModuleEmployeeRepository } from './repository/type-orm-organization-project-module-employee.repository';
-import { MikroOrmOrganizationProjectModuleEmployeeRepository } from './repository/mikro-orm-organization-project-module-employee.repository';
+import {
+	TypeOrmOrganizationProjectModuleEmployeeRepository,
+	TypeOrmOrganizationProjectModuleRepository
+} from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class OrganizationProjectModuleService extends TenantAwareCrudService<OrganizationProjectModule> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmProjectModuleRepository: TypeOrmOrganizationProjectModuleRepository,
-		readonly mikroOrmProjectModuleRepository: MikroOrmOrganizationProjectModuleRepository,
-		readonly typeOrmOrganizationProjectModuleEmployeeRepository: TypeOrmOrganizationProjectModuleEmployeeRepository,
-		readonly mikroOrmOrganizationProjectModuleEmployeeRepository: MikroOrmOrganizationProjectModuleEmployeeRepository,
+		@InjectRepository(OrganizationProjectModule)
+		private readonly typeOrmProjectModuleRepository: TypeOrmOrganizationProjectModuleRepository,
+
+		@InjectRepository(OrganizationProjectModuleEmployee)
+		private readonly typeOrmOrganizationProjectModuleEmployeeRepository: TypeOrmOrganizationProjectModuleEmployeeRepository,
+
 		private readonly activityLogService: ActivityLogService,
 		private readonly _roleService: RoleService,
 		private readonly _employeeService: EmployeeService
 	) {
-		super(typeOrmProjectModuleRepository, mikroOrmProjectModuleRepository);
+		super(typeOrmProjectModuleRepository);
 	}
 	/**
 	 * @description Create project Module
@@ -68,7 +75,9 @@ export class OrganizationProjectModuleService extends TenantAwareCrudService<Org
 					// If not included, add the employeeId to the managerIds array.
 					managerIds.push(employeeId);
 				}
-			} catch (error) {}
+			} catch (error) {
+				this.logger.error(`Error while finding employee role to assign as module manager: ${error}`);
+			}
 
 			// Combine memberIds and managerIds into a single array.
 			const employeeIds = [...memberIds, ...managerIds].filter(Boolean);
@@ -124,6 +133,7 @@ export class OrganizationProjectModuleService extends TenantAwareCrudService<Org
 
 			return projectModule;
 		} catch (error) {
+			this.logger.error(`Error while creating project module: ${error}`);
 			// Handle errors and return an appropriate error response
 			throw new HttpException(
 				`Failed to create organization project module: ${error.message}`,
@@ -156,7 +166,7 @@ export class OrganizationProjectModuleService extends TenantAwareCrudService<Org
 			if (!existingProjectModule) {
 				throw new BadRequestException('Module not found');
 			}
-			console.log(Array.isArray(memberIds), Array.isArray(managerIds));
+
 			if (Array.isArray(memberIds) || Array.isArray(managerIds)) {
 				// Retrieve members and managers IDs
 				// Combine memberIds and managerIds into a single array
@@ -203,6 +213,7 @@ export class OrganizationProjectModuleService extends TenantAwareCrudService<Org
 			// return updated Module
 			return updatedProjectModule;
 		} catch (error) {
+			this.logger.error(`Error while updating project module: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -273,11 +284,10 @@ export class OrganizationProjectModuleService extends TenantAwareCrudService<Org
 				})
 			);
 
-			console.log('Get Employees modules', query.getSql()); // Query logs for debugging
-
 			// Execute the query with pagination
 			return await this.executePaginationQuery<OrganizationProjectModule>(query);
 		} catch (error) {
+			this.logger.error(`Error while retrieving employee project modules: ${error}`);
 			// Error logging for debugging
 			throw new HttpException(
 				`Error while retrieving employee project modules: ${error.message}`,
@@ -365,12 +375,10 @@ export class OrganizationProjectModuleService extends TenantAwareCrudService<Org
 					this.applyOptionalFilters(query, qb, filters);
 				})
 			);
-
-			console.log('Get Team modules', query.getSql()); // Query logs for debugging
-
 			// Execute the query with pagination
 			return await this.executePaginationQuery<OrganizationProjectModule>(query);
 		} catch (error) {
+			this.logger.error(`Error while retrieving organization team project modules: ${error}`);
 			// Error logging for debugging
 			throw new HttpException(
 				`Error while retrieving organization team project modules: ${error.message}`,
@@ -416,6 +424,7 @@ export class OrganizationProjectModuleService extends TenantAwareCrudService<Org
 			// Execute the query with pagination
 			return await this.executePaginationQuery<OrganizationProjectModule>(query);
 		} catch (error) {
+			this.logger.error(`Error while retrieving organization project modules by employee: ${error}`);
 			// Error logging for debugging
 			throw new HttpException(
 				`Error while retrieving organization project modules by employee: ${error.message}`,

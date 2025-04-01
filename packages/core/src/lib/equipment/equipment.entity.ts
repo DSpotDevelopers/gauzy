@@ -1,36 +1,19 @@
-import {
-	IEquipment,
-	CurrenciesEnum,
-	IEquipmentSharing,
-	ITag,
-	IImageAsset
-} from '@gauzy/contracts';
-import {
-	JoinTable,
-	JoinColumn
-} from 'typeorm';
+import { IEquipment, CurrenciesEnum, IEquipmentSharing, ITag, IImageAsset } from '@gauzy/contracts';
+import { JoinTable, JoinColumn } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	IsString,
-	IsNotEmpty,
-	IsOptional,
-	IsNumber,
-	IsEnum,
-	IsBoolean
-} from 'class-validator';
-import {
-	EquipmentSharing,
-	Tag,
-	TenantOrganizationBaseEntity,
-	ImageAsset
-} from '../core/entities/internal';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsBoolean } from 'class-validator';
+import { EquipmentSharing, Tag, TenantOrganizationBaseEntity, ImageAsset } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
-import { MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmEquipmentRepository } from './repository/mikro-orm-equipment.repository';
+import {
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('equipment', { mikroOrmRepository: () => MikroOrmEquipmentRepository })
+@MultiORMEntity('equipment')
 export class Equipment extends TenantOrganizationBaseEntity implements IEquipment {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@IsNotEmpty()
@@ -138,7 +121,7 @@ export class Equipment extends TenantOrganizationBaseEntity implements IEquipmen
 		owner: true,
 		pivotTable: 'tag_equipment',
 		joinColumn: 'equipmentId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({ name: 'tag_equipment' })
 	tags: ITag[];

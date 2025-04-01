@@ -1,4 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
 	IOrganizationGithubRepository,
 	IOrganizationGithubRepositoryFindInput,
@@ -6,15 +7,20 @@ import {
 } from '@gauzy/contracts';
 import { RequestContext } from '@gauzy/core';
 import { IntegrationSyncGithubRepositoryIssueCommand } from '../integration-sync-github-repository-issue.command';
-import { TypeOrmOrganizationGithubRepositoryRepository } from '../../../repository/type-orm-organization-github-repository.repository';
-import { TypeOrmOrganizationGithubRepositoryIssueRepository } from '../../repository/type-orm-github-repository-issue.repository';
+import { TypeOrmOrganizationGithubRepositoryRepository } from '../../../repository';
+import { TypeOrmOrganizationGithubRepositoryIssueRepository } from '../../repository';
+import { OrganizationGithubRepositoryIssue } from '../../github-repository-issue.entity';
+import { OrganizationGithubRepository } from '../../../github-repository.entity';
 
 @CommandHandler(IntegrationSyncGithubRepositoryIssueCommand)
 export class IntegrationSyncGithubRepositoryIssueCommandHandler
 	implements ICommandHandler<IntegrationSyncGithubRepositoryIssueCommand>
 {
 	constructor(
+		@InjectRepository(OrganizationGithubRepository)
 		private readonly typeOrmOrganizationGithubRepositoryRepository: TypeOrmOrganizationGithubRepositoryRepository,
+
+		@InjectRepository(OrganizationGithubRepositoryIssue)
 		private readonly typeOrmOrganizationGithubRepositoryIssueRepository: TypeOrmOrganizationGithubRepositoryIssueRepository
 	) {}
 

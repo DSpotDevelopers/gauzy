@@ -7,7 +7,7 @@ import { ActivityLogController } from './activity-log.controller';
 import { ActivityLog } from './activity-log.entity';
 import { ActivityLogService } from './activity-log.service';
 import { EventHandlers } from './events/handlers';
-import { TypeOrmActivityLogRepository } from './repository/type-orm-activity-log.repository';
+import { TypeOrmActivityLogRepository } from './repository';
 
 @Global()
 @Module({

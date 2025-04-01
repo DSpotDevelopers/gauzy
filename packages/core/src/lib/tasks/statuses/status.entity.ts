@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RelationId } from 'typeorm';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ID, IOrganizationProject, IOrganizationTeam, ITaskStatus, TaskStatusEnum } from '@gauzy/contracts';
 import { OrganizationProject, OrganizationTeam, TenantOrganizationBaseEntity } from '../../core/entities/internal';
@@ -12,12 +10,9 @@ import {
 	MultiORMManyToOne,
 	VirtualMultiOrmColumn
 } from '../../core/decorators/entity';
-import { MikroOrmTaskStatusRepository } from './repository';
 
-@MultiORMEntity('task_status', { mikroOrmRepository: () => MikroOrmTaskStatusRepository })
+@MultiORMEntity('task_status')
 export class TaskStatus extends TenantOrganizationBaseEntity implements ITaskStatus {
-	[EntityRepositoryType]?: MikroOrmTaskStatusRepository;
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsString()

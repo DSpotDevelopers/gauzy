@@ -10,133 +10,115 @@ import { chain } from 'underscore';
 
 @Injectable()
 export class ExpenseMapService {
-	constructor() {}
-
 	mapByDate(expenses: IExpense[]): IExpenseReportGroupByDate[] {
-		const dailyLogs: any = this.groupByDate(expenses).map(
-			(byDateExpense: IExpense[], date) => {
+		const dailyLogs: any = this.groupByDate(expenses)
+			.map((byDateExpense: IExpense[], date) => {
 				const sum = this.getDurationSum(byDateExpense);
-				const byEmployee = this.groupByEmployee(byDateExpense).map(
-					(byEmployeeExpense: IExpense[]) => {
-						const byProject = this.groupByProject(
-							byEmployeeExpense
-						).map((byProjectExpense: IExpense[]) => {
-							const project =
-								byProjectExpense.length > 0 &&
-								byProjectExpense[0]
-									? byProjectExpense[0].project
-									: null;
+				const byEmployee = this.groupByEmployee(byDateExpense)
+					.map((byEmployeeExpense: IExpense[]) => {
+						const byProject = this.groupByProject(byEmployeeExpense)
+							.map((byProjectExpense: IExpense[]) => {
+								const project =
+									byProjectExpense.length > 0 && byProjectExpense[0]
+										? byProjectExpense[0].project
+										: null;
 
-							return {
-								project,
-								expanse: byProjectExpense.map((row) =>
-									this.mapExpensePercentage(row, sum)
-								)
-							};
-						}).value();
+								return {
+									project,
+									expanse: byProjectExpense.map((row) => this.mapExpensePercentage(row, sum))
+								};
+							})
+							.value();
 
 						const employee =
-							byEmployeeExpense.length > 0 && byEmployeeExpense[0]
-								? byEmployeeExpense[0].employee
-								: null;
+							byEmployeeExpense.length > 0 && byEmployeeExpense[0] ? byEmployeeExpense[0].employee : null;
 						return {
 							employee,
 							projects: byProject
 						};
-					}
-				).value();
+					})
+					.value();
 
 				return {
 					date,
 					employees: byEmployee
 				};
-			}
-		).value();
+			})
+			.value();
 		return dailyLogs;
 	}
 
 	mapByEmployee(expenses: IExpense[]): IExpenseReportGroupByEmployee[] {
-		const byEmployee: any = this.groupByEmployee(expenses).map(
-			(byEmployeeExpense: IExpense[]) => {
+		const byEmployee: any = this.groupByEmployee(expenses)
+			.map((byEmployeeExpense: IExpense[]) => {
 				const sum = this.getDurationSum(byEmployeeExpense);
-				const dailyLogs = this.groupByDate(byEmployeeExpense).map(
-					(byDateExpense: IExpense[], date) => {
-						const byProject = this.groupByProject(
-							byDateExpense
-						).map((byProjectExpense: IExpense[]) => {
-							const project =
-								byProjectExpense.length > 0 &&
-								byProjectExpense[0]
-									? byProjectExpense[0].project
-									: null;
-							return {
-								project,
-								expanse: byProjectExpense.map((row) =>
-									this.mapExpensePercentage(row, sum)
-								)
-							};
-						}).value();
+				const dailyLogs = this.groupByDate(byEmployeeExpense)
+					.map((byDateExpense: IExpense[], date) => {
+						const byProject = this.groupByProject(byDateExpense)
+							.map((byProjectExpense: IExpense[]) => {
+								const project =
+									byProjectExpense.length > 0 && byProjectExpense[0]
+										? byProjectExpense[0].project
+										: null;
+								return {
+									project,
+									expanse: byProjectExpense.map((row) => this.mapExpensePercentage(row, sum))
+								};
+							})
+							.value();
 
 						return {
 							date,
 							projects: byProject
 						};
-					}
-				).value();
+					})
+					.value();
 
 				const employee =
-					byEmployeeExpense.length > 0 && byEmployeeExpense[0]
-						? byEmployeeExpense[0].employee
-						: null;
+					byEmployeeExpense.length > 0 && byEmployeeExpense[0] ? byEmployeeExpense[0].employee : null;
 				return {
 					employee,
 					dates: dailyLogs
 				};
-			}
-		).value();
+			})
+			.value();
 		return byEmployee;
 	}
 
 	mapByProject(expenses: IExpense[]): IExpenseReportGroupByProject[] {
-		const byEmployee: any = this.groupByProject(expenses).map(
-			(byProjectExpense: IExpense[]) => {
+		const byEmployee: any = this.groupByProject(expenses)
+			.map((byProjectExpense: IExpense[]) => {
 				const sum = this.getDurationSum(byProjectExpense);
 
-				const dailyLogs = this.groupByDate(byProjectExpense).map(
-					(byDateExpense: IExpense[], date) => {
-						const byProject = this.groupByEmployee(
-							byDateExpense
-						).map((byEmployeeExpense: IExpense[]) => {
-							const employee =
-								byEmployeeExpense.length > 0 &&
-								byEmployeeExpense[0]
-									? byEmployeeExpense[0].employee
-									: null;
-							return {
-								employee,
-								expanse: byEmployeeExpense.map((row) =>
-									this.mapExpensePercentage(row, sum)
-								)
-							};
-						}).value();
+				const dailyLogs = this.groupByDate(byProjectExpense)
+					.map((byDateExpense: IExpense[], date) => {
+						const byProject = this.groupByEmployee(byDateExpense)
+							.map((byEmployeeExpense: IExpense[]) => {
+								const employee =
+									byEmployeeExpense.length > 0 && byEmployeeExpense[0]
+										? byEmployeeExpense[0].employee
+										: null;
+								return {
+									employee,
+									expanse: byEmployeeExpense.map((row) => this.mapExpensePercentage(row, sum))
+								};
+							})
+							.value();
 
 						return {
 							date,
 							employees: byProject
 						};
-					}
-				).value();
+					})
+					.value();
 
-				const project =
-					byProjectExpense.length > 0 && byProjectExpense[0]
-						? byProjectExpense[0].project
-						: null;
+				const project = byProjectExpense.length > 0 && byProjectExpense[0] ? byProjectExpense[0].project : null;
 				return {
 					project,
 					dates: dailyLogs
 				};
-			}
-		).value();
+			})
+			.value();
 		return byEmployee;
 	}
 
@@ -159,8 +141,7 @@ export class ExpenseMapService {
 	}
 
 	private mapExpensePercentage(expanse, sum = 0) {
-		expanse.duration_percentage =
-			(parseInt(expanse.duration, 10) * 100) / sum;
+		expanse.duration_percentage = (parseInt(expanse.duration, 10) * 100) / sum;
 		return expanse;
 	}
 

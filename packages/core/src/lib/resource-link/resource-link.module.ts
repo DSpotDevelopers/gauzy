@@ -9,7 +9,7 @@ import { CommandHandlers } from './commands/handlers';
 import { ResourceLink } from './resource-link.entity';
 import { ResourceLinkService } from './resource-link.service';
 import { ResourceLinkController } from './resource-link.controller';
-import { TypeOrmResourceLinkRepository } from './repository/type-orm-resource-link.repository';
+import { TypeOrmResourceLinkRepository } from './repository';
 
 @Module({
 	imports: [

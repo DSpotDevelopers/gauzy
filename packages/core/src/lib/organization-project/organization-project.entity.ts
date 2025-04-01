@@ -64,7 +64,6 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from '../core/decorators/entity';
-import { MikroOrmOrganizationProjectRepository } from './repository/mikro-orm-organization-project.repository';
 import {
 	MikroOrmOrganizationProjectEntityCustomFields,
 	OrganizationProjectEntityCustomFields,
@@ -73,7 +72,7 @@ import {
 import { HasCustomFields } from '../core/entities/custom-entity-fields';
 import { Taggable } from '../tags/tag.types';
 
-@MultiORMEntity('organization_project', { mikroOrmRepository: () => MikroOrmOrganizationProjectRepository })
+@MultiORMEntity('organization_project')
 export class OrganizationProject
 	extends TenantOrganizationBaseEntity
 	implements IOrganizationProject, Taggable, HasCustomFields

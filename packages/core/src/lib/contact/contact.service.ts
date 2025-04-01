@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmContactRepository } from './repository/type-orm-contact.repository';
-import { MikroOrmContactRepository } from './repository/mikro-orm-contact.repository';
+import { TypeOrmContactRepository } from './repository';
 import { Contact } from './contact.entity';
 
 @Injectable()
 export class ContactService extends TenantAwareCrudService<Contact> {
 	constructor(
-		readonly typeOrmContactRepository: TypeOrmContactRepository,
-		readonly mikroOrmContactRepository: MikroOrmContactRepository
+		@InjectRepository(Contact)
+		private readonly typeOrmContactRepository: TypeOrmContactRepository
 	) {
-		super(typeOrmContactRepository, mikroOrmContactRepository);
+		super(typeOrmContactRepository);
 	}
 }

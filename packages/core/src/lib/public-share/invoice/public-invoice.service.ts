@@ -1,14 +1,18 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, UpdateResult } from 'typeorm';
 import { verify } from 'jsonwebtoken';
 import { IInvoice, IInvoiceUpdateInput } from '@gauzy/contracts';
 import { environment } from '@gauzy/config';
 import { Invoice } from './../../core/entities/internal';
-import { TypeOrmInvoiceRepository } from '../../invoice/repository/type-orm-invoice.repository';
+import { TypeOrmInvoiceRepository } from '../../invoice/repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class PublicInvoiceService {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(Invoice)
 		private readonly typeOrmInvoiceRepository: TypeOrmInvoiceRepository
@@ -99,6 +103,7 @@ export class PublicInvoiceService {
 				...(relations ? { relations: relations } : {})
 			});
 		} catch (error) {
+			this.logger.error(`Error while finding public invoice: ${error}`);
 			throw new ForbiddenException();
 		}
 	}
@@ -112,7 +117,7 @@ export class PublicInvoiceService {
 	 */
 	async updateInvoice(params: IInvoice, entity: IInvoiceUpdateInput): Promise<IInvoice | UpdateResult> {
 		try {
-			const decoded = verify(params.token as string, environment.JWT_SECRET) as any;
+			const decoded = verify(params.token, environment.JWT_SECRET) as any;
 			const invoice = await this.typeOrmInvoiceRepository.findOneByOrFail({
 				id: decoded.invoiceId,
 				organizationId: decoded.organizationId,
@@ -120,6 +125,7 @@ export class PublicInvoiceService {
 			});
 			return await this.typeOrmInvoiceRepository.update(invoice.id, entity);
 		} catch (error) {
+			this.logger.error(`Error while updating public invoice: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

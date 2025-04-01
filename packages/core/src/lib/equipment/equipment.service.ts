@@ -4,19 +4,16 @@ import { Like } from 'typeorm';
 import { IPagination } from '@gauzy/contracts';
 import { isNotEmpty } from '@gauzy/common';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmEquipmentRepository } from './repository/type-orm-equipment.repository';
-import { MikroOrmEquipmentRepository } from './repository/mikro-orm-equipment.repository';
+import { TypeOrmEquipmentRepository } from './repository';
 import { Equipment } from './equipment.entity';
 
 @Injectable()
 export class EquipmentService extends TenantAwareCrudService<Equipment> {
 	constructor(
 		@InjectRepository(Equipment)
-		typeOrmEquipmentRepository: TypeOrmEquipmentRepository,
-
-		mikroOrmEquipmentRepository: MikroOrmEquipmentRepository
+		private readonly typeOrmEquipmentRepository: TypeOrmEquipmentRepository
 	) {
-		super(typeOrmEquipmentRepository, mikroOrmEquipmentRepository);
+		super(typeOrmEquipmentRepository);
 	}
 
 	/**

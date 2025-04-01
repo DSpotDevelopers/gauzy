@@ -4,11 +4,9 @@ import { IsNotEmpty, IsString } from 'class-validator';
 import { IOrganizationPosition, ITag } from '@gauzy/contracts';
 import { Tag, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany } from './../core/decorators/entity';
-import { MikroOrmOrganizationPositionRepository } from './repository/mikro-orm-organization-position.repository';
 
-@MultiORMEntity('organization_position', { mikroOrmRepository: () => MikroOrmOrganizationPositionRepository })
+@MultiORMEntity('organization_position')
 export class OrganizationPosition extends TenantOrganizationBaseEntity implements IOrganizationPosition {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@IsNotEmpty()
@@ -28,7 +26,7 @@ export class OrganizationPosition extends TenantOrganizationBaseEntity implement
 		owner: true,
 		pivotTable: 'tag_organization_position',
 		joinColumn: 'organizationPositionId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_organization_position'

@@ -15,9 +15,8 @@ import {
 	MultiORMManyToOne,
 	VirtualMultiOrmColumn
 } from './../../core/decorators/entity';
-import { MikroOrmIssueTypeRepository } from './repository/mikro-orm-issue-type.repository';
 
-@MultiORMEntity('issue_type', { mikroOrmRepository: () => MikroOrmIssueTypeRepository })
+@MultiORMEntity('issue_type')
 export class IssueType extends TenantOrganizationBaseEntity implements IIssueType {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()

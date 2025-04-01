@@ -19,9 +19,8 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from './../core/decorators/entity';
-import { MikroOrmIntegrationEntitySettingRepository } from './repository/mikro-orm-integration-entity-setting.repository';
 
-@MultiORMEntity('integration_entity_setting', { mikroOrmRepository: () => MikroOrmIntegrationEntitySettingRepository })
+@MultiORMEntity('integration_entity_setting')
 export class IntegrationEntitySetting extends TenantOrganizationBaseEntity implements IIntegrationEntitySetting {
 	@ApiProperty({ type: () => String, enum: IntegrationEntity })
 	@IsNotEmpty()

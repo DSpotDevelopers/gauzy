@@ -14,10 +14,7 @@ import {
 import { TenantAwareCrudService } from './../core/crud';
 import { Product } from './product.entity';
 import { ProductTranslation } from './product-translation.entity';
-import { TypeOrmProductRepository } from './repository/type-orm-product.repository';
-import { MikroOrmProductRepository } from './repository/mikro-orm-product.repository';
-import { MikroOrmProductTranslationRepository } from './repository/mikro-orm-product-translation.repository';
-import { TypeOrmProductTranslationRepository } from './repository/type-orm-product-translation.repository';
+import { TypeOrmProductRepository, TypeOrmProductTranslationRepository } from './repository';
 
 @Injectable()
 export class ProductService extends TenantAwareCrudService<Product> {
@@ -45,16 +42,12 @@ export class ProductService extends TenantAwareCrudService<Product> {
 
 	constructor(
 		@InjectRepository(Product)
-		typeOrmProductRepository: TypeOrmProductRepository,
-
-		mikroOrmProductRepository: MikroOrmProductRepository,
+		private readonly typeOrmProductRepository: TypeOrmProductRepository,
 
 		@InjectRepository(ProductTranslation)
-		private typeOrmProductTranslationRepository: TypeOrmProductTranslationRepository,
-
-		mikroOrmProductTranslationRepository: MikroOrmProductTranslationRepository
+		private readonly typeOrmProductTranslationRepository: TypeOrmProductTranslationRepository
 	) {
-		super(typeOrmProductRepository, mikroOrmProductRepository);
+		super(typeOrmProductRepository);
 	}
 
 	public async pagination(filter: any, language: LanguagesEnum) {
@@ -127,7 +120,7 @@ export class ProductService extends TenantAwareCrudService<Product> {
 	}
 
 	async saveProduct(productRequest: IProductCreateInput): Promise<Product> {
-		let res = await this.create(<any>productRequest);
+		const res = await this.create(<any>productRequest);
 		return await this.findOneByIdString(res.id, {
 			relations: ['variants', 'optionGroups', 'productType', 'productCategory', 'tags', 'gallery']
 		});
@@ -135,7 +128,7 @@ export class ProductService extends TenantAwareCrudService<Product> {
 
 	async addGalleryImages(productId: string, images: IImageAsset[]): Promise<Product> {
 		try {
-			let product = await this.findOneByIdString(productId, {
+			const product = await this.findOneByIdString(productId, {
 				relations: ['gallery']
 			});
 			product.gallery = product.gallery.concat(images);
@@ -147,7 +140,7 @@ export class ProductService extends TenantAwareCrudService<Product> {
 
 	async setAsFeatured(productId: string, image: IImageAsset): Promise<Product> {
 		try {
-			let product = await this.findOneByIdString(productId);
+			const product = await this.findOneByIdString(productId);
 			product.featuredImage = image;
 			return await this.typeOrmRepository.save(product);
 		} catch (err) {
@@ -157,7 +150,7 @@ export class ProductService extends TenantAwareCrudService<Product> {
 
 	async deleteGalleryImage(productId: string, imageId: string): Promise<Product> {
 		try {
-			let product = await this.findOneByIdString(productId, {
+			const product = await this.findOneByIdString(productId, {
 				relations: ['gallery', 'variants']
 			});
 
@@ -174,7 +167,7 @@ export class ProductService extends TenantAwareCrudService<Product> {
 
 	async deleteFeaturedImage(productId: string): Promise<Product> {
 		try {
-			let product = await this.findOneByIdString(productId);
+			const product = await this.findOneByIdString(productId);
 			product.featuredImage = null;
 			return await this.typeOrmRepository.save(product);
 		} catch (err) {
@@ -189,9 +182,10 @@ export class ProductService extends TenantAwareCrudService<Product> {
 	async mapTranslatedProducts(items: IProductTranslatable[], languageCode: LanguagesEnum) {
 		if (languageCode) {
 			return Promise.all(
-				items.map((product: IProductTranslatable) =>
-					Object.assign({}, product, product.translateNested(languageCode, this.propsTranslate))
-				)
+				items.map((product: IProductTranslatable) => ({
+					...product,
+					...product.translateNested(languageCode, this.propsTranslate)
+				}))
 			);
 		} else {
 			return items;

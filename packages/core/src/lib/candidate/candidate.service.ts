@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SelectQueryBuilder, Brackets, WhereExpressionBuilder } from 'typeorm';
 import { ICandidateCreateInput } from '@gauzy/contracts';
@@ -7,18 +7,18 @@ import { Candidate } from './candidate.entity';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from './../core/context';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { TypeOrmCandidateRepository } from './repository/type-orm-candidate.repository';
-import { MikroOrmCandidateRepository } from './repository/mikro-orm-candidate.repository';
-
+import { TypeOrmCandidateRepository } from './repository';
+import { Logger } from '../logger';
 @Injectable()
 export class CandidateService extends TenantAwareCrudService<Candidate> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(Candidate)
-		typeOrmCandidateRepository: TypeOrmCandidateRepository,
-
-		mikroOrmCandidateRepository: MikroOrmCandidateRepository
+		private readonly typeOrmCandidateRepository: TypeOrmCandidateRepository
 	) {
-		super(typeOrmCandidateRepository, mikroOrmCandidateRepository);
+		super(typeOrmCandidateRepository);
 	}
 
 	/**
@@ -47,18 +47,10 @@ export class CandidateService extends TenantAwareCrudService<Candidate> {
 		try {
 			const query = this.typeOrmRepository.createQueryBuilder('candidate');
 			query.setFindOptions({
-				skip: options && options.skip ? options.take * (options.skip - 1) : 0,
-				take: options && options.take ? options.take : 10,
-				...(options && options.relations
-					? {
-						relations: options.relations
-					}
-					: {}),
-				...(options && options.join
-					? {
-						join: options.join
-					}
-					: {})
+				skip: options?.skip ? options.take * (options.skip - 1) : 0,
+				take: options?.take ? options.take : 10,
+				...(options?.relations ? { relations: options.relations } : {}),
+				...(options?.join ? { join: options.join } : {})
 			});
 			query.where((qb: SelectQueryBuilder<Candidate>) => {
 				qb.andWhere(
@@ -124,6 +116,7 @@ export class CandidateService extends TenantAwareCrudService<Candidate> {
 			const [items, total] = await query.getManyAndCount();
 			return { items, total };
 		} catch (error) {
+			this.logger.error(`Error while paginating candidates: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

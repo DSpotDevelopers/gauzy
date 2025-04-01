@@ -3,11 +3,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IReport, IReportOrganization } from '@gauzy/contracts';
 import { Report, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmReportOrganizationRepository } from './repository/mikro-orm-report-organization.repository';
 
-@MultiORMEntity('report_organization', { mikroOrmRepository: () => MikroOrmReportOrganizationRepository })
+@MultiORMEntity('report_organization')
 export class ReportOrganization extends TenantOrganizationBaseEntity implements IReportOrganization {
-
 	@MultiORMColumn({ default: true })
 	isEnabled?: boolean;
 
@@ -18,7 +16,7 @@ export class ReportOrganization extends TenantOrganizationBaseEntity implements 
 	*/
 
 	@MultiORMManyToOne(() => Report, (it) => it.reportOrganizations, {
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	@JoinColumn()
 	report?: IReport;

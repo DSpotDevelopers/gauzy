@@ -10,9 +10,8 @@ import {
 	MultiORMManyToOne,
 	VirtualMultiOrmColumn
 } from './../../core/decorators/entity';
-import { MikroOrmTimesheetRepository } from './repository/mikro-orm-timesheet.repository';
 
-@MultiORMEntity('timesheet', { mikroOrmRepository: () => MikroOrmTimesheetRepository })
+@MultiORMEntity('timesheet')
 export class Timesheet extends TenantOrganizationBaseEntity implements ITimesheet {
 	@ApiPropertyOptional({ type: () => Number, default: 0 })
 	@IsOptional()

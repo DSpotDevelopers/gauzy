@@ -3,10 +3,7 @@ import { ILike, Not } from 'typeorm';
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 import { RequestContext } from '../../../core/context';
 import { MultiORM, MultiORMEnum, getORMType } from '../../../core/utils';
-import {
-	MikroOrmExpenseCategoryRepository,
-	TypeOrmExpenseCategoryRepository
-} from '../../../expense-categories/repository';
+import { TypeOrmExpenseCategoryRepository } from '../../../expense-categories/repository';
 
 // Get the type of the Object-Relational Mapping (ORM) used in the application.
 const ormType: MultiORM = getORMType();
@@ -20,10 +17,7 @@ const ormType: MultiORM = getORMType();
 @ValidatorConstraint({ name: 'IsExpenseCategoryAlreadyExist', async: true })
 @Injectable()
 export class ExpenseCategoryAlreadyExistConstraint implements ValidatorConstraintInterface {
-	constructor(
-		readonly typeOrmExpenseCategoryRepository: TypeOrmExpenseCategoryRepository,
-		readonly mikroOrmExpenseCategoryRepository: MikroOrmExpenseCategoryRepository
-	) {}
+	constructor(readonly typeOrmExpenseCategoryRepository: TypeOrmExpenseCategoryRepository) {}
 
 	/**
 	 * Validates if a given name for an expense category is unique within the specified organization.
@@ -50,20 +44,10 @@ export class ExpenseCategoryAlreadyExistConstraint implements ValidatorConstrain
 				queryConditions['id'] = Not(object.id); // Exclude current category from the check
 			}
 
-			switch (ormType) {
-				case MultiORMEnum.MikroORM:
-					return !(await this.mikroOrmExpenseCategoryRepository.findOneOrFail({
-						...queryConditions,
-						name: { $ilike: normalizedName }
-					}));
-				case MultiORMEnum.TypeORM:
-					return !(await this.typeOrmExpenseCategoryRepository.findOneByOrFail({
-						...queryConditions,
-						name: ILike(normalizedName)
-					}));
-				default:
-					throw new Error(`Not implemented for ${ormType}`);
-			}
+			return !(await this.typeOrmExpenseCategoryRepository.findOneByOrFail({
+				...queryConditions,
+				name: ILike(normalizedName)
+			}));
 		} catch (error) {
 			// Consider logging or handling different types of errors explicitly
 			return true; // Name doesn't exist, validation passes

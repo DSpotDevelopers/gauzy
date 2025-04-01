@@ -1,6 +1,13 @@
-import { Injectable, NotFoundException, ForbiddenException, NotAcceptableException, Logger } from '@nestjs/common';
+import {
+	Injectable,
+	NotFoundException,
+	ForbiddenException,
+	NotAcceptableException,
+	Logger as NestLogger
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommandBus } from '@nestjs/cqrs';
-import { IsNull, Between, Not, In } from 'typeorm';
+import { IsNull, Between, Not, In, FindOneOptions } from 'typeorm';
 import * as moment from 'moment';
 import {
 	TimeLogType,
@@ -13,23 +20,14 @@ import {
 	PermissionsEnum,
 	ITimeSlot,
 	IEmployee,
-	IEmployeeFindInput,
 	ID,
-	ITimerStatusWithWeeklyLimits,
+	ITimerStatusWithWeeklyLimits
 } from '@gauzy/contracts';
 import { isNotEmpty } from '@gauzy/common';
 import { environment as env } from '@gauzy/config';
-import { TimeLog } from '../../core/entities/internal';
+import { Employee, TimeLog } from '../../core/entities/internal';
 import { RequestContext } from '../../core/context';
-import {
-	MultiORM,
-	MultiORMEnum,
-	getDateRangeFormat,
-	getORMType,
-	parseTypeORMFindToMikroOrm,
-	wrapSerialize,
-	validateDateRange
-} from '../../core/utils';
+import { getDateRangeFormat, validateDateRange } from '../../core/utils';
 import { prepareSQLQuery as p } from '../../database/database.helper';
 import { EmployeeService } from '../../employee/employee.service';
 import {
@@ -39,23 +37,20 @@ import {
 	TimeLogCreateCommand,
 	TimeLogUpdateCommand
 } from '../time-log/commands';
-import { MikroOrmTimeLogRepository, TypeOrmTimeLogRepository } from '../time-log/repository';
-import { TypeOrmEmployeeRepository, MikroOrmEmployeeRepository } from '../../employee/repository';
+import { TypeOrmTimeLogRepository } from '../time-log/repository';
 import { addRelationsToQuery, buildCommonQueryParameters, buildLogQueryParameters } from './timer.helper';
 import { TimerWeeklyLimitService } from './timer-weekly-limit.service';
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TimerService {
-	private readonly logger = new Logger(`GZY - ${TimerService.name}`);
-	protected ormType: MultiORM = ormType;
+	@Logger()
+	protected readonly logger: NestLogger;
 
 	constructor(
-		readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
-		readonly mikroOrmTimeLogRepository: MikroOrmTimeLogRepository,
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		readonly mikroOrmEmployeeRepository: MikroOrmEmployeeRepository,
+		@InjectRepository(TimeLog)
+		private readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
+
 		private readonly _employeeService: EmployeeService,
 		private readonly _timerWeeklyLimitService: TimerWeeklyLimitService,
 		private readonly _commandBus: CommandBus
@@ -67,16 +62,9 @@ export class TimerService {
 	 * @param query - The query parameters to find the employee.
 	 * @returns A Promise resolving to the employee entity or null.
 	 */
-	async fetchEmployee(query: IEmployeeFindInput): Promise<IEmployee | null> {
+	async fetchEmployee(query: FindOneOptions<Employee>): Promise<IEmployee | null> {
 		// Replace 'Employee' with your actual Employee entity type
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				return await this.mikroOrmEmployeeRepository.findOneByOptions(query);
-			case MultiORMEnum.TypeORM:
-				return await this.typeOrmEmployeeRepository.findOneByOptions(query);
-			default:
-				throw new Error(`Not implemented for ${this.ormType}`);
-		}
+		return await this._employeeService.findOneByOptions(query);
 	}
 
 	/**
@@ -96,10 +84,10 @@ export class TimerService {
 
 		if (!!permission && isNotEmpty(request.employeeId)) {
 			const { employeeId } = request;
-			employee = await this.fetchEmployee({ id: employeeId, tenantId, organizationId });
+			employee = await this.fetchEmployee({ where: { id: employeeId, tenantId, organizationId } });
 		} else {
 			const userId = RequestContext.currentUserId();
-			employee = await this.fetchEmployee({ userId, tenantId, organizationId });
+			employee = await this.fetchEmployee({ where: { userId, tenantId, organizationId } });
 		}
 
 		if (!employee) {
@@ -127,53 +115,16 @@ export class TimerService {
 			organizationId
 		};
 
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				{
-					/**
-					 * Get today's completed timelogs
-					 */
-					const parseQueryParams = parseTypeORMFindToMikroOrm<TimeLog>(buildLogQueryParameters(queryParams));
-					const items = await this.mikroOrmTimeLogRepository.findAll(parseQueryParams);
-					// Optionally wrapSerialize is a function that serializes the entity
-					logs = items.map((entity: TimeLog) => wrapSerialize(entity));
+		// Get today's completed timelogs (not running timers)
+		const previousLogsParams = buildLogQueryParameters(queryParams);
+		previousLogsParams.where.isRunning = false;
+		logs = await this.typeOrmTimeLogRepository.find(previousLogsParams);
 
-					/**
-					 * Get today's last log (running or completed)
-					 */
-					// Common query parameters for time log operations.
-					const lastLogQueryParamsMikroOrm = buildCommonQueryParameters(queryParams);
-					// Adds relations from the request to the query parameters.
-					addRelationsToQuery(lastLogQueryParamsMikroOrm, request);
-					// Converts TypeORM-style query parameters to a format compatible with MikroORM.
-					const parseMikroOrmOptions = parseTypeORMFindToMikroOrm<TimeLog>(lastLogQueryParamsMikroOrm);
+		const lastLogQueryParamsTypeOrm = buildCommonQueryParameters(queryParams); // Common query parameters for time log operations.
+		addRelationsToQuery(lastLogQueryParamsTypeOrm, request); // Adds relations from the request to the query parameters.
 
-					// Get today's last log (running or completed)
-					lastLog = (await this.mikroOrmTimeLogRepository.findOne(
-						parseMikroOrmOptions.where,
-						parseMikroOrmOptions.mikroOptions
-					)) as TimeLog;
-				}
-				break;
-
-			case MultiORMEnum.TypeORM:
-				{
-					// Get today's completed timelogs (not running timers)
-					const previousLogsParams = buildLogQueryParameters(queryParams);
-					previousLogsParams.where.isRunning = false;
-					logs = await this.typeOrmTimeLogRepository.find(previousLogsParams);
-
-					const lastLogQueryParamsTypeOrm = buildCommonQueryParameters(queryParams); // Common query parameters for time log operations.
-					addRelationsToQuery(lastLogQueryParamsTypeOrm, request); // Adds relations from the request to the query parameters.
-
-					// Get today's last log (running or completed)
-					lastLog = await this.typeOrmTimeLogRepository.findOne(lastLogQueryParamsTypeOrm);
-				}
-				break;
-
-			default:
-				throw new Error(`Not implemented for ${ormType}`);
-		}
+		// Get today's last log (running or completed)
+		lastLog = await this.typeOrmTimeLogRepository.findOne(lastLogQueryParamsTypeOrm);
 
 		const now = moment();
 
@@ -183,7 +134,8 @@ export class TimerService {
 		// If the user reached the weekly limit, then stop the current timer
 		let lastLogStopped = false;
 		if (lastLog?.isRunning) {
-			const remainingWeeklyLimit = weeklyLimitStatus.remainWeeklyTime - now.diff(moment(lastLog.stoppedAt), 'seconds');
+			const remainingWeeklyLimit =
+				weeklyLimitStatus.remainWeeklyTime - now.diff(moment(lastLog.stoppedAt), 'seconds');
 			if (lastLog?.isRunning && remainingWeeklyLimit <= 0) {
 				lastLogStopped = true;
 				lastLog = await this.stopTimer({
@@ -215,7 +167,9 @@ export class TimerService {
 
 			// Include the last log into duration if it's running or was stopped
 			if (status.running || lastLogStopped) {
-				status.duration += Math.abs((lastLogStopped ? moment(lastLog.stoppedAt) : now).diff(moment(lastLog.startedAt), 'seconds'));
+				status.duration += Math.abs(
+					(lastLogStopped ? moment(lastLog.stoppedAt) : now).diff(moment(lastLog.startedAt), 'seconds')
+				);
 			}
 
 			// If timer is running, then add the non saved duration to the workedThisWeek
@@ -365,12 +319,20 @@ export class TimerService {
 		}
 
 		// Check if the employee has reached the weekly limit
-		const weeklyLimitStatus = await this._timerWeeklyLimitService.checkWeeklyLimit(employee, lastLog.startedAt, true);
+		const weeklyLimitStatus = await this._timerWeeklyLimitService.checkWeeklyLimit(
+			employee,
+			lastLog.startedAt,
+			true
+		);
 		this.logger.verbose(`Remaining weekly limit: ${weeklyLimitStatus.remainWeeklyTime}`);
 
 		// Calculate stoppedAt date or use current date if not provided
 		let stoppedAt = await this.calculateStoppedAt(request, lastLog);
-		stoppedAt = this._timerWeeklyLimitService.adjustStoppedAtBasedOnWeeklyLimit(stoppedAt, lastLog, weeklyLimitStatus.remainWeeklyTime);
+		stoppedAt = this._timerWeeklyLimitService.adjustStoppedAtBasedOnWeeklyLimit(
+			stoppedAt,
+			lastLog,
+			weeklyLimitStatus.remainWeeklyTime
+		);
 		this.logger.verbose(`Last stopped at: ${stoppedAt}`);
 
 		// Log the case where stoppedAt is less than startedAt
@@ -690,87 +652,30 @@ export class TimerService {
 			employeeIds = [RequestContext.currentEmployeeId()];
 		}
 
-		let lastLogs: TimeLog[] = [];
+		/**
+		 * Get last logs (running or completed)
+		 */
+		const query = this.typeOrmTimeLogRepository.createQueryBuilder('time_log');
+		query.setFindOptions({
+			...(request['relations'] ? { relations: request['relations'] } : {})
+		});
+		query.where({
+			startedAt: Not(IsNull()),
+			stoppedAt: Not(IsNull()),
+			employeeId: In(employeeIds),
+			tenantId,
+			organizationId,
+			isActive: true,
+			isArchived: false,
+			...(isNotEmpty(source) ? { source } : {}),
+			...(isNotEmpty(organizationTeamId) ? { organizationTeamId } : {})
+		});
+		query.orderBy(p(`"${query.alias}"."employeeId"`), 'ASC'); // Adjust ORDER BY to match the SELECT list
+		query.addOrderBy(p(`"${query.alias}"."startedAt"`), 'DESC');
+		query.addOrderBy(p(`"${query.alias}"."createdAt"`), 'DESC');
 
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				{
-					const knex = this.mikroOrmTimeLogRepository.getKnex();
-
-					// Construct your SQL query using knex
-					let sqlQuery = knex('time_log').select(knex.raw('DISTINCT ON ("time_log"."employeeId") *'));
-
-					// Builds an SQL query with specific where clauses.
-					sqlQuery.whereNotNull('startedAt');
-					sqlQuery.whereNotNull('stoppedAt');
-					sqlQuery.whereIn('employeeId', employeeIds);
-					sqlQuery.andWhere({
-						tenantId,
-						organizationId,
-						isActive: true,
-						isArchived: false
-					});
-
-					if (source) {
-						sqlQuery = sqlQuery.andWhere({ source });
-					}
-					if (organizationTeamId) {
-						sqlQuery = sqlQuery.andWhere({ organizationTeamId });
-					}
-
-					// Adds ordering to the SQL query.
-					sqlQuery = sqlQuery.orderBy([
-						{ column: 'employeeId', order: 'ASC' },
-						{ column: 'startedAt', order: 'DESC' },
-						{ column: 'createdAt', order: 'DESC' }
-					]);
-
-					// Execute the raw SQL query and get the results
-					const rawResults: TimeLog[] = (await knex.raw(sqlQuery)).rows || [];
-					const timeLogIds = rawResults.map((entry: TimeLog) => entry.id);
-
-					// Converts TypeORM find options to a format compatible with MikroORM for a given entity.
-					const { mikroOptions } = parseTypeORMFindToMikroOrm<TimeLog>({
-						...(request.relations ? { relations: request.relations } : {})
-					});
-
-					// Get last logs group by employees (running or completed);
-					lastLogs = (
-						await this.mikroOrmTimeLogRepository.find({ id: { $in: timeLogIds } }, mikroOptions)
-					).map((item: TimeLog) => wrapSerialize(item));
-				}
-				break;
-			case MultiORMEnum.TypeORM:
-				{
-					/**
-					 * Get last logs (running or completed)
-					 */
-					const query = this.typeOrmTimeLogRepository.createQueryBuilder('time_log');
-					query.setFindOptions({
-						...(request['relations'] ? { relations: request['relations'] } : {})
-					});
-					query.where({
-						startedAt: Not(IsNull()),
-						stoppedAt: Not(IsNull()),
-						employeeId: In(employeeIds),
-						tenantId,
-						organizationId,
-						isActive: true,
-						isArchived: false,
-						...(isNotEmpty(source) ? { source } : {}),
-						...(isNotEmpty(organizationTeamId) ? { organizationTeamId } : {})
-					});
-					query.orderBy(p(`"${query.alias}"."employeeId"`), 'ASC'); // Adjust ORDER BY to match the SELECT list
-					query.addOrderBy(p(`"${query.alias}"."startedAt"`), 'DESC');
-					query.addOrderBy(p(`"${query.alias}"."createdAt"`), 'DESC');
-
-					// Get last logs group by employees (running or completed)
-					lastLogs = await query.distinctOn([p(`"${query.alias}"."employeeId"`)]).getMany();
-				}
-				break;
-			default:
-				throw new Error(`Not implemented for ${this.ormType}`);
-		}
+		// Get last logs group by employees (running or completed)
+		const lastLogs = await query.distinctOn([p(`"${query.alias}"."employeeId"`)]).getMany();
 
 		/** Transform an array of ITimeLog objects into an array of ITimerStatus objects. */
 		const statistics: ITimerStatus[] = lastLogs.map((lastLog: ITimeLog) => {

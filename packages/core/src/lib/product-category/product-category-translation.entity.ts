@@ -3,12 +3,9 @@ import { IProductTypeTranslation as IProductCategoryTranslation } from '@gauzy/c
 import { ApiProperty } from '@nestjs/swagger';
 import { ProductCategory, TranslationBase } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmProductCategoryTranslationRepository } from './repository/mikro-orm-product-category-translation.repository';
 
-@MultiORMEntity('product_category_translation', { mikroOrmRepository: () => MikroOrmProductCategoryTranslationRepository })
-export class ProductCategoryTranslation extends TranslationBase
-	implements IProductCategoryTranslation {
-
+@MultiORMEntity('product_category_translation')
+export class ProductCategoryTranslation extends TranslationBase implements IProductCategoryTranslation {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;

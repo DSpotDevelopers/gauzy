@@ -3,14 +3,16 @@ import { RequestContext } from '@gauzy/core';
 import { JobPresetUpworkJobSearchCriterion } from '../../job-preset-upwork-job-search-criterion.entity';
 import { JobPreset } from '../../job-preset.entity';
 import { CreateJobPresetCommand } from '../create-job-preset.command';
-import { TypeOrmJobPresetRepository } from '../../repository/type-orm-job-preset.repository';
-import { TypeOrmJobPresetUpworkJobSearchCriterionRepository } from '../../repository/type-orm-job-preset-upwork-job-search-criterion.repository';
+import { TypeOrmJobPresetRepository, TypeOrmJobPresetUpworkJobSearchCriterionRepository } from '../../repository';
 import { PermissionsEnum } from '@gauzy/contracts';
-
+import { InjectRepository } from '@nestjs/typeorm';
 @CommandHandler(CreateJobPresetCommand)
 export class CreateJobPresetHandler implements ICommandHandler<CreateJobPresetCommand> {
 	constructor(
+		@InjectRepository(JobPreset)
 		private readonly typeOrmJobPresetRepository: TypeOrmJobPresetRepository,
+
+		@InjectRepository(JobPresetUpworkJobSearchCriterion)
 		private readonly typeOrmJobPresetUpworkJobSearchCriterionRepository: TypeOrmJobPresetUpworkJobSearchCriterionRepository
 	) {}
 

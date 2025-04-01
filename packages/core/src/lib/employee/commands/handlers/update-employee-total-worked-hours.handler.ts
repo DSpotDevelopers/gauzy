@@ -8,15 +8,19 @@ import { TimeLog, TimeSlot } from './../../../core/entities/internal';
 import { RequestContext } from './../../../core/context';
 import { EmployeeService } from '../../employee.service';
 import { UpdateEmployeeTotalWorkedHoursCommand } from '../update-employee-total-worked-hours.command';
-import { TypeOrmTimeLogRepository } from '../../../time-tracking/time-log/repository/type-orm-time-log.repository';
-import { TypeOrmTimeSlotRepository } from '../../../time-tracking/time-slot/repository/type-orm-time-slot.repository';
+import { TypeOrmTimeLogRepository } from '../../../time-tracking/time-log/repository';
+import { TypeOrmTimeSlotRepository } from '../../../time-tracking/time-slot/repository';
 
 @CommandHandler(UpdateEmployeeTotalWorkedHoursCommand)
 export class UpdateEmployeeTotalWorkedHoursHandler implements ICommandHandler<UpdateEmployeeTotalWorkedHoursCommand> {
 	private readonly logger = new Logger(`GZY - ${UpdateEmployeeTotalWorkedHoursHandler.name}`);
 	constructor(
-		@InjectRepository(TimeLog) readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
-		@InjectRepository(TimeSlot) readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository,
+		@InjectRepository(TimeLog)
+		private readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
+
+		@InjectRepository(TimeSlot)
+		private readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository,
+
 		private readonly _employeeService: EmployeeService,
 		private readonly _configService: ConfigService
 	) {}

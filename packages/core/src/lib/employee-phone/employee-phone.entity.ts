@@ -3,9 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IEmployee, IEmployeePhone } from '@gauzy/contracts';
 import { Employee, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmEmployeePhoneRepository } from './repository/mikro-orm-employee-phone.repository';
 
-@MultiORMEntity('employee_phone', { mikroOrmRepository: () => MikroOrmEmployeePhoneRepository })
+@MultiORMEntity('employee_phone')
 export class EmployeePhone extends TenantOrganizationBaseEntity implements IEmployeePhone {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn({ nullable: true })

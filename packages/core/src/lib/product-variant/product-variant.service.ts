@@ -3,18 +3,15 @@ import { TenantAwareCrudService } from './../core/crud';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductVariant } from './product-variant.entity';
-import { MikroOrmProductVariantRepository } from './repository/mikro-orm-product-variant.repository';
-import { TypeOrmProductVariantRepository } from './repository/type-orm-product-variant.repository';
+import { TypeOrmProductVariantRepository } from './repository';
 
 @Injectable()
 export class ProductVariantService extends TenantAwareCrudService<ProductVariant> {
 	constructor(
 		@InjectRepository(ProductVariant)
-		typeOrmProductVariantRepository: TypeOrmProductVariantRepository,
-
-		mikroOrmProductVariantRepository: MikroOrmProductVariantRepository
+		private readonly typeOrmProductVariantRepository: TypeOrmProductVariantRepository
 	) {
-		super(typeOrmProductVariantRepository, mikroOrmProductVariantRepository);
+		super(typeOrmProductVariantRepository);
 	}
 
 	async findAllProductVariants(): Promise<IPagination<IProductVariant>> {
@@ -67,7 +64,7 @@ export class ProductVariantService extends TenantAwareCrudService<ProductVariant
 
 	async deleteFeaturedImage(id: string): Promise<IProductVariant> {
 		try {
-			let variant = await this.typeOrmRepository.findOneBy({
+			const variant = await this.typeOrmRepository.findOneBy({
 				id
 			});
 			variant.image = null;

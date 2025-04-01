@@ -2,23 +2,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import { RelationId } from 'typeorm';
 import { IAppointmentEmployee, IEmployee, IEmployeeAppointment } from '@gauzy/contracts';
 import { IsString, IsNotEmpty } from 'class-validator';
-import {
-	Employee,
-	EmployeeAppointment,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Employee, EmployeeAppointment, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmAppointmentEmployeeRepository } from './repository/mikro-orm-appointment-employee.repository';
 
-@MultiORMEntity('appointment_employee', { mikroOrmRepository: () => MikroOrmAppointmentEmployeeRepository })
+@MultiORMEntity('appointment_employee')
 export class AppointmentEmployee extends TenantOrganizationBaseEntity implements IAppointmentEmployee {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@IsNotEmpty()
 	@MultiORMColumn()
 	public appointmentId!: string;
-
 
 	/**
 	 * Employee
@@ -27,7 +20,7 @@ export class AppointmentEmployee extends TenantOrganizationBaseEntity implements
 	@MultiORMManyToOne(() => Employee, {
 		onDelete: 'CASCADE'
 	})
-	public employee?: IEmployee
+	public employee?: IEmployee;
 
 	@ApiProperty({ type: () => String })
 	@RelationId((it: AppointmentEmployee) => it.employee)

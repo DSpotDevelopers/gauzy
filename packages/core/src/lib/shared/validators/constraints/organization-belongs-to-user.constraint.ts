@@ -1,29 +1,17 @@
-import { Injectable } from "@nestjs/common";
-import {
-	ValidationArguments,
-	ValidatorConstraint,
-	ValidatorConstraintInterface
-} from "class-validator";
-import { IOrganization } from "@gauzy/contracts";
-import { isEmpty } from "@gauzy/common";
-import { RequestContext } from "../../../core/context";
-import { MultiORM, MultiORMEnum, getORMType } from "../../../core/utils";
-import { MikroOrmUserOrganizationRepository, TypeOrmUserOrganizationRepository } from "../../../user-organization/repository";
-
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
+import { Injectable } from '@nestjs/common';
+import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
+import { IOrganization } from '@gauzy/contracts';
+import { isEmpty } from '@gauzy/common';
+import { RequestContext } from '../../../core/context';
+import { TypeOrmUserOrganizationRepository } from '../../../user-organization/repository';
 
 /**
  * Validator constraint for checking if a user belongs to the organization.
  */
-@ValidatorConstraint({ name: "IsOrganizationBelongsToUser", async: true })
+@ValidatorConstraint({ name: 'IsOrganizationBelongsToUser', async: true })
 @Injectable()
 export class OrganizationBelongsToUserConstraint implements ValidatorConstraintInterface {
-
-	constructor(
-		readonly typeOrmUserOrganizationRepository: TypeOrmUserOrganizationRepository,
-		readonly mikroOrmUserOrganizationRepository: MikroOrmUserOrganizationRepository,
-	) { }
+	constructor(readonly typeOrmUserOrganizationRepository: TypeOrmUserOrganizationRepository) {}
 
 	/**
 	 * Validates if the user belongs to the organization.
@@ -32,10 +20,12 @@ export class OrganizationBelongsToUserConstraint implements ValidatorConstraintI
 	 * @returns {Promise<boolean>} - True if the user belongs to the organization, otherwise false.
 	 */
 	async validate(value: IOrganization['id'] | IOrganization): Promise<boolean> {
-		if (isEmpty(value)) { return true; }
+		if (isEmpty(value)) {
+			return true;
+		}
 
 		// 'value' can be either a string (organization ID) or an organization object.
-		const organizationId: string = (typeof value === 'string') ? value : value.id;
+		const organizationId: string = typeof value === 'string' ? value : value.id;
 
 		// Use the consolidated ORM logic function
 		return await this.checkOrganizationExistence(organizationId);
@@ -52,14 +42,11 @@ export class OrganizationBelongsToUserConstraint implements ValidatorConstraintI
 		const userId = RequestContext.currentUserId();
 
 		try {
-			switch (ormType) {
-				case MultiORMEnum.MikroORM:
-					return !!await this.mikroOrmUserOrganizationRepository.findOneOrFail({ tenantId, userId, organizationId });
-				case MultiORMEnum.TypeORM:
-					return !!await this.typeOrmUserOrganizationRepository.findOneByOrFail({ tenantId, userId, organizationId });
-				default:
-					throw new Error(`Not implemented for ${ormType}`);
-			}
+			return !!(await this.typeOrmUserOrganizationRepository.findOneByOrFail({
+				tenantId,
+				userId,
+				organizationId
+			}));
 		} catch (error) {
 			return false;
 		}
@@ -72,6 +59,8 @@ export class OrganizationBelongsToUserConstraint implements ValidatorConstraintI
 	 */
 	defaultMessage(validationArguments?: ValidationArguments): string {
 		const { value } = validationArguments;
-		return `The user with ID ${RequestContext.currentUserId()} is not associated with the specified organization (${JSON.stringify(value)}).`;
+		return `The user with ID ${RequestContext.currentUserId()} is not associated with the specified organization (${JSON.stringify(
+			value
+		)}).`;
 	}
 }

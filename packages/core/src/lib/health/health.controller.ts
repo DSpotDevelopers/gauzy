@@ -1,10 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import {
-	HealthCheckService,
-	TypeOrmHealthIndicator,
-	DiskHealthIndicator,
-	MikroOrmHealthIndicator
-} from '@nestjs/terminus';
+import { HealthCheckService, TypeOrmHealthIndicator, DiskHealthIndicator } from '@nestjs/terminus';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
@@ -13,8 +8,7 @@ import { Public } from '@gauzy/common';
 import { User } from '../core/entities/internal';
 import { CacheHealthIndicator } from './indicators/cache-health.indicator';
 import { RedisHealthIndicator } from './indicators/redis-health.indicator';
-import { getORMType, MultiORM, MultiORMEnum } from '../core/utils';
-import { MikroOrmUserRepository, TypeOrmUserRepository } from '../user/repository';
+import { TypeOrmUserRepository } from '../user/repository';
 
 @Controller('health')
 export class HealthController {
@@ -23,18 +17,13 @@ export class HealthController {
 		private readonly dataSource: DataSource,
 		private readonly health: HealthCheckService,
 		private readonly typeOrmHealthIndicator: TypeOrmHealthIndicator,
-		private readonly mikroOrmHealthIndicator: MikroOrmHealthIndicator,
 		private readonly disk: DiskHealthIndicator,
 		private readonly cacheHealthIndicator: CacheHealthIndicator,
 		private readonly redisHealthIndicator: RedisHealthIndicator,
 		@InjectRepository(User)
-		private readonly typeOrmUserRepository: TypeOrmUserRepository,
-		private readonly mikroOrmUserRepository: MikroOrmUserRepository
-	) {
-		this.ormType = getORMType();
-	}
+		private readonly typeOrmUserRepository: TypeOrmUserRepository
+	) {}
 
-	private readonly ormType: MultiORM;
 	private readonly checkDb = true;
 	private readonly checkStorage = true;
 	private readonly checkCache = true;
@@ -56,81 +45,43 @@ export class HealthController {
 		if (this.checkDb) {
 			checks.push(async () => {
 				console.log(`Checking ${uniqueLabel} Database...`);
-				switch (this.ormType) {
-					case MultiORMEnum.TypeORM:
-						let queryRunner: QueryRunner;
-						try {
-							let message: string;
+				let queryRunner: QueryRunner;
+				try {
+					let message: string;
 
-							if (this.checkDbWithTerminus) {
-								queryRunner = this.dataSource.createQueryRunner();
+					if (this.checkDbWithTerminus) {
+						queryRunner = this.dataSource.createQueryRunner();
 
-								const resDatabase = await this.typeOrmHealthIndicator.pingCheck('database', {
-									connection: queryRunner.connection,
-									timeout: 60000
-								});
+						const resDatabase = await this.typeOrmHealthIndicator.pingCheck('database', {
+							connection: queryRunner.connection,
+							timeout: 60000
+						});
 
-								message = resDatabase?.database?.message;
-							}
+						message = resDatabase?.database?.message;
+					}
 
-							const usersCount = await this.typeOrmUserRepository.count();
+					const usersCount = await this.typeOrmUserRepository.count();
 
-							console.log(`Database (TypeORM) users count ${uniqueLabel} is: ${usersCount}`);
+					console.log(`Database (TypeORM) users count ${uniqueLabel} is: ${usersCount}`);
 
-							console.log(`Database (TypeORM) check ${uniqueLabel} completed`);
+					console.log(`Database (TypeORM) check ${uniqueLabel} completed`);
 
-							return {
-								database: {
-									status: 'up',
-									message: message
-								}
-							};
-						} catch (err) {
-							console.error(`Database (TypeORM) check ${uniqueLabel} failed`, err);
-							return {
-								database: {
-									status: 'down',
-									message: err.message
-								}
-							};
-						} finally {
-							if (this.checkDbWithTerminus && queryRunner) await queryRunner.release();
+					return {
+						database: {
+							status: 'up',
+							message: message
 						}
-					case MultiORMEnum.MikroORM:
-						try {
-							let message: string;
-
-							if (this.checkDbWithTerminus) {
-								const resDatabase = await this.mikroOrmHealthIndicator.pingCheck('database', {
-									timeout: 60000
-								});
-
-								message = resDatabase?.database?.message;
-							}
-
-							const usersCount = await this.mikroOrmUserRepository.count();
-
-							console.log(`Database (MikroORM) users count ${uniqueLabel} is: ${usersCount}`);
-
-							console.log(`Database (MikroORM) check ${uniqueLabel} completed`);
-
-							return {
-								database: {
-									status: 'up',
-									message: message
-								}
-							};
-						} catch (err) {
-							console.error(`Database (MikroORM) check ${uniqueLabel} failed`, err);
-							return {
-								database: {
-									status: 'down',
-									message: err.message
-								}
-							};
+					};
+				} catch (err) {
+					console.error(`Database (TypeORM) check ${uniqueLabel} failed`, err);
+					return {
+						database: {
+							status: 'down',
+							message: err.message
 						}
-					default:
-						throw new Error('ORM not supported');
+					};
+				} finally {
+					if (this.checkDbWithTerminus && queryRunner) await queryRunner.release();
 				}
 			});
 		}

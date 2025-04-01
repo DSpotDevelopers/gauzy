@@ -2,14 +2,18 @@ import { RelationId } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 import { IHelpCenter, IHelpCenterArticle, IHelpCenterAuthor } from '@gauzy/contracts';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany, TenantOrganizationBaseEntity } from '@gauzy/core';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany,
+	TenantOrganizationBaseEntity
+} from '@gauzy/core';
 import { HelpCenter, HelpCenterAuthor } from './../entities';
-import { MikroOrmHelpCenterArticleRepository } from './repository/mikro-orm-help-center-article.repository';
 
-@MultiORMEntity('knowledge_base_article', { mikroOrmRepository: () => MikroOrmHelpCenterArticleRepository })
-export class HelpCenterArticle extends TenantOrganizationBaseEntity
-	implements IHelpCenterArticle {
-
+@MultiORMEntity('knowledge_base_article')
+export class HelpCenterArticle extends TenantOrganizationBaseEntity implements IHelpCenterArticle {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;

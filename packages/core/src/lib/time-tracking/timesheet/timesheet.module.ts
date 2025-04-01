@@ -10,7 +10,7 @@ import { CommandHandlers } from './commands/handlers';
 import { TimeSheetController } from './timesheet.controller';
 import { TimeSheetService } from './timesheet.service';
 import { Timesheet } from './timesheet.entity';
-import { TypeOrmTimesheetRepository } from './repository/type-orm-timesheet.repository';
+import { TypeOrmTimesheetRepository } from './repository';
 
 @Module({
 	controllers: [TimeSheetController],

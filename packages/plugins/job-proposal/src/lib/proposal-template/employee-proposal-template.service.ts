@@ -1,17 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ID, IEmployeeProposalTemplate, IEmployeeProposalTemplateMakeDefaultInput, IPagination } from '@gauzy/contracts';
+import { InjectRepository } from '@nestjs/typeorm';
+import {
+	ID,
+	IEmployeeProposalTemplate,
+	IEmployeeProposalTemplateMakeDefaultInput,
+	IPagination
+} from '@gauzy/contracts';
 import { PaginationParams, TenantAwareCrudService } from '@gauzy/core';
 import { EmployeeProposalTemplate } from './employee-proposal-template.entity';
-import { MikroOrmEmployeeProposalTemplateRepository } from './repository/mikro-orm-employee-proposal-template.repository';
-import { TypeOrmEmployeeProposalTemplateRepository } from './repository/type-orm-employee-proposal-template.repository';
+import { TypeOrmEmployeeProposalTemplateRepository } from './repository';
 
 @Injectable()
 export class EmployeeProposalTemplateService extends TenantAwareCrudService<EmployeeProposalTemplate> {
 	constructor(
-		readonly typeOrmEmployeeProposalTemplateRepository: TypeOrmEmployeeProposalTemplateRepository,
-		readonly mikroOrmEmployeeProposalTemplateRepository: MikroOrmEmployeeProposalTemplateRepository
+		@InjectRepository(EmployeeProposalTemplate)
+		private readonly typeOrmEmployeeProposalTemplateRepository: TypeOrmEmployeeProposalTemplateRepository
 	) {
-		super(typeOrmEmployeeProposalTemplateRepository, mikroOrmEmployeeProposalTemplateRepository);
+		super(typeOrmEmployeeProposalTemplateRepository);
 	}
 
 	/**

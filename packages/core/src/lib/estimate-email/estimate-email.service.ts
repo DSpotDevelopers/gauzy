@@ -9,32 +9,23 @@ import { RequestContext } from '../core/context';
 import { TenantAwareCrudService } from './../core/crud';
 import { Invoice, Organization } from './../core/entities/internal';
 import { EstimateEmail } from './estimate-email.entity';
-import { TypeOrmEstimateEmailRepository } from './repository/type-orm-estimate-email.repository';
-import { MikroOrmEstimateEmailRepository } from './repository/mikro-orm-estimate-email.repository';
-import { TypeOrmInvoiceRepository } from './../invoice/repository/type-orm-invoice.repository';
-import { MikroOrmInvoiceRepository } from './../invoice/repository/mikro-orm-invoice.repository';
-import { TypeOrmOrganizationRepository } from './../organization/repository/type-orm-organization.repository';
-import { MikroOrmOrganizationRepository } from './../organization/repository/mikro-orm-organization.repository';
+import { TypeOrmEstimateEmailRepository } from './repository';
+import { TypeOrmInvoiceRepository } from './../invoice/repository';
+import { TypeOrmOrganizationRepository } from './../organization/repository';
 
 @Injectable()
 export class EstimateEmailService extends TenantAwareCrudService<EstimateEmail> {
 	constructor(
 		@InjectRepository(EstimateEmail)
-		typeOrmEstimateEmailRepository: TypeOrmEstimateEmailRepository,
-
-		mikroOrmEstimateEmailRepository: MikroOrmEstimateEmailRepository,
+		private readonly typeOrmEstimateEmailRepository: TypeOrmEstimateEmailRepository,
 
 		@InjectRepository(Invoice)
-		private typeOrmInvoiceRepository: TypeOrmInvoiceRepository,
-
-		mikroOrmInvoiceRepository: MikroOrmInvoiceRepository,
+		private readonly typeOrmInvoiceRepository: TypeOrmInvoiceRepository,
 
 		@InjectRepository(Organization)
-		private typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
-
-		mikroOrmOrganizationRepository: MikroOrmOrganizationRepository
+		private readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository
 	) {
-		super(typeOrmEstimateEmailRepository, mikroOrmEstimateEmailRepository);
+		super(typeOrmEstimateEmailRepository);
 	}
 
 	async createEstimateEmail(id: string, email: string): Promise<IEstimateEmail> {
@@ -102,11 +93,7 @@ export class EstimateEmailService extends TenantAwareCrudService<EstimateEmail> 
 					tenantId,
 					expireDate: MoreThan(moment().toDate())
 				},
-				...(relations
-					? {
-						relations: relations
-					}
-					: {})
+				...(relations ? { relations: relations } : {})
 			});
 		} catch (error) {
 			throw new BadRequestException(error);

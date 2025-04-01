@@ -1,7 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsDateString, IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
-import { IIntegration, IIntegrationEntitySetting, IIntegrationMap, IIntegrationSetting, IIntegrationTenant, IntegrationEnum } from '@gauzy/contracts';
+import {
+	IIntegration,
+	IIntegrationEntitySetting,
+	IIntegrationMap,
+	IIntegrationSetting,
+	IIntegrationTenant,
+	IntegrationEnum
+} from '@gauzy/contracts';
 import {
 	Integration,
 	IntegrationEntitySetting,
@@ -9,12 +16,16 @@ import {
 	IntegrationSetting,
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmIntegrationTenantRepository } from './repository/mikro-orm-integration-tenant.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('integration_tenant', { mikroOrmRepository: () => MikroOrmIntegrationTenantRepository })
+@MultiORMEntity('integration_tenant')
 export class IntegrationTenant extends TenantOrganizationBaseEntity implements IIntegrationTenant {
-
 	@ApiProperty({ type: () => String, enum: IntegrationEnum })
 	@IsNotEmpty()
 	@IsEnum(IntegrationEnum)
@@ -42,12 +53,11 @@ export class IntegrationTenant extends TenantOrganizationBaseEntity implements I
 	 * Integration
 	 */
 	@MultiORMManyToOne(() => Integration, {
-
 		/** Indicates if relation column value can be nullable or not. */
 		nullable: true,
 
 		/** Database cascade action on delete. */
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	@JoinColumn()
 	integration?: IIntegration;

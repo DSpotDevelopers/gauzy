@@ -4,18 +4,15 @@ import { ID, IEmployeeSetting, IEmployeeSettingCreateInput, IEmployeeSettingUpda
 import { RequestContext } from '../core/context';
 import { TenantAwareCrudService } from './../core/crud';
 import { EmployeeSetting } from './employee-setting.entity';
-import { TypeOrmEmployeeSettingRepository } from './repository/type-orm-employee-setting.repository';
-import { MikroOrmEmployeeSettingRepository } from './repository/mikro-orm-employee-setting.repository';
+import { TypeOrmEmployeeSettingRepository } from './repository';
 
 @Injectable()
 export class EmployeeSettingService extends TenantAwareCrudService<EmployeeSetting> {
 	constructor(
 		@InjectRepository(EmployeeSetting)
-		typeOrmEmployeeSettingRepository: TypeOrmEmployeeSettingRepository,
-
-		mikroOrmEmployeeSettingRepository: MikroOrmEmployeeSettingRepository
+		private readonly typeOrmEmployeeSettingRepository: TypeOrmEmployeeSettingRepository
 	) {
-		super(typeOrmEmployeeSettingRepository, mikroOrmEmployeeSettingRepository);
+		super(typeOrmEmployeeSettingRepository);
 	}
 
 	/**

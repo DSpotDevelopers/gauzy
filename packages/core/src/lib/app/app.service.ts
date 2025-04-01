@@ -1,12 +1,12 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import * as chalk from 'chalk';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@gauzy/config';
 import { SeedDataService } from '../core/seeds/seed-data.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AppService {
-	public count: number = 0;
+	public count = 0;
+	private readonly logger = new Logger(`GZY - ${AppService.name}`);
 
 	constructor(
 		@Inject(forwardRef(() => SeedDataService))
@@ -25,7 +25,7 @@ export class AppService {
 	 */
 	async seedDBIfEmpty() {
 		this.count = await this.userService.countFast();
-		console.log(chalk.magenta(`Found ${this.count} users in DB`));
+		this.logger.verbose(`Found ${this.count} users in DB`);
 		if (this.count === 0) {
 			await this.seedDataService.runDefaultSeed(true);
 		}

@@ -1,4 +1,5 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOneOptions, UpdateResult } from 'typeorm';
 import {
 	ActionTypeEnum,
@@ -13,18 +14,22 @@ import { TenantAwareCrudService } from '../../core/crud';
 import { RequestContext } from '../../core/context';
 import { ActivityLogService } from '../../activity-log/activity-log.service';
 import { TaskLinkedIssue } from './task-linked-issue.entity';
-import { MikroOrmTaskLinkedIssueRepository } from './repository/mikro-orm-linked-issue.repository';
-import { TypeOrmTaskLinkedIssueRepository } from './repository/type-orm-linked-issue.repository';
+import { TypeOrmTaskLinkedIssueRepository } from './repository';
 import { taskRelatedIssueRelationMap } from './task-linked-issue.helper';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TaskLinkedIssueService extends TenantAwareCrudService<TaskLinkedIssue> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		typeOrmTaskLinkedIssueRepository: TypeOrmTaskLinkedIssueRepository,
-		mikroOrmTaskLinkedIssueRepository: MikroOrmTaskLinkedIssueRepository,
+		@InjectRepository(TaskLinkedIssue)
+		private readonly typeOrmTaskLinkedIssueRepository: TypeOrmTaskLinkedIssueRepository,
+
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmTaskLinkedIssueRepository, mikroOrmTaskLinkedIssueRepository);
+		super(typeOrmTaskLinkedIssueRepository);
 	}
 
 	/**
@@ -57,6 +62,7 @@ export class TaskLinkedIssueService extends TenantAwareCrudService<TaskLinkedIss
 			// Return the created task linked issue
 			return taskLinkedIssue;
 		} catch (error) {
+			this.logger.error(`Failed to create task linked issue : ${error}`);
 			// Handle errors and return an appropriate error response
 			throw new HttpException(`Failed to create task linked issue : ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
@@ -103,6 +109,7 @@ export class TaskLinkedIssueService extends TenantAwareCrudService<TaskLinkedIss
 			// return the updated task linked issue
 			return updatedTaskLinkedIssue;
 		} catch (error) {
+			this.logger.error(`Failed to update task linked issue: ${error}`);
 			// Handle errors and return an appropriate error response
 			throw new HttpException(`Failed to update task linked issue: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
@@ -120,7 +127,7 @@ export class TaskLinkedIssueService extends TenantAwareCrudService<TaskLinkedIss
 			await this.deleteActivityLog(id);
 			return super.delete(id, options);
 		} catch (error) {
-			console.error(`Failed to delete task linked issue (ID: ${id}):`, error);
+			this.logger.error(`Failed to delete task linked issue (ID: ${id}): ${error}`);
 			throw new HttpException(`Failed to delete task linked issue: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -136,8 +143,11 @@ export class TaskLinkedIssueService extends TenantAwareCrudService<TaskLinkedIss
 			await this.deleteActivityLog(id);
 			return super.softDelete(id);
 		} catch (error) {
-			console.error(`Failed to soft delete task linked issue (ID: ${id}):`, error);
-			throw new HttpException(`Failed to soft delete task linked issue: ${error.message}`, HttpStatus.BAD_REQUEST);
+			this.logger.error(`Failed to soft delete task linked issue (ID: ${id}): ${error}`);
+			throw new HttpException(
+				`Failed to soft delete task linked issue: ${error.message}`,
+				HttpStatus.BAD_REQUEST
+			);
 		}
 	}
 
@@ -150,11 +160,11 @@ export class TaskLinkedIssueService extends TenantAwareCrudService<TaskLinkedIss
 		const tenantId = RequestContext.currentTenantId();
 
 		try {
-			  // Retrieve existing task linked issue
-			  const existingTaskLinkedIssue = await this.findOneByIdString(id);
-			  if (!existingTaskLinkedIssue) {
-				  throw new NotFoundException('Task linked issue not found');
-			  }
+			// Retrieve existing task linked issue
+			const existingTaskLinkedIssue = await this.findOneByIdString(id);
+			if (!existingTaskLinkedIssue) {
+				throw new NotFoundException('Task linked issue not found');
+			}
 
 			// Generate deleted activity log
 			const { organizationId } = existingTaskLinkedIssue;
@@ -169,7 +179,7 @@ export class TaskLinkedIssueService extends TenantAwareCrudService<TaskLinkedIss
 				tenantId
 			);
 		} catch (error) {
-			console.error(`Failed to create activity log for deletion (ID: ${id}):`, error);
+			this.logger.error(`Failed to create activity log for deletion (ID: ${id}): ${error}`);
 		}
 	}
 }

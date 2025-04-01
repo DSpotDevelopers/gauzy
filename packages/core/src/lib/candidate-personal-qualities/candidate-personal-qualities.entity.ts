@@ -1,23 +1,19 @@
 import { JoinColumn, RelationId } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-	ICandidatePersonalQualities,
-	ICandidateInterview,
-	ICandidateCriterionsRating
-} from '@gauzy/contracts';
-import {
-	CandidateCriterionsRating,
-	CandidateInterview,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { ICandidatePersonalQualities, ICandidateInterview, ICandidateCriterionsRating } from '@gauzy/contracts';
+import { CandidateCriterionsRating, CandidateInterview, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { IsOptional, IsString } from 'class-validator';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmCandidatePersonalQualitiesRepository } from './repository/mikro-orm-candidate-personal-qualities.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('candidate_personal_quality', { mikroOrmRepository: () => MikroOrmCandidatePersonalQualitiesRepository })
+@MultiORMEntity('candidate_personal_quality')
 export class CandidatePersonalQualities extends TenantOrganizationBaseEntity implements ICandidatePersonalQualities {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;

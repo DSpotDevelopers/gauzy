@@ -1,19 +1,23 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ID, ISubscription, ISubscriptionCreateInput, ISubscriptionFindInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
 import { Subscription } from './subscription.entity';
-import { MikroOrmSubscriptionRepository } from './repository/mikro-orm-subscription.repository';
-import { TypeOrmSubscriptionRepository } from './repository/type-orm-subscription.repository';
+import { TypeOrmSubscriptionRepository } from './repository';
 import { DeleteResult } from 'typeorm';
+import { Logger } from '../logger';
 
 @Injectable()
 export class SubscriptionService extends TenantAwareCrudService<Subscription> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmSubscriptionRepository: TypeOrmSubscriptionRepository,
-		readonly mikroOrmSubscriptionRepository: MikroOrmSubscriptionRepository
+		@InjectRepository(Subscription)
+		private readonly typeOrmSubscriptionRepository: TypeOrmSubscriptionRepository
 	) {
-		super(typeOrmSubscriptionRepository, mikroOrmSubscriptionRepository);
+		super(typeOrmSubscriptionRepository);
 	}
 
 	/**
@@ -54,7 +58,7 @@ export class SubscriptionService extends TenantAwareCrudService<Subscription> {
 
 			return subscription;
 		} catch (error) {
-			console.log('Error creating subscription:', error);
+			this.logger.error(`Error creating subscription: ${error}`);
 			throw new BadRequestException('Failed to create subscription', error);
 		}
 	}
@@ -76,6 +80,7 @@ export class SubscriptionService extends TenantAwareCrudService<Subscription> {
 			const userId = RequestContext.currentUserId();
 			return await super.delete({ id, userId, entity, entityId });
 		} catch (error) {
+			this.logger.error(`Error while unsubscribing from entity: ${error}`);
 			throw new BadRequestException('Failed to unsubscribe from entity', error);
 		}
 	}

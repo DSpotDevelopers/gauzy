@@ -1,24 +1,23 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, In } from 'typeorm';
 import { indexBy, keys, object, pluck } from 'underscore';
 import { S3Client, CreateBucketCommand, CreateBucketCommandInput, CreateBucketCommandOutput } from '@aws-sdk/client-s3';
 import { ITenantSetting, IWasabiFileStorageProviderConfig } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../../core/crud';
-import { MultiORMEnum, parseTypeORMFindToMikroOrm } from '../../core/utils';
 import { TenantSetting } from './tenant-setting.entity';
-import { TypeOrmTenantSettingRepository } from './repository/type-orm-tenant-setting.repository';
-import { MikroOrmTenantSettingRepository } from './repository/mikro-orm-tenant-setting.repository';
-
+import { TypeOrmTenantSettingRepository } from './repository';
+import { Logger } from '../../logger';
 @Injectable()
 export class TenantSettingService extends TenantAwareCrudService<TenantSetting> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(TenantSetting)
-		typeOrmTenantSettingRepository: TypeOrmTenantSettingRepository,
-
-		mikroOrmTenantSettingRepository: MikroOrmTenantSettingRepository
+		private readonly typeOrmTenantSettingRepository: TypeOrmTenantSettingRepository
 	) {
-		super(typeOrmTenantSettingRepository, mikroOrmTenantSettingRepository);
+		super(typeOrmTenantSettingRepository);
 	}
 
 	/**
@@ -27,21 +26,7 @@ export class TenantSettingService extends TenantAwareCrudService<TenantSetting> 
 	 * @returns
 	 */
 	async get(request?: FindManyOptions) {
-		let settings: TenantSetting[];
-
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				const { where, mikroOptions } = parseTypeORMFindToMikroOrm<TenantSetting>(request);
-				const items = await this.mikroOrmRepository.find(where, mikroOptions);
-				settings = items.map((entity: TenantSetting) => this.serialize(entity)) as TenantSetting[];
-				break;
-			case MultiORMEnum.TypeORM:
-				settings = await await this.typeOrmRepository.find(request);
-				break;
-			default:
-				throw new Error(`Not implemented for ${this.ormType}`);
-		}
-
+		const settings = await this.typeOrmRepository.find(request);
 		return object(pluck(settings, 'name'), pluck(settings, 'value'));
 	}
 
@@ -63,7 +48,7 @@ export class TenantSettingService extends TenantAwareCrudService<TenantSetting> 
 		const settingsByName = indexBy(settings, 'name');
 		const saveInput = [];
 		for (const key in input) {
-			if (Object.prototype.hasOwnProperty.call(input, key)) {
+			if (Object.hasOwn(input, key)) {
 				const setting = settingsByName[key];
 				if (setting !== undefined) {
 					setting.value = input[key];
@@ -91,7 +76,7 @@ export class TenantSettingService extends TenantAwareCrudService<TenantSetting> 
 	 */
 	public async verifyWasabiConfiguration(
 		entity: IWasabiFileStorageProviderConfig
-	): Promise<Object | BadRequestException> {
+	): Promise<object | BadRequestException> {
 		// Validate the input data (You can use class-validator for validation)
 		if (!entity.wasabi_aws_access_key_id || !entity.wasabi_aws_secret_access_key) {
 			throw new HttpException(
@@ -135,7 +120,7 @@ export class TenantSettingService extends TenantAwareCrudService<TenantSetting> 
 				data
 			});
 		} catch (error) {
-			console.log('Error while creating wasabi bucket: %s', params.Bucket);
+			this.logger.error(`Error while creating wasabi bucket ${params.Bucket}: ${error}`);
 			throw new HttpException(error, HttpStatus.BAD_REQUEST, {
 				description: `Error while creating wasabi bucket: ${params.Bucket}`
 			});

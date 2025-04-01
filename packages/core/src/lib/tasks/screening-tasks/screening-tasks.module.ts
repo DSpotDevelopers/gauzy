@@ -9,7 +9,7 @@ import { CommandHandlers } from './commands/handlers';
 import { ScreeningTasksService } from './screening-tasks.service';
 import { ScreeningTasksController } from './screening-tasks.controller';
 import { ScreeningTask } from './screening-task.entity';
-import { TypeOrmScreeningTaskRepository } from './repository/type-orm-screening-task.repository';
+import { TypeOrmScreeningTaskRepository } from './repository';
 
 @Module({
 	imports: [

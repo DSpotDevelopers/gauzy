@@ -10,27 +10,23 @@ import { TimeSlot } from './../../../../core/entities/internal';
 import { RequestContext } from './../../../../core/context';
 import { getDateRangeFormat } from './../../../../core/utils';
 import { prepareSQLQuery as p } from './../../../../database/database.helper';
-import { TypeOrmTimeSlotRepository } from '../../../time-slot/repository/type-orm-time-slot.repository';
+import { TypeOrmTimeSlotRepository } from '../../../time-slot/repository';
 
 @CommandHandler(TimesheetRecalculateCommand)
 export class TimesheetRecalculateHandler implements ICommandHandler<TimesheetRecalculateCommand> {
-
 	constructor(
 		private readonly timesheetService: TimeSheetService,
 
 		@InjectRepository(TimeSlot)
 		private readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository
-	) { }
+	) {}
 
 	/**
 	 *
 	 * @param command
 	 * @returns
 	 */
-	public async execute(
-		command: TimesheetRecalculateCommand
-	): Promise<ITimesheet> {
-
+	public async execute(command: TimesheetRecalculateCommand): Promise<ITimesheet> {
 		const { id } = command;
 		const timesheet = await this.timesheetService.findOneByIdString(id);
 
@@ -59,10 +55,13 @@ export class TimesheetRecalculateHandler implements ICommandHandler<TimesheetRec
 					qb.andWhere(p(`"${query.alias}"."tenantId" = :tenantId`), {
 						tenantId
 					});
-					qb.andWhere(p(`"${query.alias}"."startedAt" >= :startedAt AND "${query.alias}"."startedAt" < :stoppedAt`), {
-						startedAt,
-						stoppedAt
-					});
+					qb.andWhere(
+						p(`"${query.alias}"."startedAt" >= :startedAt AND "${query.alias}"."startedAt" < :stoppedAt`),
+						{
+							startedAt,
+							stoppedAt
+						}
+					);
 				})
 			)
 			.getRawOne();
@@ -75,7 +74,9 @@ export class TimesheetRecalculateHandler implements ICommandHandler<TimesheetRec
 				overall: Math.round(timeSlot.overall)
 			});
 		} catch (error) {
-			throw new BadRequestException(`Can\'t update timesheet for employee-${employeeId} of organization-${organizationId}`);
+			throw new BadRequestException(
+				`Can\'t update timesheet for employee-${employeeId} of organization-${organizationId}`
+			);
 		}
 
 		return await this.timesheetService.findOneByIdString(id);

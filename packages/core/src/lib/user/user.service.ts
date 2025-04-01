@@ -2,7 +2,14 @@
 // MIT License, see https://github.com/xmlking/ngx-starter-kit/blob/develop/LICENSE
 // Copyright (c) 2018 Sumanth Chinthagunta
 
-import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+	UnauthorizedException,
+	Logger as NestLogger
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
 	InsertResult,
 	SelectQueryBuilder,
@@ -32,22 +39,27 @@ import { ConfigService, environment as env } from '@gauzy/config';
 import { prepareSQLQuery as p } from './../database/database.helper';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from './../core/context';
-import { freshTimestamp, MultiORMEnum } from './../core/utils';
+import { freshTimestamp } from './../core/utils';
 import { EmployeeService } from '../employee/employee.service';
 import { TaskService } from '../tasks/task.service';
-import { MikroOrmUserRepository, TypeOrmUserRepository } from './repository';
+import { TypeOrmUserRepository } from './repository';
 import { User } from './user.entity';
+import { Logger } from '../logger';
 
 @Injectable()
 export class UserService extends TenantAwareCrudService<User> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmUserRepository: TypeOrmUserRepository,
-		readonly mikroOrmUserRepository: MikroOrmUserRepository,
+		@InjectRepository(User)
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
+
 		private readonly _configService: ConfigService,
 		private readonly _employeeService: EmployeeService,
 		private readonly _taskService: TaskService
 	) {
-		super(typeOrmUserRepository, mikroOrmUserRepository);
+		super(typeOrmUserRepository);
 	}
 
 	/**
@@ -67,7 +79,7 @@ export class UserService extends TenantAwareCrudService<User> {
 				lastMonthActiveUsers // The number of active users in the last month
 			};
 		} catch (error) {
-			console.error('Error fetching user stats:', error);
+			this.logger.error(`Error fetching user stats: ${error}`);
 			throw new Error(`Failed to retrieve user statistics: ${error.message}`);
 		}
 	}
@@ -88,7 +100,7 @@ export class UserService extends TenantAwareCrudService<User> {
 			});
 		} catch (error) {
 			// Handle error, log it, or throw a custom exception
-			console.error('Error fetching monthly active users:', error);
+			this.logger.error(`Error fetching monthly active users: ${error}`);
 			throw new Error('Unable to retrieve monthly active users count.');
 		}
 	}
@@ -113,7 +125,7 @@ export class UserService extends TenantAwareCrudService<User> {
 		// Fetch the user along with requested relations (excluding employee).
 		const user = await this.findMe(options.relations);
 
-		console.log('findMe found User with Id:', user.id);
+		this.logger.verbose(`findMe found User with Id: ${user.id}`);
 
 		// Fetch employee details if 'includeEmployee' is true
 		if (options.includeEmployee) {
@@ -143,7 +155,7 @@ export class UserService extends TenantAwareCrudService<User> {
 			return await this.findOneByIdString(userId, { relations });
 		} catch (error) {
 			// Log the error for debugging purposes
-			console.error('Error in findMe:', error);
+			this.logger.error(`Error in findMe: ${error}`);
 		}
 	}
 
@@ -154,30 +166,15 @@ export class UserService extends TenantAwareCrudService<User> {
 	 * @returns
 	 */
 	public async markEmailAsVerified(id: IUser['id']) {
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				return await this.mikroOrmRepository.nativeUpdate(
-					{ id },
-					{
-						emailVerifiedAt: freshTimestamp(),
-						emailToken: null,
-						code: null,
-						codeExpireAt: null
-					}
-				);
-			case MultiORMEnum.TypeORM:
-				return await this.typeOrmRepository.update(
-					{ id },
-					{
-						emailVerifiedAt: freshTimestamp(),
-						emailToken: null,
-						code: null,
-						codeExpireAt: null
-					}
-				);
-			default:
-				throw new Error(`Not implemented for ${this.ormType}`);
-		}
+		return await this.typeOrmRepository.update(
+			{ id },
+			{
+				emailVerifiedAt: freshTimestamp(),
+				emailToken: null,
+				code: null,
+				codeExpireAt: null
+			}
+		);
 	}
 
 	/**
@@ -200,6 +197,7 @@ export class UserService extends TenantAwareCrudService<User> {
 		try {
 			return await this.typeOrmRepository.findOneByOrFail({ email });
 		} catch (error) {
+			this.logger.error(`Error in getOAuthLoginEmail: ${error}`);
 			throw new NotFoundException(`The requested record was not found`);
 		}
 	}
@@ -237,15 +235,7 @@ export class UserService extends TenantAwareCrudService<User> {
 	 * @returns {Promise<User | undefined>} - A promise that resolves to the user if it exists, otherwise undefined.
 	 */
 	async getIfExists(id: string): Promise<User | undefined> {
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				return await this.mikroOrmUserRepository.findOne({ id });
-
-			case MultiORMEnum.TypeORM:
-				return await this.typeOrmRepository.findOneBy({ id });
-			default:
-				throw new Error(`Not implemented for ${this.ormType}`);
-		}
+		return await this.typeOrmRepository.findOneBy({ id });
 	}
 
 	/**
@@ -254,15 +244,7 @@ export class UserService extends TenantAwareCrudService<User> {
 	 * @returns {Promise<User | undefined>} - A promise that resolves to the user if it exists, otherwise undefined.
 	 */
 	async getIfExistsThirdParty(thirdPartyId: string): Promise<User | undefined> {
-		switch (this.ormType) {
-			case MultiORMEnum.MikroORM:
-				return await this.mikroOrmUserRepository.findOne({ thirdPartyId });
-
-			case MultiORMEnum.TypeORM:
-				return await this.typeOrmRepository.findOneBy({ thirdPartyId });
-			default:
-				throw new Error(`Not implemented for ${this.ormType}`);
-		}
+		return await this.typeOrmRepository.findOneBy({ thirdPartyId });
 	}
 
 	/**
@@ -280,6 +262,7 @@ export class UserService extends TenantAwareCrudService<User> {
 			user.hash = hash;
 			return await this.typeOrmRepository.save(user);
 		} catch (error) {
+			this.logger.error(`Error in changePassword: ${error}`);
 			throw new ForbiddenException();
 		}
 	}
@@ -321,13 +304,12 @@ export class UserService extends TenantAwareCrudService<User> {
 			}
 
 			await this.save(entity);
-			try {
-				return await this.findOneByWhereOptions({
-					id: id as string,
-					tenantId: RequestContext.currentTenantId()
-				});
-			} catch {}
+			return await this.findOneByWhereOptions({
+				id: id as string,
+				tenantId: RequestContext.currentTenantId()
+			});
 		} catch (error) {
+			this.logger.error(`Error in updateProfile: ${error}`);
 			throw new ForbiddenException();
 		}
 	}
@@ -359,6 +341,7 @@ export class UserService extends TenantAwareCrudService<User> {
 			const userId = RequestContext.currentUserId();
 			return await this.update(userId, { preferredLanguage });
 		} catch (err) {
+			this.logger.error(`Error in updatePreferredLanguage: ${err}`);
 			throw new NotFoundException(`The record was not found`, err);
 		}
 	}
@@ -375,6 +358,7 @@ export class UserService extends TenantAwareCrudService<User> {
 			const userId = RequestContext.currentUserId();
 			return await this.update(userId, { preferredComponentLayout });
 		} catch (err) {
+			this.logger.error(`Error in updatePreferredComponentLayout: ${err}`);
 			throw new NotFoundException(`The record was not found`, err);
 		}
 	}
@@ -396,7 +380,7 @@ export class UserService extends TenantAwareCrudService<User> {
 			return await this.typeOrmRepository.update(userId, { refreshToken });
 		} catch (error) {
 			// Log error if any
-			console.error('Error while setting current refresh token:', error);
+			this.logger.error(`Error while setting current refresh token: ${error}`);
 		}
 	}
 
@@ -420,10 +404,10 @@ export class UserService extends TenantAwareCrudService<User> {
 					}
 				);
 			} catch (error) {
-				console.log('Error while remove refresh token', error);
+				this.logger.error(`Error while remove refresh token: ${error}`);
 			}
 		} catch (error) {
-			console.log('Error while logout device', error);
+			this.logger.error(`Error while logout device: ${error}`);
 		}
 	}
 
@@ -438,18 +422,9 @@ export class UserService extends TenantAwareCrudService<User> {
 			const lastLoginAt = new Date(); // Define the last login time
 			const id = userId; // Define the user ID
 
-			// Update the last login time
-			switch (this.ormType) {
-				case MultiORMEnum.MikroORM:
-					const updatedRow = await this.mikroOrmRepository.nativeUpdate({ id }, { lastLoginAt });
-					return { affected: updatedRow } as UpdateResult;
-				case MultiORMEnum.TypeORM:
-					return await this.typeOrmRepository.update({ id }, { lastLoginAt });
-				default:
-					throw new Error(`Not implemented for ${this.ormType}`);
-			}
+			return await this.typeOrmRepository.update({ id }, { lastLoginAt });
 		} catch (error) {
-			console.log('Error while updating last login time', error);
+			this.logger.error(`Error while updating last login time: ${error}`);
 		}
 	}
 
@@ -498,6 +473,7 @@ export class UserService extends TenantAwareCrudService<User> {
 				throw new UnauthorizedException();
 			}
 		} catch (error) {
+			this.logger.error(`Error in getUserIfRefreshTokenMatches: ${error}`);
 			throw new UnauthorizedException();
 		}
 	}
@@ -514,7 +490,7 @@ export class UserService extends TenantAwareCrudService<User> {
 			return await bcrypt.hash(password, env.USER_PASSWORD_BCRYPT_SALT_ROUNDS);
 		} catch (error) {
 			// Handle any errors during hashing process
-			console.error('Error generating password hash:', error);
+			this.logger.error(`Error generating password hash: ${error}`);
 		}
 	}
 
@@ -527,7 +503,7 @@ export class UserService extends TenantAwareCrudService<User> {
 	 */
 	public async delete(userId: IUser['id']): Promise<DeleteResult> {
 		// Do not allow user to delete account in Demo server.
-		if (!!this._configService.get('demo')) {
+		if (this._configService.get('demo')) {
 			throw new ForbiddenException('Do not allow user to delete account in Demo server');
 		}
 
@@ -557,6 +533,7 @@ export class UserService extends TenantAwareCrudService<User> {
 
 			return await super.delete(userId);
 		} catch (error) {
+			this.logger.error(`Error in delete: ${error}`);
 			throw new ForbiddenException(error?.message);
 		}
 	}

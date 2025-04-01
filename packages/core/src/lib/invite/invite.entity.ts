@@ -10,11 +10,7 @@ import {
 } from '@gauzy/contracts';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import {
-	JoinColumn,
-	JoinTable,
-	RelationId
-} from 'typeorm';
+import { JoinColumn, JoinTable, RelationId } from 'typeorm';
 import {
 	OrganizationContact,
 	OrganizationDepartment,
@@ -24,12 +20,16 @@ import {
 	TenantOrganizationBaseEntity,
 	User
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmInviteRepository } from './repository/mikro-orm-invite.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('invite', { mikroOrmRepository: () => MikroOrmInviteRepository })
+@MultiORMEntity('invite')
 export class Invite extends TenantOrganizationBaseEntity implements IInvite {
-
 	@ApiPropertyOptional({ type: () => String })
 	@MultiORMColumn()
 	token: string;
@@ -99,7 +99,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 	 */
 	@ApiPropertyOptional({ type: () => Role })
 	@MultiORMManyToOne(() => User, (it) => it.invites, {
-		onDelete: "SET NULL"
+		onDelete: 'SET NULL'
 	})
 	@JoinColumn()
 	user?: IUser;
@@ -123,7 +123,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 		owner: true,
 		pivotTable: 'invite_organization_project',
 		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationProjectId',
+		inverseJoinColumn: 'organizationProjectId'
 	})
 	@JoinTable({
 		name: 'invite_organization_project'
@@ -138,7 +138,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 		owner: true,
 		pivotTable: 'invite_organization_contact',
 		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationContactId',
+		inverseJoinColumn: 'organizationContactId'
 	})
 	@JoinTable({
 		name: 'invite_organization_contact'
@@ -153,7 +153,7 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 		owner: true,
 		pivotTable: 'invite_organization_department',
 		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationDepartmentId',
+		inverseJoinColumn: 'organizationDepartmentId'
 	})
 	@JoinTable({
 		name: 'invite_organization_department'
@@ -161,14 +161,14 @@ export class Invite extends TenantOrganizationBaseEntity implements IInvite {
 	departments?: IOrganizationDepartment[];
 
 	/**
-	* Organization Teams
-	*/
+	 * Organization Teams
+	 */
 	@ApiPropertyOptional({ type: () => OrganizationTeam })
 	@MultiORMManyToMany(() => OrganizationTeam, {
 		owner: true,
 		pivotTable: 'invite_organization_team',
 		joinColumn: 'inviteId',
-		inverseJoinColumn: 'organizationTeamId',
+		inverseJoinColumn: 'organizationTeamId'
 	})
 	@JoinTable({
 		name: 'invite_organization_team'

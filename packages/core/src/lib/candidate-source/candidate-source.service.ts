@@ -2,19 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ICandidateSource } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmCandidateSourceRepository } from './repository/type-orm-candidate-source.repository';
-import { MikroOrmCandidateSourceRepository } from './repository/mikro-orm-candidate-source.repository';
+import { TypeOrmCandidateSourceRepository } from './repository';
 import { CandidateSource } from './candidate-source.entity';
 
 @Injectable()
 export class CandidateSourceService extends TenantAwareCrudService<CandidateSource> {
 	constructor(
 		@InjectRepository(CandidateSource)
-		typeOrmCandidateSourceRepository: TypeOrmCandidateSourceRepository,
-
-		mikroOrmCandidateSourceRepository: MikroOrmCandidateSourceRepository
+		private readonly typeOrmCandidateSourceRepository: TypeOrmCandidateSourceRepository
 	) {
-		super(typeOrmCandidateSourceRepository, mikroOrmCandidateSourceRepository);
+		super(typeOrmCandidateSourceRepository);
 	}
 
 	/**

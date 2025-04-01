@@ -1,37 +1,31 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult } from 'typeorm';
-import { Knex as KnexConnection } from 'knex';
-import { InjectConnection } from 'nest-knexjs';
 import {
 	IOrganization,
 	IPagination,
 	ITaskVersion,
 	ITaskVersionCreateInput,
 	ITaskVersionFindInput,
-	ITenant,
+	ITenant
 } from '@gauzy/contracts';
-import { isPostgres } from '@gauzy/config';
 import { TaskStatusPrioritySizeService } from '../task-status-priority-size.service';
 import { RequestContext } from '../../core/context';
-import { MultiORMEnum } from '../../core/utils';
 import { TaskVersion } from './version.entity';
 import { DEFAULT_GLOBAL_VERSIONS } from './default-global-versions';
-import { MikroOrmTaskVersionRepository } from './repository/mikro-orm-task-version.repository';
-import { TypeOrmTaskVersionRepository } from './repository/type-orm-task-version.repository';
+import { TypeOrmTaskVersionRepository } from './repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersion> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(TaskVersion)
-		readonly typeOrmTaskVersionRepository: TypeOrmTaskVersionRepository,
-
-		readonly mikroOrmTaskVersionRepository: MikroOrmTaskVersionRepository,
-
-		@InjectConnection()
-		readonly knexConnection: KnexConnection
+		private readonly typeOrmTaskVersionRepository: TypeOrmTaskVersionRepository
 	) {
-		super(typeOrmTaskVersionRepository, mikroOrmTaskVersionRepository, knexConnection);
+		super(typeOrmTaskVersionRepository);
 	}
 
 	/**
@@ -43,14 +37,13 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 	 */
 	async fetchAll(params: ITaskVersionFindInput): Promise<IPagination<TaskVersion>> {
 		try {
-			if (this.ormType == MultiORMEnum.TypeORM && isPostgres()) {
-				return await super.fetchAllByKnex(params);
-			} else {
-				return await super.fetchAll(params);
-			}
+			return await super.fetchAll(params);
 		} catch (error) {
-			console.log('Failed to retrieve task versions. Ensure that the provided parameters are valid and complete.', error);
-			throw new BadRequestException('Failed to retrieve task versions. Ensure that the provided parameters are valid and complete.', error);
+			this.logger.error(`Failed to retrieve task versions: ${error}`);
+			throw new BadRequestException(
+				'Failed to retrieve task versions. Ensure that the provided parameters are valid and complete.',
+				error
+			);
 		}
 	}
 
@@ -64,7 +57,7 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 		return await super.delete(id, {
 			where: {
 				isSystem: false
-			},
+			}
 		});
 	}
 
@@ -73,9 +66,7 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 	 *
 	 * @param tenants '
 	 */
-	async bulkCreateTenantsVersions(
-		tenants: ITenant[]
-	): Promise<ITaskVersion[] & TaskVersion[]> {
+	async bulkCreateTenantsVersions(tenants: ITenant[]): Promise<ITaskVersion[] & TaskVersion[]> {
 		const versions: ITaskVersion[] = [];
 		for (const tenant of tenants) {
 			for (const version of DEFAULT_GLOBAL_VERSIONS) {
@@ -84,7 +75,7 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 						...version,
 						icon: `ever-icons/${version.icon}`,
 						isSystem: false,
-						tenant,
+						tenant
 					})
 				);
 			}
@@ -97,9 +88,7 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 	 *
 	 * @param organization
 	 */
-	async bulkCreateOrganizationVersions(
-		organization: IOrganization
-	): Promise<ITaskVersion[] & TaskVersion[]> {
+	async bulkCreateOrganizationVersions(organization: IOrganization): Promise<ITaskVersion[] & TaskVersion[]> {
 		try {
 			const tenantId = RequestContext.currentTenantId();
 			const { items = [] } = await super.fetchAll({ tenantId });
@@ -115,12 +104,13 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 					icon,
 					color,
 					organization,
-					isSystem: false,
+					isSystem: false
 				});
 				versions.push(version);
 			}
 			return await this.typeOrmRepository.save(versions);
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task versions for organization: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -131,9 +121,7 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 	 * @param entity
 	 * @returns
 	 */
-	async createBulkVersionsByEntity(
-		entity: Partial<ITaskVersionCreateInput>
-	): Promise<ITaskVersion[]> {
+	async createBulkVersionsByEntity(entity: Partial<ITaskVersionCreateInput>): Promise<ITaskVersion[]> {
 		try {
 			const { organizationId } = entity;
 			const tenantId = RequestContext.currentTenantId();
@@ -154,12 +142,13 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 					description,
 					icon,
 					color,
-					isSystem: false,
+					isSystem: false
 				});
 				versions.push(version);
 			}
 			return versions;
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task versions by entity: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

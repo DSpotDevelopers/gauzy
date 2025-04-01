@@ -4,11 +4,8 @@ import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsUUID } from 'class-v
 import { ID, IEmployee, IOrganizationProjectModuleEmployee, IRole } from '@gauzy/contracts';
 import { Employee, OrganizationProjectModule, Role, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmOrganizationProjectModuleEmployeeRepository } from './repository/mikro-orm-organization-project-module-employee.repository';
 
-@MultiORMEntity('organization_project_module_employee', {
-	mikroOrmRepository: () => MikroOrmOrganizationProjectModuleEmployeeRepository
-})
+@MultiORMEntity('organization_project_module_employee')
 export class OrganizationProjectModuleEmployee
 	extends TenantOrganizationBaseEntity
 	implements IOrganizationProjectModuleEmployee

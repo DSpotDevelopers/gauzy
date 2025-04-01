@@ -5,9 +5,8 @@ import { ID, ITask, ITaskLinkedIssue, TaskRelatedIssuesRelationEnum } from '@gau
 import { Task } from './../task.entity';
 import { TenantOrganizationBaseEntity } from './../../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../../core/decorators/entity';
-import { MikroOrmTaskLinkedIssueRepository } from './repository/mikro-orm-linked-issue.repository';
 
-@MultiORMEntity('task_linked_issues', { mikroOrmRepository: () => MikroOrmTaskLinkedIssueRepository })
+@MultiORMEntity('task_linked_issues')
 export class TaskLinkedIssue extends TenantOrganizationBaseEntity implements ITaskLinkedIssue {
 	@ApiProperty({ enum: TaskRelatedIssuesRelationEnum })
 	@IsEnum(TaskRelatedIssuesRelationEnum)

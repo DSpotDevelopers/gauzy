@@ -11,13 +11,11 @@ import { TimeLog } from './time-log.entity';
 import { TimeLogController } from './time-log.controller';
 import { TimeLogService } from './time-log.service';
 import { TimeSlotModule } from './../time-slot/time-slot.module';
-import { TypeOrmTimeLogRepository } from './repository/type-orm-time-log.repository';
+import { TypeOrmTimeLogRepository } from './repository';
 import { TimerModule } from '../timer/timer.module';
 
 @Module({
-	controllers: [
-		TimeLogController
-	],
+	controllers: [TimeLogController],
 	imports: [
 		TypeOrmModule.forFeature([TimeLog]),
 		MikroOrmModule.forFeature([TimeLog]),
@@ -32,4 +30,4 @@ import { TimerModule } from '../timer/timer.module';
 	providers: [TimeLogService, TypeOrmTimeLogRepository, ...CommandHandlers],
 	exports: [TypeOrmModule, MikroOrmModule, TimeLogService, TypeOrmTimeLogRepository]
 })
-export class TimeLogModule { }
+export class TimeLogModule {}

@@ -3,18 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { IInvoiceItemCreateInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { InvoiceItem } from './invoice-item.entity';
-import { MikroOrmInvoiceItemRepository } from './repository/mikro-orm-invoice-item.repository';
-import { TypeOrmInvoiceItemRepository } from './repository/type-orm-invoice-item.repository';
+import { TypeOrmInvoiceItemRepository } from './repository';
 
 @Injectable()
 export class InvoiceItemService extends TenantAwareCrudService<InvoiceItem> {
 	constructor(
 		@InjectRepository(InvoiceItem)
-		typeOrmInvoiceItemRepository: TypeOrmInvoiceItemRepository,
-
-		mikroOrmInvoiceItemRepository: MikroOrmInvoiceItemRepository
+		private readonly typeOrmInvoiceItemRepository: TypeOrmInvoiceItemRepository
 	) {
-		super(typeOrmInvoiceItemRepository, mikroOrmInvoiceItemRepository);
+		super(typeOrmInvoiceItemRepository);
 	}
 
 	/**

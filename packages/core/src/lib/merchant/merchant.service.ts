@@ -2,17 +2,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IMerchant } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
 import { Merchant } from './merchant.entity';
-import { MikroOrmMerchantRepository } from './repository/mikro-orm-merchant.repository';
-import { TypeOrmMerchantRepository } from './repository/type-orm-merchant.repository';
+import { TypeOrmMerchantRepository } from './repository';
 
 export class MerchantService extends TenantAwareCrudService<Merchant> {
 	constructor(
 		@InjectRepository(Merchant)
-		typeOrmMerchantRepository: TypeOrmMerchantRepository,
-
-		mikroOrmMerchantRepository: MikroOrmMerchantRepository
+		private readonly typeOrmMerchantRepository: TypeOrmMerchantRepository
 	) {
-		super(typeOrmMerchantRepository, mikroOrmMerchantRepository);
+		super(typeOrmMerchantRepository);
 	}
 
 	async findById(id: IMerchant['id'], relations: string[] = []): Promise<IMerchant> {

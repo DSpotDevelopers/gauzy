@@ -3,19 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Skill } from './skill.entity';
 import { TenantAwareCrudService } from './../core/crud';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { MikroOrmSkillRepository } from './repository/mikro-orm-skill.repository';
-import { TypeOrmSkillRepository } from './repository/type-orm-skill.repository';
+import { TypeOrmSkillRepository } from './repository';
 
 @Injectable()
 export class SkillService extends TenantAwareCrudService<Skill> {
-
 	constructor(
 		@InjectRepository(Skill)
-		typeOrmSkillRepository: TypeOrmSkillRepository,
-
-		mikroOrmSkillRepository: MikroOrmSkillRepository
+		private readonly typeOrmSkillRepository: TypeOrmSkillRepository
 	) {
-		super(typeOrmSkillRepository, mikroOrmSkillRepository);
+		super(typeOrmSkillRepository);
 	}
 
 	/**

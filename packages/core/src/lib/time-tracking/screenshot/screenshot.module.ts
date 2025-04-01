@@ -10,7 +10,7 @@ import { ScreenshotController } from './screenshot.controller';
 import { ScreenshotService } from './screenshot.service';
 import { TimeSlotModule } from './../time-slot/time-slot.module';
 import { IntegrationTenantModule } from './../../integration-tenant/integration-tenant.module';
-import { TypeOrmScreenshotRepository } from './repository/type-orm-screenshot.repository';
+import { TypeOrmScreenshotRepository } from './repository';
 
 @Module({
 	controllers: [ScreenshotController],

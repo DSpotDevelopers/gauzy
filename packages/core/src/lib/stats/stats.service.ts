@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
 import { GlobalStats } from './stats.types';
 import { EmployeeService } from '../employee/employee.service';
 import { OrganizationService } from '../organization/organization.service';
@@ -9,9 +9,13 @@ import { InvoiceService } from '../invoice/invoice.service';
 import { PaymentService } from '../payment/payment.service';
 import { StatisticService } from '../time-tracking/statistic/statistic.service';
 import { OrganizationTeamService } from '../organization-team/organization-team.service';
+import { Logger } from '../logger';
 
 @Injectable()
 export class StatsService {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		readonly _employeeService: EmployeeService,
 		readonly _organizationService: OrganizationService,
@@ -72,7 +76,7 @@ export class StatsService {
 			};
 		} catch (error) {
 			// Log the error and throw a custom error message
-			console.error('Error fetching global stats:', error);
+			this.logger.error(`Error fetching global stats: ${error}`);
 			throw new Error(`Failed to retrieve global statistics: ${error.message}`);
 		}
 	}

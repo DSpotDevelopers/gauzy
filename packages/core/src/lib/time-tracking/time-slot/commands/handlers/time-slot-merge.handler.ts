@@ -11,7 +11,7 @@ import { prepareSQLQuery as p } from './../../../../database/database.helper';
 import { TimeSlotMergeCommand } from '../time-slot-merge.command';
 import { TimesheetRecalculateCommand } from './../../../timesheet/commands';
 import { UpdateEmployeeTotalWorkedHoursCommand } from './../../../../employee/commands';
-import { TypeOrmTimeSlotRepository } from '../../repository/type-orm-time-slot.repository';
+import { TypeOrmTimeSlotRepository } from '../../repository';
 
 interface IAggregatedTimeSlot {
 	duration: number;

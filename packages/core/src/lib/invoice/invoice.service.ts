@@ -1,7 +1,8 @@
+import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { Invoice } from './invoice.entity';
 import { Between, In } from 'typeorm';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { EmailService } from './../email-send/email.service';
 import { IInvoice, IOrganization, InvoiceStats, LanguagesEnum } from '@gauzy/contracts';
 import { sign } from 'jsonwebtoken';
@@ -13,21 +14,25 @@ import { Readable } from 'stream';
 import { PdfmakerService } from './pdfmaker.service';
 import { generateInvoicePdfDefinition, generateInvoicePaymentPdfDefinition } from './index';
 import { OrganizationService } from './../organization';
-import { TypeOrmInvoiceRepository } from './repository/type-orm-invoice.repository';
-import { MikroOrmInvoiceRepository } from './repository/mikro-orm-invoice.repository';
+import { TypeOrmInvoiceRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class InvoiceService extends TenantAwareCrudService<Invoice> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmInvoiceRepository: TypeOrmInvoiceRepository,
-		readonly mikroOrmInvoiceRepository: MikroOrmInvoiceRepository,
+		@InjectRepository(Invoice)
+		private readonly typeOrmInvoiceRepository: TypeOrmInvoiceRepository,
+
 		private readonly emailService: EmailService,
 		private readonly estimateEmailService: EstimateEmailService,
 		private readonly pdfmakerService: PdfmakerService,
 		private readonly i18n: I18nService,
 		private readonly organizationService: OrganizationService
 	) {
-		super(typeOrmInvoiceRepository, mikroOrmInvoiceRepository);
+		super(typeOrmInvoiceRepository);
 	}
 
 	/**
@@ -59,6 +64,7 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 			const query = this.typeOrmRepository.createQueryBuilder(this.tableName);
 			return await query.select(`COALESCE(MAX(${query.alias}.invoiceNumber), 0)`, 'max').getRawOne();
 		} catch (error) {
+			this.logger.error(`Error while getting highest invoice number: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -94,10 +100,10 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 					organization
 				);
 			} catch (error) {
-				console.log(`Error while sending estimate email ${invoiceNumber}: %s`, error?.message);
+				this.logger.error(`Error while sending estimate email ${invoiceNumber}: ${error}`);
 			}
 		} catch (error) {
-			console.log(`Error while creating estimate email for invoice ${invoiceId}: %s`, error?.message);
+			this.logger.error(`Error while creating estimate email for invoice ${invoiceId}: ${error}`);
 		}
 	}
 
@@ -140,42 +146,42 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 			]
 		});
 		const translatedText = {
-			item: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.ITEM', { lang: language }),
-			description: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.DESCRIPTION', {
+			item: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.ITEM', { lang: language }),
+			description: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.DESCRIPTION', {
 				lang: language
 			}),
-			quantity: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.QUANTITY', {
+			quantity: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.QUANTITY', {
 				lang: language
 			}),
-			price: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.PRICE', { lang: language }),
-			totalValue: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.TOTAL_VALUE', {
+			price: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.PRICE', { lang: language }),
+			totalValue: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.TOTAL_VALUE', {
 				lang: language
 			}),
 
-			invoice: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE', { lang: language }),
-			estimate: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.ESTIMATE', { lang: language }),
-			number: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.NUMBER', { lang: language }),
-			from: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.FROM', { lang: language }),
-			to: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TO', { lang: language }),
-			date: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DATE', { lang: language }),
-			dueDate: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DUE_DATE', { lang: language }),
-			discountValue: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICES_SELECT_DISCOUNT_VALUE', {
+			invoice: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE', { lang: language }),
+			estimate: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.ESTIMATE', { lang: language }),
+			number: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.NUMBER', { lang: language }),
+			from: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.FROM', { lang: language }),
+			to: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TO', { lang: language }),
+			date: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DATE', { lang: language }),
+			dueDate: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DUE_DATE', { lang: language }),
+			discountValue: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICES_SELECT_DISCOUNT_VALUE', {
 				lang: language
 			}),
-			discountType: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DISCOUNT_TYPE', {
+			discountType: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DISCOUNT_TYPE', {
 				lang: language
 			}),
-			taxValue: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TAX_VALUE', { lang: language }),
-			taxType: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TAX_TYPE', { lang: language }),
-			currency: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.CURRENCY', { lang: language }),
-			terms: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICES_SELECT_TERMS', {
+			taxValue: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TAX_VALUE', { lang: language }),
+			taxType: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TAX_TYPE', { lang: language }),
+			currency: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.CURRENCY', { lang: language }),
+			terms: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICES_SELECT_TERMS', {
 				lang: language
 			}),
-			paid: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAID', { lang: language }),
-			yes: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.YES', { lang: language }),
-			no: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.NO', { lang: language }),
-			alreadyPaid: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.ALREADY_PAID', { lang: language }),
-			amountDue: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.AMOUNT_DUE', { lang: language })
+			paid: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAID', { lang: language }),
+			yes: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.YES', { lang: language }),
+			no: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.NO', { lang: language }),
+			alreadyPaid: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.ALREADY_PAID', { lang: language }),
+			amountDue: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.AMOUNT_DUE', { lang: language })
 		};
 		const docDefinition = await generateInvoicePdfDefinition(
 			invoice,
@@ -200,32 +206,31 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 		});
 
 		const translatedText = {
-			overdue: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.OVERDUE', { lang: language }),
-			onTime: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.ON_TIME', { lang: language }),
-			paymentDate: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.PAYMENT_DATE', {
+			overdue: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.OVERDUE', { lang: language }),
+			onTime: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.ON_TIME', { lang: language }),
+			paymentDate: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.PAYMENT_DATE', {
 				lang: language
 			}),
-			amount: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.AMOUNT', { lang: language }),
-			recordedBy: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.RECORDED_BY', {
+			amount: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.AMOUNT', { lang: language }),
+			recordedBy: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.RECORDED_BY', {
 				lang: language
 			}),
-			note: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.NOTE', { lang: language }),
-			status: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.STATUS', { lang: language }),
-			paymentsForInvoice: await this.i18n.translate(
-				'USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.PAYMENTS_FOR_INVOICE',
-				{ lang: language }
-			),
-			dueDate: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DUE_DATE', { lang: language }),
-			totalValue: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.TOTAL_VALUE', {
+			note: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.NOTE', { lang: language }),
+			status: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.STATUS', { lang: language }),
+			paymentsForInvoice: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.PAYMENTS_FOR_INVOICE', {
 				lang: language
 			}),
-			totalPaid: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.TOTAL_PAID', {
+			dueDate: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.DUE_DATE', { lang: language }),
+			totalValue: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICE_ITEM.TOTAL_VALUE', {
 				lang: language
 			}),
-			receivedFrom: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.RECEIVED_FROM', {
+			totalPaid: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.TOTAL_PAID', {
 				lang: language
 			}),
-			receiver: await this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.RECEIVER', { lang: language })
+			receivedFrom: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.RECEIVED_FROM', {
+				lang: language
+			}),
+			receiver: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAYMENTS.RECEIVER', { lang: language })
 		};
 
 		const docDefinition = await generateInvoicePaymentPdfDefinition(

@@ -2,16 +2,11 @@ import { RelationId, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 import { IKeyResult, IKeyResultUpdate, KeyResultUpdateStatusEnum } from '@gauzy/contracts';
-import {
-	KeyResult,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { KeyResult, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmKeyResultUpdateRepository } from './repository/mikro-orm-keyresult-update.repository';
 
-@MultiORMEntity('key_result_update', { mikroOrmRepository: () => MikroOrmKeyResultUpdateRepository })
+@MultiORMEntity('key_result_update')
 export class KeyResultUpdate extends TenantOrganizationBaseEntity implements IKeyResultUpdate {
-
 	@ApiProperty({ type: () => Number })
 	@MultiORMColumn()
 	update: number;

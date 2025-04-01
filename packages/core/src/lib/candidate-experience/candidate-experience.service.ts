@@ -4,18 +4,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions } from 'typeorm';
 import { TenantAwareCrudService } from './../core/crud';
 import { CandidateExperience } from './candidate-experience.entity';
-import { TypeOrmCandidateExperienceRepository } from './repository/type-orm-candidate-experience.repository';
-import { MikroOrmCandidateExperienceRepository } from './repository/mikro-orm-candidate-experience.repository';
+import { TypeOrmCandidateExperienceRepository } from './repository';
 
 @Injectable()
 export class CandidateExperienceService extends TenantAwareCrudService<CandidateExperience> {
 	constructor(
 		@InjectRepository(CandidateExperience)
-		typeOrmCandidateExperienceRepository: TypeOrmCandidateExperienceRepository,
-
-		mikroOrmCandidateExperienceRepository: MikroOrmCandidateExperienceRepository
+		private readonly typeOrmCandidateExperienceRepository: TypeOrmCandidateExperienceRepository
 	) {
-		super(typeOrmCandidateExperienceRepository, mikroOrmCandidateExperienceRepository);
+		super(typeOrmCandidateExperienceRepository);
 	}
 
 	/**

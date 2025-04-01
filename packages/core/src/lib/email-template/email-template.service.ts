@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, SelectQueryBuilder, WhereExpressionBuilder } from 'typeorm';
 import * as mjml2html from 'mjml';
 import { EmailTemplateEnum, IEmailTemplate, IPagination, LanguagesEnum } from '@gauzy/contracts';
@@ -7,15 +8,15 @@ import { EmailTemplate } from './email-template.entity';
 import { CrudService, PaginationParams } from './../core/crud';
 import { RequestContext } from './../core/context';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { MikroOrmEmailTemplateRepository, TypeOrmEmailTemplateRepository } from './repository';
+import { TypeOrmEmailTemplateRepository } from './repository';
 
 @Injectable()
 export class EmailTemplateService extends CrudService<EmailTemplate> {
 	constructor(
-		typeOrmEmailTemplateRepository: TypeOrmEmailTemplateRepository,
-		mikroOrmEmailTemplateRepository: MikroOrmEmailTemplateRepository
+		@InjectRepository(EmailTemplate)
+		private readonly typeOrmEmailTemplateRepository: TypeOrmEmailTemplateRepository
 	) {
-		super(typeOrmEmailTemplateRepository, mikroOrmEmailTemplateRepository);
+		super(typeOrmEmailTemplateRepository);
 	}
 
 	/**
@@ -33,16 +34,8 @@ export class EmailTemplateService extends CrudService<EmailTemplate> {
 					brandColor: true
 				}
 			},
-			...(params && params.relations
-				? {
-						relations: params.relations
-				  }
-				: {}),
-			...(params && params.order
-				? {
-						order: params.order
-				  }
-				: {})
+			...(params?.relations ? { relations: params.relations } : {}),
+			...(params?.order ? { order: params.order } : {})
 		});
 		query.where((qb: SelectQueryBuilder<EmailTemplate>) => {
 			qb.where(

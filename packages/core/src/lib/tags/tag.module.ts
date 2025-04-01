@@ -9,7 +9,7 @@ import { TagController } from './tag.controller';
 import { TagService } from './tag.service';
 import { Tag } from './tag.entity';
 import { CommandHandlers } from './commands/handlers';
-import { TypeOrmTagRepository } from './repository/type-orm-tag.repository';
+import { TypeOrmTagRepository } from './repository';
 
 @Module({
 	imports: [

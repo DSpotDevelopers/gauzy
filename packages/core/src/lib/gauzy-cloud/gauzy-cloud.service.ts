@@ -10,7 +10,7 @@ import {
 	IRoleMigrateInput,
 	ITenant,
 	IRolePermissionMigrateInput,
-	IUserLoginInput,
+	IUserLoginInput
 } from '@gauzy/contracts';
 
 @Injectable()
@@ -24,12 +24,8 @@ export class GauzyCloudService {
 	 * @param params
 	 * @returns
 	 */
-	migrateUser(
-		params: IUserRegistrationInput
-	): Observable<AxiosResponse<any, any>> {
-		return this._http
-			.post('/api/auth/register', params)
-			.pipe(map((resp: AxiosResponse<any, any>) => resp));
+	migrateUser(params: IUserRegistrationInput): Observable<AxiosResponse<any, any>> {
+		return this._http.post('/api/auth/register', params).pipe(map((resp: AxiosResponse<any, any>) => resp));
 	}
 
 	/**
@@ -40,9 +36,7 @@ export class GauzyCloudService {
 	 * @returns
 	 */
 	extractToken(params: IUserLoginInput): Observable<AxiosResponse<any, any>> {
-		return this._http
-			.post('/api/auth/login', params)
-			.pipe(map((resp: AxiosResponse<any, any>) => resp));
+		return this._http.post('/api/auth/login', params).pipe(map((resp: AxiosResponse<any, any>) => resp));
 	}
 
 	/**
@@ -52,15 +46,12 @@ export class GauzyCloudService {
 	 * @param token
 	 * @returns
 	 */
-	migrateTenant(
-		params: ITenantCreateInput,
-		token: string
-	): Observable<AxiosResponse<any, any>> {
+	migrateTenant(params: ITenantCreateInput, token: string): Observable<AxiosResponse<any, any>> {
 		return this._http
 			.post('/api/tenant', params, {
 				headers: {
-					Authorization: `Bearer ${token}`,
-				},
+					Authorization: `Bearer ${token}`
+				}
 			})
 			.pipe(map((resp: AxiosResponse<any, any>) => resp));
 	}
@@ -72,15 +63,12 @@ export class GauzyCloudService {
 	 * @param token
 	 * @returns
 	 */
-	migrateOrganization(
-		params: IOrganizationCreateInput,
-		token: string
-	): Observable<AxiosResponse<any, any>> {
+	migrateOrganization(params: IOrganizationCreateInput, token: string): Observable<AxiosResponse<any, any>> {
 		return this._http
 			.post('/api/organization', params, {
 				headers: {
-					Authorization: `Bearer ${token}`,
-				},
+					Authorization: `Bearer ${token}`
+				}
 			})
 			.pipe(map((resp: AxiosResponse<any, any>) => resp));
 	}
@@ -93,17 +81,13 @@ export class GauzyCloudService {
 	 * @param tenant
 	 * @returns
 	 */
-	migrateRoles(
-		params: IRoleMigrateInput[],
-		token: string,
-		tenant: ITenant
-	): Observable<AxiosResponse<any, any>> {
+	migrateRoles(params: IRoleMigrateInput[], token: string, tenant: ITenant): Observable<AxiosResponse<any, any>> {
 		return this._http
 			.post('/api/roles/import/migrate', params, {
 				headers: {
 					Authorization: `Bearer ${token}`,
-					'Tenant-Id': `${tenant.id}`,
-				},
+					'Tenant-Id': `${tenant.id}`
+				}
 			})
 			.pipe(map((resp: AxiosResponse<any, any>) => resp));
 	}
@@ -125,8 +109,8 @@ export class GauzyCloudService {
 			.post('/api/role-permissions/import/migrate', params, {
 				headers: {
 					Authorization: `Bearer ${token}`,
-					'Tenant-Id': `${tenant.id}`,
-				},
+					'Tenant-Id': `${tenant.id}`
+				}
 			})
 			.pipe(map((resp: AxiosResponse<any, any>) => resp));
 	}

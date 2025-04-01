@@ -1,4 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+	UnauthorizedException,
+	Logger as NestLogger
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommandBus } from '@nestjs/cqrs';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { FindManyOptions, FindOptionsWhere, In, IsNull, MoreThanOrEqual, Not, SelectQueryBuilder } from 'typeorm';
@@ -31,13 +38,7 @@ import { IAppIntegrationConfig, isNotEmpty } from '@gauzy/common';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { ALPHA_NUMERIC_CODE_LENGTH } from './../constants';
 import { RequestContext } from './../core/context';
-import {
-	MultiORMEnum,
-	freshTimestamp,
-	generateRandomAlphaNumericCode,
-	getArrayIntersection,
-	parseTypeORMFindToMikroOrm
-} from './../core/utils';
+import { freshTimestamp, generateRandomAlphaNumericCode, getArrayIntersection } from './../core/utils';
 import { EmailService } from './../email-send/email.service';
 import { UserService } from '../user/user.service';
 import { RoleService } from './../role/role.service';
@@ -49,27 +50,34 @@ import { OrganizationProjectService } from './../organization-project/organizati
 import { AuthService } from './../auth/auth.service';
 import { User } from './../user/user.entity';
 import { UserOrganizationService } from './../user-organization/user-organization.services';
-import { MikroOrmUserRepository, TypeOrmUserRepository } from '../user/repository';
-import { MikroOrmEmployeeRepository, TypeOrmEmployeeRepository } from '../employee/repository';
-import {
-	MikroOrmOrganizationTeamEmployeeRepository,
-	TypeOrmOrganizationTeamEmployeeRepository
-} from '../organization-team-employee/repository';
-import { MikroOrmInviteRepository, TypeOrmInviteRepository } from './repository';
+import { TypeOrmUserRepository } from '../user/repository';
+import { TypeOrmEmployeeRepository } from '../employee/repository';
+import { TypeOrmOrganizationTeamEmployeeRepository } from '../organization-team-employee/repository';
+import { TypeOrmInviteRepository } from './repository';
 import { Invite } from './invite.entity';
 import { InviteAcceptCommand } from './commands';
+import { OrganizationTeamEmployee } from '../organization-team-employee/organization-team-employee.entity';
+import { Employee } from '../employee/employee.entity';
+import { Logger } from '../logger';
 
 @Injectable()
 export class InviteService extends TenantAwareCrudService<Invite> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmInviteRepository: TypeOrmInviteRepository,
-		readonly mikroOrmInviteRepository: MikroOrmInviteRepository,
-		readonly typeOrmUserRepository: TypeOrmUserRepository,
-		readonly mikroOrmUserRepository: MikroOrmUserRepository,
-		readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		readonly mikroOrmEmployeeRepository: MikroOrmEmployeeRepository,
-		readonly typeOrmOrganizationTeamEmployeeRepository: TypeOrmOrganizationTeamEmployeeRepository,
-		readonly mikroOrmOrganizationTeamEmployeeRepository: MikroOrmOrganizationTeamEmployeeRepository,
+		@InjectRepository(Invite)
+		private readonly typeOrmInviteRepository: TypeOrmInviteRepository,
+
+		@InjectRepository(User)
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
+
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
+		@InjectRepository(OrganizationTeamEmployee)
+		private readonly typeOrmOrganizationTeamEmployeeRepository: TypeOrmOrganizationTeamEmployeeRepository,
+
 		private readonly configService: ConfigService,
 		private readonly emailService: EmailService,
 		private readonly organizationContactService: OrganizationContactService,
@@ -83,7 +91,7 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 		private readonly commandBus: CommandBus,
 		private readonly userOrganizationService: UserOrganizationService
 	) {
-		super(typeOrmInviteRepository, mikroOrmInviteRepository);
+		super(typeOrmInviteRepository);
 	}
 
 	/**
@@ -150,6 +158,8 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 				where: { name: RolesEnum.EMPLOYEE }
 			});
 		} catch (error) {
+			this.logger.error(`Error while finding current role by id: ${error}`);
+
 			// If the current role is not an 'EMPLOYEE' role, fallback to specified 'roleId'
 			role = await this.roleService.findOneByIdString(roleId);
 
@@ -433,18 +443,17 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 		languageCode: LanguagesEnum
 	): Promise<any> {
 		const superAdminUsers: IUser[] = await this.userService.getAdminUsers(organization.tenantId);
-
-		try {
-			for await (const superAdmin of superAdminUsers) {
-				this.emailService.sendAcceptInvitationEmail({
+		for (const superAdmin of superAdminUsers) {
+			this.emailService
+				.sendAcceptInvitationEmail({
 					email: superAdmin.email,
 					employee,
 					organization,
 					languageCode
+				})
+				.catch((error) => {
+					this.logger.error(`Error while sending accept invitation email: ${error}`);
 				});
-			}
-		} catch (e) {
-			console.log('caught', e);
 		}
 	}
 
@@ -457,10 +466,9 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 		const organization: IOrganization = await this.organizationService.findOneByIdString(organizationId);
 		const inviterUser: IUser = await this.userService.findOneByIdString(invitedById);
 
-		const inviteExpiryPeriod =
-			organization && organization.inviteExpiryPeriod
-				? organization.inviteExpiryPeriod
-				: DEFAULT_INVITE_EXPIRY_PERIOD;
+		const inviteExpiryPeriod = organization?.inviteExpiryPeriod
+			? organization.inviteExpiryPeriod
+			: DEFAULT_INVITE_EXPIRY_PERIOD;
 
 		const expireDate = addDays(new Date(), inviteExpiryPeriod);
 
@@ -542,6 +550,7 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 			}
 			throw new BadRequestException();
 		} catch (error) {
+			this.logger.error(`Error while validating invite by token: ${error}`);
 			throw new BadRequestException();
 		}
 	}
@@ -587,7 +596,7 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 			});
 			return await query.getOneOrFail();
 		} catch (error) {
-			console.error(`Cant validate code '${code}' for email '${email}'`, error);
+			this.logger.error(`Cant validate code '${code as string}' for email '${email as string}': ${error}`);
 			throw new BadRequestException();
 		}
 	}
@@ -605,62 +614,29 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 	 */
 	public async findAllInvites(options: PaginationParams<any>) {
 		try {
+			const roleOptions = isNotEmpty(options.where.role)
+				? { role: { ...options.where.role } }
+				: { role: { name: Not(RolesEnum.EMPLOYEE) } };
+			const projectsOptions = isNotEmpty(options.where.projects)
+				? { projects: { id: In(options.where.projects.id) } }
+				: {};
+			const teamsOptions = isNotEmpty(options.where.teams) ? { teams: { id: In(options.where.teams.id) } } : {};
 			return await super.findAll({
-				...(options && options.skip
-					? {
-							skip: options.take * (options.skip - 1)
-					  }
-					: {}),
-				...(options && options.take
-					? {
-							take: options.take
-					  }
-					: {}),
-				...(options && options.relations
-					? {
-							relations: options.relations
-					  }
-					: {}),
+				...(options?.skip ? { skip: options.take * (options.skip - 1) } : {}),
+				...(options?.take ? { take: options.take } : {}),
+				...(options?.relations ? { relations: options.relations } : {}),
 				where: {
 					tenantId: RequestContext.currentTenantId(),
 					...(isNotEmpty(options) && isNotEmpty(options.where) ? options.where : {}),
-					...(isNotEmpty(options) && isNotEmpty(options.where)
-						? isNotEmpty(options.where.role)
-							? {
-									role: {
-										...options.where.role
-									}
-							  }
-							: {
-									role: {
-										name: Not(RolesEnum.EMPLOYEE)
-									}
-							  }
-						: {}),
+					...(isNotEmpty(options) && isNotEmpty(options.where) ? roleOptions : {}),
 					/**
 					 * Organization invites filter by specific projects
 					 */
-					...(isNotEmpty(options) && isNotEmpty(options.where)
-						? isNotEmpty(options.where.projects)
-							? {
-									projects: {
-										id: In(options.where.projects.id)
-									}
-							  }
-							: {}
-						: {}),
+					...(isNotEmpty(options) && isNotEmpty(options.where) ? projectsOptions : {}),
 					/**
 					 * Organization invites filter by specific teams
 					 */
-					...(isNotEmpty(options) && isNotEmpty(options.where)
-						? isNotEmpty(options.where.teams)
-							? {
-									teams: {
-										id: In(options.where.teams.id)
-									}
-							  }
-							: {}
-						: {})
+					...(isNotEmpty(options) && isNotEmpty(options.where) ? teamsOptions : {})
 				}
 			});
 		} catch (error) {
@@ -671,15 +647,11 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 	/**
 	 * Finds invites associated with the current user.
 	 * Retrieves invite items and total count based on the current user's email, status, and expiry date.
-	 * Supports different ORMs (Object-Relational Mappers): MikroORM and TypeORM.
 	 *
 	 * @returns An object containing an array of invite items and the total count of invites.
 	 */
 	async getCurrentUserInvites(): Promise<IPagination<IInvite>> {
 		try {
-			let total: number;
-			let items: Invite[] = [];
-
 			const user = RequestContext.currentUser();
 
 			// Define common parameters for querying
@@ -711,23 +683,11 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 				relations: { teams: true }
 			};
 
-			switch (this.ormType) {
-				case MultiORMEnum.MikroORM:
-					const { where, mikroOptions } = parseTypeORMFindToMikroOrm<Invite>(options as FindManyOptions);
-					[items, total] = (await this.mikroOrmInviteRepository.findAndCount(where, mikroOptions)) as any;
-					items = items.map((entity) => this.serialize(entity)) as Invite[];
-					break;
-				case MultiORMEnum.TypeORM:
-					[items, total] = await this.typeOrmInviteRepository.findAndCount(options);
-					break;
-				default:
-					throw new Error(`Not implemented for ${this.ormType}`);
-			}
+			const [items, total] = await this.typeOrmInviteRepository.findAndCount(options);
 
 			return { items, total };
 		} catch (error) {
-			// Handle the error here, e.g., logging, returning an error response, etc.
-			console.error('An error occurred in get current user invites:', error);
+			this.logger.error(`An error occurred in get current user invites: ${error}`);
 			throw new BadRequestException(error); // Re-throwing the error for higher-level handling if needed
 		}
 	}
@@ -882,8 +842,8 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 					const newTenantUser = await this.createUser(
 						{
 							user: {
-								firstName: (names && names.length && names[0]) || '',
-								lastName: (names && names.length && names[1]) || '',
+								firstName: (names?.length && names[0]) || '',
+								lastName: (names?.length && names[1]) || '',
 								email: email,
 								tenant: tenant,
 								role: role
@@ -916,8 +876,7 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 				select: { status: true }
 			});
 		} catch (error) {
-			// Handle the error here, e.g., logging, returning an error response, etc.
-			console.error('An error occurred when accept invitation by ID:', error);
+			this.logger.error(`An error occurred when accept invitation by ID: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -999,7 +958,14 @@ export class InviteService extends TenantAwareCrudService<Invite> {
 		}
 
 		// Extract integration information
-		let integration = pick(input, ['appName', 'appLogo', 'appSignature', 'appLink', 'companyLink', 'companyName']);
+		const integration = pick(input, [
+			'appName',
+			'appLogo',
+			'appSignature',
+			'appLink',
+			'companyLink',
+			'companyName'
+		]);
 
 		this.emailService.welcomeUser(input.user, languageCode, input.organizationId, input.originalUrl, integration);
 		return user;

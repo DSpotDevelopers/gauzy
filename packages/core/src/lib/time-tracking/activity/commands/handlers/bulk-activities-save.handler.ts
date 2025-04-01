@@ -4,8 +4,8 @@ import { isEmpty, isNotEmpty } from '@gauzy/common';
 import { Activity } from '../../activity.entity';
 import { BulkActivitiesSaveCommand } from '../bulk-activities-save.command';
 import { RequestContext } from '../../../../core/context';
-import { TypeOrmActivityRepository } from '../../repository/type-orm-activity.repository';
-import { TypeOrmEmployeeRepository } from '../../../../employee/repository/type-orm-employee.repository';
+import { TypeOrmActivityRepository } from '../../repository';
+import { TypeOrmEmployeeRepository } from '../../../../employee/repository';
 
 @CommandHandler(BulkActivitiesSaveCommand)
 export class BulkActivitiesSaveHandler implements ICommandHandler<BulkActivitiesSaveCommand> {

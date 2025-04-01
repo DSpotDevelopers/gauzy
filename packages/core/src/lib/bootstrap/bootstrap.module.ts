@@ -1,20 +1,18 @@
-import { MiddlewareConsumer, Module, NestModule, OnApplicationShutdown } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, OnApplicationShutdown, Logger as NestLogger } from '@nestjs/common';
 import { ConfigModule } from '@gauzy/config';
 import { PluginModule } from '@gauzy/plugin';
 import { AppModule } from '../app/app.module';
-import { Logger, LoggerModule } from '../logger';
+import { Logger } from '../logger';
 
 @Module({
-	imports: [
-		ConfigModule,
-		LoggerModule.forRoot(),
-		PluginModule.init(),
-		AppModule
-	],
+	imports: [ConfigModule, PluginModule.init(), AppModule],
 	providers: [],
 	exports: []
 })
 export class BootstrapModule implements NestModule, OnApplicationShutdown {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	/**
 	 * Configures middleware for the application.
 	 * This method applies middleware to all routes in the application.
@@ -33,7 +31,7 @@ export class BootstrapModule implements NestModule, OnApplicationShutdown {
 	 */
 	async onApplicationShutdown(signal: string) {
 		if (signal) {
-			Logger.log(`Received shutdown signal: ${signal}`);
+			this.logger.log(`Received shutdown signal: ${signal}`);
 
 			// Check if tracing is enabled through the environment variable
 			if (process.env.OTEL_ENABLED === 'true') {
@@ -50,7 +48,7 @@ export class BootstrapModule implements NestModule, OnApplicationShutdown {
 
 			// Handle specific signal logic
 			if (signal === 'SIGTERM') {
-				Logger.log('SIGTERM shutting down. Please wait...');
+				this.logger.log('SIGTERM shutting down. Please wait...');
 			}
 		}
 	}

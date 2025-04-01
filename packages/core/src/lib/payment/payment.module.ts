@@ -8,7 +8,7 @@ import { PaymentService } from './payment.service';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { PaymentMapService } from './payment.map.service';
 import { EmailSendModule } from './../email-send/email-send.module';
-import { TypeOrmPaymentRepository } from './repository/type-orm-payment.repository';
+import { TypeOrmPaymentRepository } from './repository';
 
 @Module({
 	imports: [

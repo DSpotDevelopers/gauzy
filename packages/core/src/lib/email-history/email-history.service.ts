@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { IEmailHistory, IPagination } from '@gauzy/contracts';
 import { PaginationParams, TenantAwareCrudService } from '../core/crud';
 import { RequestContext } from '../core/context';
 import { EmailHistory } from './email-history.entity';
-import { MikroOrmEmailHistoryRepository, TypeOrmEmailHistoryRepository } from './repository';
-
+import { TypeOrmEmailHistoryRepository } from './repository';
 @Injectable()
 export class EmailHistoryService extends TenantAwareCrudService<EmailHistory> {
 	constructor(
-		typeOrmEmailHistoryRepository: TypeOrmEmailHistoryRepository,
-		mikroOrmEmailHistoryRepository: MikroOrmEmailHistoryRepository
+		@InjectRepository(EmailHistory)
+		private readonly typeOrmEmailHistoryRepository: TypeOrmEmailHistoryRepository
 	) {
-		super(typeOrmEmailHistoryRepository, mikroOrmEmailHistoryRepository);
+		super(typeOrmEmailHistoryRepository);
 	}
 
 	/**
@@ -35,7 +35,7 @@ export class EmailHistoryService extends TenantAwareCrudService<EmailHistory> {
 			isArchived: false
 		});
 
-		query.take(filter.take ? (filter.take as number) : 20);
+		query.take(filter.take ? filter.take : 20);
 		query.orderBy(`${query.alias}.createdAt`, 'DESC');
 
 		const [items, total] = await query.getManyAndCount();

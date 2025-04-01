@@ -1,16 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import {
-	ValidationArguments,
-	ValidatorConstraint,
-	ValidatorConstraintInterface
-} from "class-validator";
-import { isEmpty } from "@gauzy/common";
-import { RequestContext } from "../../../core/context";
-import { MultiORM, MultiORMEnum, getORMType } from "../../../core/utils";
-import { MikroOrmRoleRepository, TypeOrmRoleRepository } from "../../../role/repository";
-
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
+import { Injectable } from '@nestjs/common';
+import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
+import { isEmpty } from '@gauzy/common';
+import { RequestContext } from '../../../core/context';
+import { TypeOrmRoleRepository } from '../../../role/repository';
 
 /**
  * Role already existed validation constraint
@@ -18,14 +10,10 @@ const ormType: MultiORM = getORMType();
  * @param validationOptions
  * @returns
  */
-@ValidatorConstraint({ name: "IsRoleAlreadyExist", async: true })
+@ValidatorConstraint({ name: 'IsRoleAlreadyExist', async: true })
 @Injectable()
 export class RoleAlreadyExistConstraint implements ValidatorConstraintInterface {
-
-	constructor(
-		readonly typeOrmRoleRepository: TypeOrmRoleRepository,
-		readonly mikroOrmRoleRepository: MikroOrmRoleRepository,
-	) { }
+	constructor(readonly typeOrmRoleRepository: TypeOrmRoleRepository) {}
 
 	/**
 	 * Validates if a role with the given name does not exist for the current tenant.
@@ -38,14 +26,7 @@ export class RoleAlreadyExistConstraint implements ValidatorConstraintInterface 
 
 		const tenantId: string = RequestContext.currentTenantId();
 		try {
-			switch (ormType) {
-				case MultiORMEnum.MikroORM:
-					return !await this.mikroOrmRoleRepository.findOneOrFail({ name, tenantId });
-				case MultiORMEnum.TypeORM:
-					return !await this.typeOrmRoleRepository.findOneByOrFail({ name, tenantId });
-				default:
-					throw new Error(`Not implemented for ${ormType}`);
-			}
+			return !(await this.typeOrmRoleRepository.findOneByOrFail({ name, tenantId }));
 		} catch (error) {
 			// Check the specific error type (e.g., EntityNotFoundError) to ensure the error is due to the role not being found
 			// Consider logging or handling other types of errors if necessary

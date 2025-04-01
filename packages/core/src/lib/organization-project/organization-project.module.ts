@@ -10,8 +10,8 @@ import { CommandHandlers } from './commands/handlers';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { RoleModule } from './../role/role.module';
 import { EmployeeModule } from './../employee/employee.module';
-import { TypeOrmOrganizationProjectRepository } from './repository/type-orm-organization-project.repository';
-import { TypeOrmOrganizationProjectEmployeeRepository } from './repository/type-orm-organization-project-employee.repository';
+import { TypeOrmOrganizationProjectRepository } from './repository';
+import { TypeOrmOrganizationProjectEmployeeRepository } from './repository';
 
 @Module({
 	imports: [

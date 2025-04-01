@@ -1,6 +1,4 @@
 import { JoinColumn, JoinTable, RelationId } from 'typeorm';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
 import {
@@ -57,13 +55,10 @@ import {
 	MultiORMOneToMany,
 	VirtualMultiOrmColumn
 } from './../core/decorators/entity';
-import { MikroOrmTaskRepository } from './repository/mikro-orm-task.repository';
 
-@MultiORMEntity('task', { mikroOrmRepository: () => MikroOrmTaskRepository })
+@MultiORMEntity('task')
 @ColumnIndex('taskNumber', ['projectId', 'number'], { unique: true })
 export class Task extends TenantOrganizationBaseEntity implements ITask {
-	[EntityRepositoryType]?: MikroOrmTaskRepository;
-
 	@MultiORMColumn({
 		nullable: true,
 		...(isMySQL() ? { type: 'bigint' } : {})

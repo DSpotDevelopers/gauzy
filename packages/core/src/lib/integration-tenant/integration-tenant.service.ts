@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, IsNull, Not } from 'typeorm';
 import {
 	ID,
@@ -13,16 +14,19 @@ import {
 import { RequestContext } from '../core/context';
 import { TenantAwareCrudService } from '../core/crud';
 import { IntegrationTenant } from './integration-tenant.entity';
-import { MikroOrmIntegrationTenantRepository } from './repository/mikro-orm-integration-tenant.repository';
-import { TypeOrmIntegrationTenantRepository } from './repository/type-orm-integration-tenant.repository';
+import { TypeOrmIntegrationTenantRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class IntegrationTenantService extends TenantAwareCrudService<IntegrationTenant> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		typeOrmIntegrationTenantRepository: TypeOrmIntegrationTenantRepository,
-		mikroOrmIntegrationTenantRepository: MikroOrmIntegrationTenantRepository
+		@InjectRepository(IntegrationTenant)
+		private readonly typeOrmIntegrationTenantRepository: TypeOrmIntegrationTenantRepository
 	) {
-		super(typeOrmIntegrationTenantRepository, mikroOrmIntegrationTenantRepository);
+		super(typeOrmIntegrationTenantRepository);
 	}
 
 	/**
@@ -53,7 +57,8 @@ export class IntegrationTenantService extends TenantAwareCrudService<Integration
 	async create(input: IIntegrationTenantCreateInput): Promise<IIntegrationTenant> {
 		try {
 			const tenantId = RequestContext.currentTenantId() ?? input.tenantId;
-			let { organizationId, entitySettings = [], settings = [] } = input;
+			const organizationId = input.organizationId;
+			let { entitySettings = [], settings = [] } = input;
 
 			settings = settings.map((item: IIntegrationSetting) => ({
 				...item,
@@ -75,7 +80,7 @@ export class IntegrationTenantService extends TenantAwareCrudService<Integration
 				entitySettings
 			});
 		} catch (error) {
-			console.log('Error while creating integration tenant:', error);
+			this.logger.error(`Error while creating integration tenant: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -141,7 +146,7 @@ export class IntegrationTenantService extends TenantAwareCrudService<Integration
 				}
 			});
 		} catch (error) {
-			console.error('Error occurred while retrieving integration tenant settings:', error?.message);
+			this.logger.error(`Error occurred while retrieving integration tenant settings: ${error?.message}`);
 			return null;
 		}
 	}

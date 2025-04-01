@@ -7,7 +7,7 @@ import { DeleteTimeSpanCommand } from '../../../time-log/commands/delete-time-sp
 import { DeleteTimeSlotCommand } from '../delete-time-slot.command';
 import { RequestContext } from './../../../../core/context';
 import { prepareSQLQuery as p } from './../../../../database/database.helper';
-import { TypeOrmTimeSlotRepository } from '../../repository/type-orm-time-slot.repository';
+import { TypeOrmTimeSlotRepository } from '../../repository';
 
 @CommandHandler(DeleteTimeSlotCommand)
 export class DeleteTimeSlotHandler implements ICommandHandler<DeleteTimeSlotCommand> {

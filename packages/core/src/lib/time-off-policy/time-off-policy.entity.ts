@@ -9,9 +9,8 @@ import {
 	MultiORMManyToMany,
 	MultiORMOneToMany
 } from './../core/decorators/entity';
-import { MikroOrmTimeOffPolicyRepository } from './repository/mikro-orm-time-off-policy.repository';
 
-@MultiORMEntity('time_off_policy', { mikroOrmRepository: () => MikroOrmTimeOffPolicyRepository })
+@MultiORMEntity('time_off_policy')
 export class TimeOffPolicy extends TenantOrganizationBaseEntity implements ITimeOffPolicy {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()

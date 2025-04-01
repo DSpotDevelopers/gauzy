@@ -2,18 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CrudService } from '../core/crud';
 import { Integration } from './integration.entity';
-import { TypeOrmIntegrationRepository } from './repository/type-orm-integration.repository';
-import { MikroOrmIntegrationRepository } from './repository/mikro-orm-integration.repository';
+import { TypeOrmIntegrationRepository } from './repository';
 
 @Injectable()
 export class IntegrationService extends CrudService<Integration> {
-
 	constructor(
 		@InjectRepository(Integration)
-		typeOrmIntegrationRepository: TypeOrmIntegrationRepository,
-
-		mikroOrmIntegrationRepository: MikroOrmIntegrationRepository
+		private readonly typeOrmIntegrationRepository: TypeOrmIntegrationRepository
 	) {
-		super(typeOrmIntegrationRepository, mikroOrmIntegrationRepository);
+		super(typeOrmIntegrationRepository);
 	}
 }

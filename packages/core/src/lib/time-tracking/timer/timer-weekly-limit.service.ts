@@ -1,19 +1,15 @@
-import { Injectable, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, ConflictException, Logger as NestLogger } from '@nestjs/common';
 import * as moment from 'moment';
-import {
-	ITimeLog,
-	IEmployee,
-	IWeeklyLimitStatus
-} from '@gauzy/contracts';
-
+import { ITimeLog, IEmployee, IWeeklyLimitStatus } from '@gauzy/contracts';
 import { StatisticService } from '../statistic/statistic.service';
-
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TimerWeeklyLimitService {
-	private readonly logger = new Logger(`GZY - ${TimerWeeklyLimitService.name}`);
+	@Logger()
+	private readonly logger: NestLogger;
 
-	constructor(private readonly _statisticService: StatisticService) { }
+	constructor(private readonly _statisticService: StatisticService) {}
 
 	/**
 	 * Check if the employee has reached the weekly limit

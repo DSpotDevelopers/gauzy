@@ -4,25 +4,18 @@ import { ProductOptionTranslation } from './../core/entities/internal';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IProductOptionTranslatable, IProductOptionTranslation } from '@gauzy/contracts';
 import { ProductOption } from './product-option.entity';
-import { TypeOrmProductOptionRepository } from './repository/type-orm-product-option.repository';
-import { MikroOrmProductOptionRepository } from './repository/mikro-orm-product-option.repository';
-import { MikroOrmProductOptionTranslationRepository } from './repository/mikro-orm-product-option-translation.repository';
-import { TypeOrmProductOptionTranslationRepository } from './repository/type-orm-product-option-translation.repository';
+import { TypeOrmProductOptionTranslationRepository, TypeOrmProductOptionRepository } from './repository';
 
 @Injectable()
 export class ProductOptionService extends TenantAwareCrudService<ProductOption> {
 	constructor(
 		@InjectRepository(ProductOption)
-		typeOrmProductOptionRepository: TypeOrmProductOptionRepository,
-
-		mikroOrmProductOptionRepository: MikroOrmProductOptionRepository,
+		private readonly typeOrmProductOptionRepository: TypeOrmProductOptionRepository,
 
 		@InjectRepository(ProductOptionTranslation)
-		private typeOrmProductOptionTranslationRepository: TypeOrmProductOptionTranslationRepository,
-
-		mikroOrmProductOptionTranslationRepository: MikroOrmProductOptionTranslationRepository
+		private readonly typeOrmProductOptionTranslationRepository: TypeOrmProductOptionTranslationRepository
 	) {
-		super(typeOrmProductOptionRepository, mikroOrmProductOptionRepository);
+		super(typeOrmProductOptionRepository);
 	}
 
 	async saveProductOptionTranslations(

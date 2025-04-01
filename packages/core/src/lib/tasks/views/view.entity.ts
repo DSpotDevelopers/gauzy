@@ -20,9 +20,8 @@ import {
 	TenantOrganizationBaseEntity
 } from '../../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../../core/decorators/entity';
-import { MikroOrmTaskViewRepository } from './repository/mikro-orm-task-view.repository';
 
-@MultiORMEntity('task_view', { mikroOrmRepository: () => MikroOrmTaskViewRepository })
+@MultiORMEntity('task_view')
 export class TaskView extends TenantOrganizationBaseEntity implements ITaskView {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()

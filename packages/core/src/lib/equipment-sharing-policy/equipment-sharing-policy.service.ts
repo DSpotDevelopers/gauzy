@@ -1,15 +1,15 @@
-import { TenantAwareCrudService } from './../core/crud';
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { TenantAwareCrudService } from './../core/crud';
 import { EquipmentSharingPolicy } from './equipment-sharing-policy.entity';
-import { TypeOrmEquipmentSharingPolicyRepository } from './repository/type-orm-equipment-sharing-policy.repository';
-import { MikroOrmEquipmentSharingPolicyRepository } from './repository/mikro-orm-equipment-sharing-policy.repository';
+import { TypeOrmEquipmentSharingPolicyRepository } from './repository';
 
 @Injectable()
 export class EquipmentSharingPolicyService extends TenantAwareCrudService<EquipmentSharingPolicy> {
 	constructor(
-		typeOrmEquipmentSharingPolicyRepository: TypeOrmEquipmentSharingPolicyRepository,
-		mikroOrmEquipmentSharingPolicyRepository: MikroOrmEquipmentSharingPolicyRepository
+		@InjectRepository(EquipmentSharingPolicy)
+		private readonly typeOrmEquipmentSharingPolicyRepository: TypeOrmEquipmentSharingPolicyRepository
 	) {
-		super(typeOrmEquipmentSharingPolicyRepository, mikroOrmEquipmentSharingPolicyRepository);
+		super(typeOrmEquipmentSharingPolicyRepository);
 	}
 }

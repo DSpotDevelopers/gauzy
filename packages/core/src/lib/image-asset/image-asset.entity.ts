@@ -11,9 +11,8 @@ import {
 	MultiORMOneToMany,
 	VirtualMultiOrmColumn
 } from './../core/decorators/entity';
-import { MikroOrmImageAssetRepository } from './repository/mikro-orm-image-asset.repository';
 
-@MultiORMEntity('image_asset', { mikroOrmRepository: () => MikroOrmImageAssetRepository })
+@MultiORMEntity('image_asset')
 export class ImageAsset extends TenantOrganizationBaseEntity implements IImageAsset {
 	@ApiPropertyOptional({ type: () => String })
 	@IsOptional()

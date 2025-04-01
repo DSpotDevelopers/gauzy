@@ -10,9 +10,8 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToOne
 } from './../core/decorators/entity';
-import { MikroOrmDealRepository } from './repository/mikro-orm-deal.repository';
 
-@MultiORMEntity('deal', { mikroOrmRepository: () => MikroOrmDealRepository })
+@MultiORMEntity('deal')
 export class Deal extends TenantOrganizationBaseEntity implements IDeal {
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()

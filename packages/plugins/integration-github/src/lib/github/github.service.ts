@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, switchMap } from 'rxjs';
@@ -12,7 +12,7 @@ import {
 	IntegrationEnum,
 	SYNC_TAG_GITHUB
 } from '@gauzy/contracts';
-import { IntegrationService, IntegrationTenantUpdateOrCreateCommand, RequestContext } from '@gauzy/core';
+import { IntegrationService, IntegrationTenantUpdateOrCreateCommand, RequestContext, Logger } from '@gauzy/core';
 import { DEFAULT_ENTITY_SETTINGS, ISSUE_TIED_ENTITIES } from './github-entity-settings';
 import { GITHUB_ACCESS_TOKEN_URL } from './github.config';
 
@@ -21,7 +21,8 @@ const { github } = environment;
 
 @Injectable()
 export class GithubService {
-	private readonly logger = new Logger('GithubService');
+	@Logger()
+	private readonly logger: NestLogger;
 
 	constructor(
 		private readonly _http: HttpService,
@@ -39,7 +40,7 @@ export class GithubService {
 	public async addGithubAppInstallation(input: IGithubAppInstallInput): Promise<IIntegrationTenant> {
 		try {
 			// Validate the input data (You can use class-validator for validation)
-			if (!input || !input.installation_id || !input.setup_action) {
+			if (!input?.installation_id || !input?.setup_action) {
 				throw new HttpException('Invalid github input data', HttpStatus.BAD_REQUEST);
 			}
 
@@ -124,7 +125,7 @@ export class GithubService {
 	async oAuthEndpointAuthorization(input: IOAuthAppInstallInput): Promise<IIntegrationTenant> {
 		try {
 			// Validate the input data (You can use class-validator for validation)
-			if (!input || !input.code) {
+			if (!input?.code) {
 				throw new HttpException('Invalid input data', HttpStatus.BAD_REQUEST);
 			}
 

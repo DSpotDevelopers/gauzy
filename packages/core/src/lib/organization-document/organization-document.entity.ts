@@ -4,11 +4,9 @@ import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { IImageAsset as IDocumentAsset, IOrganizationDocument } from '@gauzy/contracts';
 import { ImageAsset, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmOrganizationDocumentRepository } from './repository/mikro-orm-organization-document.repository';
 
-@MultiORMEntity('organization_document', { mikroOrmRepository: () => MikroOrmOrganizationDocumentRepository })
+@MultiORMEntity('organization_document')
 export class OrganizationDocument extends TenantOrganizationBaseEntity implements IOrganizationDocument {
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsString()

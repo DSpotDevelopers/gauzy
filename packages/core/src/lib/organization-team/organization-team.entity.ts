@@ -54,9 +54,8 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from './../core/decorators/entity';
-import { MikroOrmOrganizationTeamRepository } from './repository/mikro-orm-organization-team.repository';
 
-@MultiORMEntity('organization_team', { mikroOrmRepository: () => MikroOrmOrganizationTeamRepository })
+@MultiORMEntity('organization_team')
 export class OrganizationTeam extends TenantOrganizationBaseEntity implements IOrganizationTeam {
 	/**
 	 * Team name

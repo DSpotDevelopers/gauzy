@@ -1,28 +1,19 @@
-import {
-	RelationId,
-	JoinColumn,
-	JoinTable
-} from 'typeorm';
+import { RelationId, JoinColumn, JoinTable } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	IsNotEmpty,
-	IsString,
-	IsNumber,
-	IsOptional,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 import { IEmployee, IEventType, ITag } from '@gauzy/contracts';
-import {
-	Employee,
-	Tag,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Employee, Tag, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmEventTypeRepository } from './repository/mikro-orm-event-type.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('event_type', { mikroOrmRepository: () => MikroOrmEventTypeRepository })
+@MultiORMEntity('event_type')
 export class EventType extends TenantOrganizationBaseEntity implements IEventType {
-
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
 	@IsNotEmpty()
@@ -49,7 +40,6 @@ export class EventType extends TenantOrganizationBaseEntity implements IEventTyp
 	@IsOptional()
 	@MultiORMColumn({ nullable: true })
 	description?: string;
-
 
 	/*
 	|--------------------------------------------------------------------------
@@ -89,7 +79,7 @@ export class EventType extends TenantOrganizationBaseEntity implements IEventTyp
 		owner: true,
 		pivotTable: 'tag_event_type',
 		joinColumn: 'tagEventId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_event_type'

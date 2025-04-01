@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+	Injectable,
+	BadRequestException,
+	NotFoundException,
+	ConflictException,
+	Logger as NestLogger
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Brackets, Like, SelectQueryBuilder, WhereExpressionBuilder } from 'typeorm';
 import * as moment from 'moment';
@@ -17,25 +23,23 @@ import { RequestApproval } from '../request-approval/request-approval.entity';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from './../core/context';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { MikroOrmRequestApprovalRepository } from '../request-approval/repository/mikro-orm-request-approval.repository';
-import { TypeOrmRequestApprovalRepository } from '../request-approval/repository/type-orm-request-approval.repository';
-import { MikroOrmTimeOffRequestRepository } from './repository/mikro-orm-time-off-request.repository';
-import { TypeOrmTimeOffRequestRepository } from './repository/type-orm-time-off-request.repository';
+import { TypeOrmRequestApprovalRepository } from '../request-approval/repository';
+import { TypeOrmTimeOffRequestRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class TimeOffRequestService extends TenantAwareCrudService<TimeOffRequest> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(TimeOffRequest)
-		typeOrmTimeOffRequestRepository: TypeOrmTimeOffRequestRepository,
-
-		mikroOrmTimeOffRequestRepository: MikroOrmTimeOffRequestRepository,
+		private readonly typeOrmTimeOffRequestRepository: TypeOrmTimeOffRequestRepository,
 
 		@InjectRepository(RequestApproval)
-		private typeOrmRequestApprovalRepository: TypeOrmRequestApprovalRepository,
-
-		mikroOrmRequestApprovalRepository: MikroOrmRequestApprovalRepository
+		private readonly typeOrmRequestApprovalRepository: TypeOrmRequestApprovalRepository
 	) {
-		super(typeOrmTimeOffRequestRepository, mikroOrmTimeOffRequestRepository);
+		super(typeOrmTimeOffRequestRepository);
 	}
 
 	async create(entity: ITimeOffCreateInput): Promise<TimeOffRequest> {
@@ -104,6 +108,7 @@ export class TimeOffRequestService extends TenantAwareCrudService<TimeOffRequest
 			const items = await query.getMany();
 			return { items, total: items.length };
 		} catch (err) {
+			this.logger.error(`Error while getting all time off requests: ${err}`);
 			throw new BadRequestException(err);
 		}
 	}
@@ -115,6 +120,7 @@ export class TimeOffRequestService extends TenantAwareCrudService<TimeOffRequest
 				...timeOffRequest
 			});
 		} catch (error) {
+			this.logger.error(`Error while updating time off by admin: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -135,6 +141,7 @@ export class TimeOffRequestService extends TenantAwareCrudService<TimeOffRequest
 			}
 			return await this.typeOrmRepository.save(timeOffRequest);
 		} catch (err) {
+			this.logger.error(`Error while updating status time off by admin: ${err}`);
 			throw new BadRequestException(err);
 		}
 	}
@@ -257,7 +264,7 @@ export class TimeOffRequestService extends TenantAwareCrudService<TimeOffRequest
 			const [items, total] = await query.getManyAndCount();
 			return { items, total };
 		} catch (error) {
-			console.log(error);
+			this.logger.error(`Error while pagination: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

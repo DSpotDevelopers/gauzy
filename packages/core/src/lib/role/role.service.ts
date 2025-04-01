@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeleteResult, In, Not } from 'typeorm';
 import { IRole, ITenant, RolesEnum, IRoleMigrateInput, IImportRecord, SYSTEM_DEFAULT_ROLES } from '@gauzy/contracts';
@@ -6,17 +7,17 @@ import { TenantAwareCrudService } from './../core/crud';
 import { Role } from './role.entity';
 import { RequestContext } from './../core/context';
 import { ImportRecordUpdateOrCreateCommand } from './../export-import/import-record';
-import { MikroOrmRoleRepository, TypeOrmRoleRepository } from './repository';
+import { TypeOrmRoleRepository } from './repository';
 
 @Injectable()
 export class RoleService extends TenantAwareCrudService<Role> {
-
 	constructor(
-		readonly typeOrmRoleRepository: TypeOrmRoleRepository,
-		readonly mikroOrmRoleRepository: MikroOrmRoleRepository,
+		@InjectRepository(Role)
+		private readonly typeOrmRoleRepository: TypeOrmRoleRepository,
+
 		private readonly _commandBus: CommandBus
 	) {
-		super(typeOrmRoleRepository, mikroOrmRoleRepository);
+		super(typeOrmRoleRepository);
 	}
 
 	/**
@@ -59,7 +60,7 @@ export class RoleService extends TenantAwareCrudService<Role> {
 	}
 
 	async migrateImportRecord(roles: IRoleMigrateInput[]) {
-		let records: IImportRecord[] = [];
+		const records: IImportRecord[] = [];
 		for await (const item of roles) {
 			const { isImporting, sourceId, name } = item;
 			if (isImporting && sourceId) {

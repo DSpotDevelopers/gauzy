@@ -8,17 +8,11 @@ import {
 } from '@gauzy/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsEnum, IsString } from 'class-validator';
-import {
-	GoalKPITemplate,
-	GoalTemplate,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { GoalKPITemplate, GoalTemplate, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmKeyResultTemplateRepository } from './repository/mikro-orm-keyresult-template.repository';
 
-@MultiORMEntity('key_result_template', { mikroOrmRepository: () => MikroOrmKeyResultTemplateRepository })
+@MultiORMEntity('key_result_template')
 export class KeyResultTemplate extends TenantOrganizationBaseEntity implements IKeyResultTemplate {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;
@@ -65,7 +59,6 @@ export class KeyResultTemplate extends TenantOrganizationBaseEntity implements I
 	@IsOptional()
 	@MultiORMColumn({ nullable: true, relationId: true })
 	kpiId?: string;
-
 
 	@ApiProperty({ type: () => GoalTemplate })
 	@MultiORMManyToOne(() => GoalTemplate, (goalTemplate) => goalTemplate.keyResults, {

@@ -4,11 +4,9 @@ import { Exclude } from 'class-transformer';
 import { IImportHistory, ImportStatusEnum } from '@gauzy/contracts';
 import { TenantBaseEntity } from '../../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, VirtualMultiOrmColumn } from '../../core/decorators/entity';
-import { MikroOrmImportHistoryRepository } from './repository/mikro-orm-import-history.repository';
 
-@MultiORMEntity('import-history', { mikroOrmRepository: () => MikroOrmImportHistoryRepository })
+@MultiORMEntity('import-history')
 export class ImportHistory extends TenantBaseEntity implements IImportHistory {
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@MultiORMColumn()

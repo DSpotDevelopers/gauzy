@@ -279,8 +279,8 @@ export interface IWarehouseProductVariant extends IBasePerTenantEntityModel {
 }
 
 export interface IWarehouseProductCreateInput extends IBasePerTenantEntityModel {
-	productId: String;
-	variantIds: String[];
+	productId: string;
+	variantIds: string[];
 }
 
 export enum BillingInvoicingPolicyEnum {

@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RelationId } from 'typeorm';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import {
 	ICandidate,
@@ -73,12 +71,9 @@ import {
 	TagEntityCustomFields,
 	TypeOrmTagEntityCustomFields
 } from '../core/entities/custom-entity-fields/tag';
-import { MikroOrmTagRepository } from './repository/mikro-orm-tag.repository';
 
-@MultiORMEntity('tag', { mikroOrmRepository: () => MikroOrmTagRepository })
+@MultiORMEntity('tag')
 export class Tag extends TenantOrganizationBaseEntity implements ITag {
-	[EntityRepositoryType]?: MikroOrmTagRepository;
-
 	@ApiProperty({ type: () => String, required: true })
 	@IsNotEmpty()
 	@IsString()

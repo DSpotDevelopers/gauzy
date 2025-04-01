@@ -4,18 +4,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TenantAwareCrudService } from '@gauzy/core';
 import { isNotEmpty } from '@gauzy/common';
 import { HelpCenterAuthor } from './help-center-author.entity';
-import { TypeOrmHelpCenterAuthorRepository } from './repository/type-orm-help-center-author.repository';
-import { MikroOrmHelpCenterAuthorRepository } from './repository/mikro-orm-help-center-author.repository';
+import { TypeOrmHelpCenterAuthorRepository } from './repository';
 
 @Injectable()
 export class HelpCenterAuthorService extends TenantAwareCrudService<HelpCenterAuthor> {
 	constructor(
 		@InjectRepository(HelpCenterAuthor)
-		typeOrmHelpCenterAuthorRepository: TypeOrmHelpCenterAuthorRepository,
-
-		mikroOrmHelpCenterAuthorRepository: MikroOrmHelpCenterAuthorRepository
+		private readonly typeOrmHelpCenterAuthorRepository: TypeOrmHelpCenterAuthorRepository
 	) {
-		super(typeOrmHelpCenterAuthorRepository, mikroOrmHelpCenterAuthorRepository);
+		super(typeOrmHelpCenterAuthorRepository);
 	}
 
 	async findByArticleId(articleId: string): Promise<HelpCenterAuthor[]> {

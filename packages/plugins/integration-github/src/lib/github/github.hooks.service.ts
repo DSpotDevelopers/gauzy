@@ -1,7 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { Context } from 'probot';
-import * as chalk from 'chalk';
 import {
 	GithubPropertyMapEnum,
 	IGithubInstallation,
@@ -9,12 +8,14 @@ import {
 	IGithubRepository,
 	IIntegrationSetting
 } from '@gauzy/contracts';
-import { IntegrationSettingGetCommand, IntegrationSettingGetManyCommand } from '@gauzy/core';
+import { IntegrationSettingGetCommand, IntegrationSettingGetManyCommand, Logger } from '@gauzy/core';
 import { GithubSyncService } from './github-sync.service';
+import chalk from 'chalk';
 
 @Injectable()
 export class GithubHooksService {
-	private readonly logger = new Logger('GithubHooksService');
+	@Logger()
+	private readonly logger: NestLogger;
 
 	constructor(private readonly _commandBus: CommandBus, private readonly _githubSyncService: GithubSyncService) {}
 
@@ -56,7 +57,7 @@ export class GithubHooksService {
 			);
 			return await Promise.all(
 				settings.map(async (setting: IIntegrationSetting) => {
-					if (!setting || !setting.integration) {
+					if (!setting?.integration) {
 						// No integration or setting found; no action needed.
 						return;
 					}
@@ -73,7 +74,7 @@ export class GithubHooksService {
 			);
 		} catch (error) {
 			// Handle errors
-			this.logger.error(`Failed to delete GitHub integration for installation: ${installation?.id}`, error);
+			this.logger.error(`Failed to delete GitHub integration for installation: ${installation?.id}: ${error}`);
 		}
 	}
 
@@ -88,12 +89,12 @@ export class GithubHooksService {
 			const installation = context.payload['installation'] as IGithubInstallation;
 			const issue = context.payload['issue'] as IGithubIssue;
 			const repository = context.payload['repository'] as IGithubRepository;
-			console.log(chalk.magenta(`Syncing GitHub Automation ID: %s`), context.payload['action']);
+			this.logger.log(`Syncing GitHub Automation ID: ${context.payload['action']}`);
 
 			/** Synchronizes automation issues for a GitHub installation. */
 			await this.syncAutomationIssue({ installation, issue, repository });
 		} catch (error) {
-			this.logger.error('Failed to sync in issues and labels', error.message);
+			this.logger.error(`Failed to sync in issues and labels: ${error}`);
 		}
 	}
 
@@ -108,12 +109,12 @@ export class GithubHooksService {
 			const installation = context.payload['installation'] as IGithubInstallation;
 			const issue = context.payload['issue'] as IGithubIssue;
 			const repository = context.payload['repository'] as IGithubRepository;
-			console.log(chalk.magenta(`Syncing GitHub Automation ID: %s`), context.payload['action']);
+			this.logger.log(`Syncing GitHub Automation ID: ${context.payload['action']}`);
 
 			/** Synchronizes automation issues for a GitHub installation. */
 			await this.syncAutomationIssue({ installation, issue, repository });
 		} catch (error) {
-			this.logger.error('Failed to sync in issues and labels', error.message);
+			this.logger.error(`Failed to sync in issues and labels: ${error}`);
 		}
 	}
 
@@ -128,12 +129,12 @@ export class GithubHooksService {
 			const installation = context.payload['installation'] as IGithubInstallation;
 			const issue = context.payload['issue'] as IGithubIssue;
 			const repository = context.payload['repository'] as IGithubRepository;
-			console.log(chalk.magenta(`Syncing GitHub Automation ID: %s`), context.payload['action']);
+			this.logger.log(`Syncing GitHub Automation ID: ${context.payload['action']}`);
 
 			/** Synchronizes automation issues for a GitHub installation. */
 			await this.syncAutomationIssue({ installation, issue, repository });
 		} catch (error) {
-			this.logger.error('Failed to sync in issues and labels', error.message);
+			this.logger.error(`Failed to sync labeled issues and labels: ${error}`);
 		}
 	}
 
@@ -148,12 +149,12 @@ export class GithubHooksService {
 			const installation = context.payload['installation'] as IGithubInstallation;
 			const issue = context.payload['issue'] as IGithubIssue;
 			const repository = context.payload['repository'] as IGithubRepository;
-			console.log(chalk.magenta(`Syncing GitHub Automation ID: %s`), context.payload['action']);
+			this.logger.log(`Syncing GitHub Automation ID: ${context.payload['action']}`);
 
 			/** Synchronizes automation issues for a GitHub installation. */
 			await this.syncAutomationIssue({ installation, issue, repository });
 		} catch (error) {
-			this.logger.error('Failed to sync in issues and labels', error.message);
+			this.logger.error(`Failed to sync unlabeled issues and labels: ${error}`);
 		}
 	}
 
@@ -178,7 +179,7 @@ export class GithubHooksService {
 				await this._githubSyncService.syncAutomationIssue({ integration, issue, repository });
 			}
 		} catch (error) {
-			this.logger.error(`Failed to sync GitHub automation issue: ${installation?.id}`, error.message);
+			this.logger.error(`Failed to sync GitHub automation issue: ${installation?.id}: ${error}`);
 		}
 	}
 
@@ -210,7 +211,7 @@ export class GithubHooksService {
 				})
 			);
 		} catch (error) {
-			this.logger.error(`Failed to fetch GitHub installation setting: ${installation?.id}`, error.message);
+			this.logger.error(`Failed to fetch GitHub installation setting: ${installation?.id}: ${error}`);
 		}
 	}
 }

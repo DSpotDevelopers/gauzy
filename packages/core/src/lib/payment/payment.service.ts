@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Brackets, WhereExpressionBuilder, Raw, SelectQueryBuilder } from 'typeorm';
 import { chain } from 'underscore';
 import * as moment from 'moment';
@@ -11,17 +12,17 @@ import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
 import { EmailService } from './../email-send/email.service';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { MikroOrmPaymentRepository } from './repository/mikro-orm-payment.repository';
-import { TypeOrmPaymentRepository } from './repository/type-orm-payment.repository';
+import { TypeOrmPaymentRepository } from './repository';
 
 @Injectable()
 export class PaymentService extends TenantAwareCrudService<Payment> {
 	constructor(
-		readonly typeOrmPaymentRepository: TypeOrmPaymentRepository,
-		readonly mikroOrmPaymentRepository: MikroOrmPaymentRepository,
+		@InjectRepository(Payment)
+		private readonly typeOrmPaymentRepository: TypeOrmPaymentRepository,
+
 		private readonly emailService: EmailService
 	) {
-		super(typeOrmPaymentRepository, mikroOrmPaymentRepository);
+		super(typeOrmPaymentRepository);
 	}
 
 	/**
@@ -54,12 +55,7 @@ export class PaymentService extends TenantAwareCrudService<Payment> {
 
 		// Set up the find options for the query
 		query.setFindOptions({
-			...(request && request.limit > 0
-				? {
-						take: request.limit,
-						skip: (request.page || 0) * request.limit
-				  }
-				: {}),
+			...(request?.limit > 0 ? { take: request.limit, skip: (request.page || 0) * request.limit } : {}),
 			join: {
 				alias: `${this.tableName}`,
 				leftJoin: {
@@ -109,16 +105,9 @@ export class PaymentService extends TenantAwareCrudService<Payment> {
 
 		// Set up the find options for the query
 		query.setFindOptions({
-			...(request.limit > 0
-				? {
-						take: request.limit,
-						skip: (request.page || 0) * request.limit
-				  }
-				: {}),
-			order: {
-				// Order results by the 'startedAt' field in ascending order
-				paymentDate: 'ASC'
-			}
+			...(request?.limit > 0 ? { take: request.limit, skip: (request.page || 0) * request.limit } : {}),
+			// Order results by the 'paymentDate' field in ascending order
+			order: { paymentDate: 'ASC' }
 		});
 
 		// Set up the where clause using the provided filter function
@@ -162,7 +151,7 @@ export class PaymentService extends TenantAwareCrudService<Payment> {
 	private getFilterQuery(query: SelectQueryBuilder<Payment>, request: IGetPaymentInput) {
 		const tenantId = RequestContext.currentTenantId();
 		const { organizationId, startDate, endDate } = request;
-		let { projectIds = [], contactIds = [] } = request;
+		const { projectIds = [], contactIds = [] } = request;
 
 		// Calculate start and end dates using a utility function
 		const { start, end } = getDateRangeFormat(

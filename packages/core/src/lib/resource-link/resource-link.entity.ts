@@ -1,18 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID } from 'class-validator';
 import { BaseEntityEnum, ID, IResourceLink, IURLMetaData, IUser } from '@gauzy/contracts';
 import { isBetterSqlite3, isSqlite } from '@gauzy/config';
 import { TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmResourceLinkRepository } from './repository/mikro-orm-resource-link.repository';
 
-@MultiORMEntity('resource_link', { mikroOrmRepository: () => MikroOrmResourceLinkRepository })
+@MultiORMEntity('resource_link')
 export class ResourceLink extends TenantOrganizationBaseEntity implements IResourceLink {
-	[EntityRepositoryType]?: MikroOrmResourceLinkRepository;
-
 	@ApiProperty({ enum: BaseEntityEnum })
 	@IsNotEmpty()
 	@IsEnum(BaseEntityEnum)

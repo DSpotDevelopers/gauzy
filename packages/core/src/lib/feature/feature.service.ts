@@ -1,23 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull } from 'typeorm';
-import {
-	FeatureEnum,
-	IFeature,
-	IPagination
-} from '@gauzy/contracts';
+import { FeatureEnum, IFeature, IPagination } from '@gauzy/contracts';
 import { gauzyToggleFeatures } from '@gauzy/config';
 import { Feature } from './feature.entity';
 import { CrudService } from '../core/crud/crud.service';
-import { TypeOrmFeatureRepository } from './repository/type-orm-feature.repository';
-import { MikroOrmFeatureRepository } from './repository/mikro-orm-feature.repository';
-
+import { TypeOrmFeatureRepository } from './repository';
+import { Logger } from '../logger';
 @Injectable()
 export class FeatureService extends CrudService<Feature> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmFeatureRepository: TypeOrmFeatureRepository,
-		readonly mikroOrmFeatureRepository: MikroOrmFeatureRepository
+		@InjectRepository(Feature)
+		private readonly typeOrmFeatureRepository: TypeOrmFeatureRepository
 	) {
-		super(typeOrmFeatureRepository, mikroOrmFeatureRepository);
+		super(typeOrmFeatureRepository);
 	}
 
 	/**
@@ -49,7 +48,7 @@ export class FeatureService extends CrudService<Feature> {
 			const featureFlag = await super.findOneByWhereOptions({ code: flag });
 			return featureFlag.isEnabled;
 		} catch (error) {
-			// Feature flag not found, fallback to default value
+			this.logger.error(`Failed to check if feature ${flag} is enabled: ${error}`);
 			return !!gauzyToggleFeatures[flag];
 		}
 	}

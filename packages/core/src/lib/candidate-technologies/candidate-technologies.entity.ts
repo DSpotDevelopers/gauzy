@@ -1,19 +1,19 @@
 import { JoinColumn, RelationId } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { ICandidateTechnologies, ICandidateInterview, ICandidateCriterionsRating } from '@gauzy/contracts';
-import {
-	CandidateCriterionsRating,
-	CandidateInterview,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { CandidateCriterionsRating, CandidateInterview, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { IsString } from 'class-validator';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmCandidateTechnologiesRepository } from './repository/mikro-orm-candidate-technologies.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('candidate_technology', { mikroOrmRepository: () => MikroOrmCandidateTechnologiesRepository })
+@MultiORMEntity('candidate_technology')
 export class CandidateTechnologies extends TenantOrganizationBaseEntity implements ICandidateTechnologies {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;

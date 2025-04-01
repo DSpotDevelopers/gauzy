@@ -1,17 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsEnum, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { BaseEntityEnum, ID, IMention, IUser } from '@gauzy/contracts';
 import { TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmMentionRepository } from './repository/mikro-orm-mention.repository';
 
-@MultiORMEntity('mention', { mikroOrmRepository: () => MikroOrmMentionRepository })
+@MultiORMEntity('mention')
 export class Mention extends TenantOrganizationBaseEntity implements IMention {
-	[EntityRepositoryType]?: MikroOrmMentionRepository;
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsUUID()

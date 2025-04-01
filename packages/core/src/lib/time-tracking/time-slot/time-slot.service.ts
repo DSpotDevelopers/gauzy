@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommandBus } from '@nestjs/cqrs';
 import { SelectQueryBuilder } from 'typeorm';
 import { PermissionsEnum, IGetTimeSlotInput, ID, ITimeSlot } from '@gauzy/contracts';
@@ -17,17 +18,17 @@ import {
 	UpdateTimeSlotMinutesCommand
 } from './commands';
 import { prepareSQLQuery as p } from './../../database/database.helper';
-import { TypeOrmTimeSlotRepository } from './repository/type-orm-time-slot.repository';
-import { MikroOrmTimeSlotRepository } from './repository/mikro-orm-time-slot.repository';
+import { TypeOrmTimeSlotRepository } from './repository';
 
 @Injectable()
 export class TimeSlotService extends TenantAwareCrudService<TimeSlot> {
 	constructor(
-		readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository,
-		readonly mikroOrmTimeSlotRepository: MikroOrmTimeSlotRepository,
+		@InjectRepository(TimeSlot)
+		private readonly typeOrmTimeSlotRepository: TypeOrmTimeSlotRepository,
+
 		private readonly _commandBus: CommandBus
 	) {
-		super(typeOrmTimeSlotRepository, mikroOrmTimeSlotRepository);
+		super(typeOrmTimeSlotRepository);
 	}
 
 	/**
@@ -217,7 +218,6 @@ export class TimeSlotService extends TenantAwareCrudService<TimeSlot> {
 	 *create time slot minute activity for specific TimeSlot
 	 */
 	async createTimeSlotMinute(request: TimeSlotMinute) {
-		// const { keyboard, mouse, datetime, timeSlot } = request;
 		return await this._commandBus.execute(new CreateTimeSlotMinutesCommand(request));
 	}
 

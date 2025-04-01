@@ -1,16 +1,11 @@
 import { RelationId } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { ICandidateInterviewers, ICandidateInterview, IEmployee } from '@gauzy/contracts';
-import {
-	CandidateInterview,
-	Employee,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { CandidateInterview, Employee, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { IsString } from 'class-validator';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmCandidateInterviewersRepository } from './repository/mikro-orm-candidate-interviewers.repository';
 
-@MultiORMEntity('candidate_interviewer', { mikroOrmRepository: () => MikroOrmCandidateInterviewersRepository })
+@MultiORMEntity('candidate_interviewer')
 export class CandidateInterviewers extends TenantOrganizationBaseEntity implements ICandidateInterviewers {
 	/*
 	|--------------------------------------------------------------------------

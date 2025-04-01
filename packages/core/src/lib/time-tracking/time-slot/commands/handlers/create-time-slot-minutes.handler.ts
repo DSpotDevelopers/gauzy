@@ -4,21 +4,18 @@ import { CreateTimeSlotMinutesCommand } from '../create-time-slot-minutes.comman
 import { TimeSlotMinute } from './../../time-slot-minute.entity';
 import { UpdateTimeSlotMinutesCommand } from '../update-time-slot-minutes.command';
 import { RequestContext } from '../../../../core/context';
-import { TypeOrmTimeSlotMinuteRepository } from '../../repository/type-orm-time-slot-minute.repository';
+import { TypeOrmTimeSlotMinuteRepository } from '../../repository';
 
 @CommandHandler(CreateTimeSlotMinutesCommand)
 export class CreateTimeSlotMinutesHandler implements ICommandHandler<CreateTimeSlotMinutesCommand> {
-
 	constructor(
 		@InjectRepository(TimeSlotMinute)
 		private readonly typeOrmTimeSlotMinuteRepository: TypeOrmTimeSlotMinuteRepository,
 
 		private readonly commandBus: CommandBus
-	) { }
+	) {}
 
-	public async execute(
-		command: CreateTimeSlotMinutesCommand
-	): Promise<TimeSlotMinute> {
+	public async execute(command: CreateTimeSlotMinutesCommand): Promise<TimeSlotMinute> {
 		const { input } = command;
 		const { id: timeSlotId } = input.timeSlot;
 

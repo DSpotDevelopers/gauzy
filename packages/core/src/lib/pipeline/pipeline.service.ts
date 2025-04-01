@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOneOptions, FindOptionsWhere, Raw, UpdateResult } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { ID, IDeal, IPagination, IPipeline, IPipelineStage } from '@gauzy/contracts';
@@ -9,20 +10,31 @@ import { Pipeline } from './pipeline.entity';
 import { PipelineStage } from './../core/entities/internal';
 import { RequestContext } from '../core/context';
 import { TenantAwareCrudService } from './../core/crud';
+import { Deal } from '../deal/deal.entity';
 import { TypeOrmDealRepository } from '../deal/repository';
+import { User } from '../user/user.entity';
 import { TypeOrmUserRepository } from '../user/repository';
-import { MikroOrmPipelineRepository, TypeOrmPipelineRepository } from './repository';
+import { TypeOrmPipelineRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class PipelineService extends TenantAwareCrudService<Pipeline> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	public constructor(
-		readonly typeOrmPipelineRepository: TypeOrmPipelineRepository,
-		readonly mikroOrmPipelineRepository: MikroOrmPipelineRepository,
-		readonly typeOrmDealRepository: TypeOrmDealRepository,
-		readonly typeOrmUserRepository: TypeOrmUserRepository,
+		@InjectRepository(Pipeline)
+		private readonly typeOrmPipelineRepository: TypeOrmPipelineRepository,
+
+		@InjectRepository(Deal)
+		private readonly typeOrmDealRepository: TypeOrmDealRepository,
+
+		@InjectRepository(User)
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
+
 		readonly connectionEntityManager: ConnectionEntityManager
 	) {
-		super(typeOrmPipelineRepository, mikroOrmPipelineRepository);
+		super(typeOrmPipelineRepository);
 	}
 
 	/**
@@ -141,7 +153,7 @@ export class PipelineService extends TenantAwareCrudService<Pipeline> {
 
 			return updatePipeline;
 		} catch (error) {
-			console.log('Rollback Pipeline Transaction', error);
+			this.logger.error(`Error while updating pipeline: ${error}`);
 			await queryRunner.rollbackTransaction();
 		} finally {
 			await queryRunner.release();

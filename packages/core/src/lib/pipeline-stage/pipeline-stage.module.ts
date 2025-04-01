@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PipelineStage } from './pipeline-stage.entity';
 import { StageService } from './pipeline-stage.service';
-import { TypeOrmPipelineStageRepository } from './repository/type-orm-pipeline-stage.repository';
+import { TypeOrmPipelineStageRepository } from './repository';
 
 @Module({
 	imports: [TypeOrmModule.forFeature([PipelineStage]), MikroOrmModule.forFeature([PipelineStage])],

@@ -1,23 +1,27 @@
 import { IOrganization, IOrganizationContact, IPagination } from '@gauzy/contracts';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere } from 'typeorm';
 import { Organization, OrganizationContact, OrganizationProject } from './../../core/entities/internal';
-import { TypeOrmOrganizationRepository } from '../../organization/repository/type-orm-organization.repository';
-import { TypeOrmOrganizationContactRepository } from '../../organization-contact/repository/type-orm-organization-contact.repository';
-import { TypeOrmOrganizationProjectRepository } from '../../organization-project/repository/type-orm-organization-project.repository';
+import { TypeOrmOrganizationRepository } from '../../organization/repository';
+import { TypeOrmOrganizationContactRepository } from '../../organization-contact/repository';
+import { TypeOrmOrganizationProjectRepository } from '../../organization-project/repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class PublicOrganizationService {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(Organization)
-		private typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
+		private readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
 
 		@InjectRepository(OrganizationContact)
-		private typeOrmOrganizationContactRepository: TypeOrmOrganizationContactRepository,
+		private readonly typeOrmOrganizationContactRepository: TypeOrmOrganizationContactRepository,
 
 		@InjectRepository(OrganizationProject)
-		private typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository
+		private readonly typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository
 	) {}
 
 	/**
@@ -34,6 +38,7 @@ export class PublicOrganizationService {
 				relations
 			});
 		} catch (error) {
+			this.logger.error(`Error while finding organization by profile link: ${error}`);
 			throw new NotFoundException(`The requested record was not found`);
 		}
 	}
@@ -51,6 +56,7 @@ export class PublicOrganizationService {
 			const [items = [], total = 0] = await this.typeOrmOrganizationContactRepository.findAndCountBy(options);
 			return { items, total };
 		} catch (error) {
+			this.logger.error(`Error while finding public clients by organization: ${error}`);
 			throw new NotFoundException(`The requested public clients was not found`);
 		}
 	}
@@ -61,10 +67,11 @@ export class PublicOrganizationService {
 	 * @param options
 	 * @returns
 	 */
-	async findPublicClientCountsByOrganization(options: FindOptionsWhere<OrganizationContact>): Promise<Number> {
+	async findPublicClientCountsByOrganization(options: FindOptionsWhere<OrganizationContact>): Promise<number> {
 		try {
 			return await this.typeOrmOrganizationContactRepository.countBy(options);
 		} catch (error) {
+			this.logger.error(`Error while finding public client counts by organization: ${error}`);
 			throw new NotFoundException(`The requested client counts was not found`);
 		}
 	}
@@ -75,10 +82,11 @@ export class PublicOrganizationService {
 	 * @param options
 	 * @returns
 	 */
-	async findPublicProjectCountsByOrganization(options: FindOptionsWhere<OrganizationProject>): Promise<Number> {
+	async findPublicProjectCountsByOrganization(options: FindOptionsWhere<OrganizationProject>): Promise<number> {
 		try {
 			return await this.typeOrmOrganizationProjectRepository.countBy(options);
 		} catch (error) {
+			this.logger.error(`Error while finding public project counts by organization: ${error}`);
 			throw new NotFoundException(`The requested project counts was not found`);
 		}
 	}

@@ -1,32 +1,31 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult } from 'typeorm';
-import { Knex as KnexConnection } from 'knex';
-import { InjectConnection } from 'nest-knexjs';
-import { IOrganization, IPagination, ITaskSize, ITaskSizeCreateInput, ITaskSizeFindInput, ITenant } from '@gauzy/contracts';
-import { isPostgres } from '@gauzy/config';
+import {
+	IOrganization,
+	IPagination,
+	ITaskSize,
+	ITaskSizeCreateInput,
+	ITaskSizeFindInput,
+	ITenant
+} from '@gauzy/contracts';
 import { RequestContext } from '../../core/context';
-import { MultiORMEnum } from '../../core/utils';
 import { TaskStatusPrioritySizeService } from '../task-status-priority-size.service';
 import { TaskSize } from './size.entity';
 import { DEFAULT_GLOBAL_SIZES } from './default-global-sizes';
-import { TypeOrmTaskSizeRepository } from './repository/type-orm-task-size.repository';
-import { MikroOrmTaskSizeRepository } from './repository/mikro-orm-task-size.repository';
-
+import { TypeOrmTaskSizeRepository } from './repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TaskSizeService extends TaskStatusPrioritySizeService<TaskSize> {
+	@Logger()
+	protected readonly logger: NestLogger;
 
 	constructor(
 		@InjectRepository(TaskSize)
-		readonly typeOrmTaskSizeRepository: TypeOrmTaskSizeRepository,
-
-		readonly mikroOrmTaskSizeRepository: MikroOrmTaskSizeRepository,
-
-		@InjectConnection()
-		readonly knexConnection: KnexConnection
+		private readonly typeOrmTaskSizeRepository: TypeOrmTaskSizeRepository
 	) {
-		super(typeOrmTaskSizeRepository, mikroOrmTaskSizeRepository, knexConnection);
+		super(typeOrmTaskSizeRepository);
 	}
 
 	/**
@@ -39,7 +38,7 @@ export class TaskSizeService extends TaskStatusPrioritySizeService<TaskSize> {
 		return await super.delete(id, {
 			where: {
 				isSystem: false
-			},
+			}
 		});
 	}
 
@@ -51,14 +50,13 @@ export class TaskSizeService extends TaskStatusPrioritySizeService<TaskSize> {
 	 */
 	public async fetchAll(params: ITaskSizeFindInput): Promise<IPagination<ITaskSize>> {
 		try {
-			if (this.ormType == MultiORMEnum.TypeORM && isPostgres()) {
-				return await super.fetchAllByKnex(params);
-			} else {
-				return await super.fetchAll(params);
-			}
+			return await super.fetchAll(params);
 		} catch (error) {
-			console.log('Failed to retrieve task sizes. Please ensure that all required parameters are provided correctly.', error);
-			throw new BadRequestException('Failed to retrieve task sizes. Ensure that the provided parameters are valid and complete.', error);
+			this.logger.error(`Failed to retrieve task sizes: ${error}`);
+			throw new BadRequestException(
+				'Failed to retrieve task sizes. Ensure that the provided parameters are valid and complete.',
+				error
+			);
 		}
 	}
 
@@ -83,6 +81,7 @@ export class TaskSizeService extends TaskStatusPrioritySizeService<TaskSize> {
 			}
 			return await this.typeOrmRepository.save(sizes);
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task sizes for tenants: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -115,6 +114,7 @@ export class TaskSizeService extends TaskStatusPrioritySizeService<TaskSize> {
 			}
 			return await this.typeOrmRepository.save(sizes);
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task sizes for organization: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
@@ -150,6 +150,7 @@ export class TaskSizeService extends TaskStatusPrioritySizeService<TaskSize> {
 
 			return sizes;
 		} catch (error) {
+			this.logger.error(`Failed to create bulk task sizes for organization: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

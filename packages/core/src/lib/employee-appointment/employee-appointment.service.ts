@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { sign, decode, JwtPayload } from 'jsonwebtoken';
 import { ID, IEmployeeAppointment, IEmployeeAppointmentCreateInput } from '@gauzy/contracts';
 import { environment as env } from '@gauzy/config';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmEmployeeAppointmentRepository } from './repository/type-orm-employee-appointment.repository';
-import { MikroOrmEmployeeAppointmentRepository } from './repository/mikro-orm-employee-appointment.repository';
+import { TypeOrmEmployeeAppointmentRepository } from './repository';
 import { EmployeeAppointment } from './employee-appointment.entity';
-
 @Injectable()
 export class EmployeeAppointmentService extends TenantAwareCrudService<EmployeeAppointment> {
 	constructor(
-		typeOrmEmployeeAppointmentRepository: TypeOrmEmployeeAppointmentRepository,
-		mikroOrmEmployeeAppointmentRepository: MikroOrmEmployeeAppointmentRepository
+		@InjectRepository(EmployeeAppointment)
+		private readonly typeOrmEmployeeAppointmentRepository: TypeOrmEmployeeAppointmentRepository
 	) {
-		super(typeOrmEmployeeAppointmentRepository, mikroOrmEmployeeAppointmentRepository);
+		super(typeOrmEmployeeAppointmentRepository);
 	}
 
 	/**

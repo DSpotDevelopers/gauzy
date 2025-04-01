@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { TenantAwareCrudService } from './../core/crud';
 import { Organization } from './organization.entity';
-import { TypeOrmOrganizationRepository, MikroOrmOrganizationRepository } from './repository';
+import { TypeOrmOrganizationRepository } from './repository';
 import { prepareSQLQuery as p } from './../database/database.helper';
 
 @Injectable()
 export class OrganizationService extends TenantAwareCrudService<Organization> {
 	constructor(
-		readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
-		readonly mikroOrmOrganizationRepository: MikroOrmOrganizationRepository
+		@InjectRepository(Organization)
+		private readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository
 	) {
-		super(typeOrmOrganizationRepository, mikroOrmOrganizationRepository);
+		super(typeOrmOrganizationRepository);
 	}
 
 	async findByEmailDomain(emailDomain: string): Promise<Organization> {
@@ -19,7 +20,7 @@ export class OrganizationService extends TenantAwareCrudService<Organization> {
 			select: {
 				id: true,
 				tenantId: true
-			},
+			}
 		});
 		query.where(p(`"${query.alias}"."emailDomain" = :emailDomain`), { emailDomain });
 		return await query.getOne();

@@ -1,38 +1,19 @@
-import {
-	JoinColumn,
-	RelationId,
-	JoinTable
-} from 'typeorm';
+import { JoinColumn, RelationId, JoinTable } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-	IsNotEmpty,
-	IsString,
-	IsNumber,
-	IsOptional,
-	IsDate,
-	IsEnum,
-	IsBoolean
-} from 'class-validator';
-import {
-	IIncome,
-	CurrenciesEnum,
-	IEmployee,
-	ITag,
-	IOrganizationContact
-} from '@gauzy/contracts';
-import {
-	Employee,
-	OrganizationContact,
-	Tag,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsDate, IsEnum, IsBoolean } from 'class-validator';
+import { IIncome, CurrenciesEnum, IEmployee, ITag, IOrganizationContact } from '@gauzy/contracts';
+import { Employee, OrganizationContact, Tag, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmIncomeRepository } from './repository/mikro-orm-income.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('income', { mikroOrmRepository: () => MikroOrmIncomeRepository })
+@MultiORMEntity('income')
 export class Income extends TenantOrganizationBaseEntity implements IIncome {
-
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
 	@IsNotEmpty()
@@ -119,8 +100,8 @@ export class Income extends TenantOrganizationBaseEntity implements IIncome {
 	*/
 
 	/**
-	* Tag
-	*/
+	 * Tag
+	 */
 	@ApiProperty({ type: () => () => Tag, isArray: true })
 	@MultiORMManyToMany(() => Tag, (tag) => tag.incomes, {
 		onUpdate: 'CASCADE',
@@ -128,7 +109,7 @@ export class Income extends TenantOrganizationBaseEntity implements IIncome {
 		owner: true,
 		pivotTable: 'tag_income',
 		joinColumn: 'incomeId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_income'

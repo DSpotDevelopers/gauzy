@@ -1,5 +1,5 @@
 import { EventBus } from '@nestjs/cqrs';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
 import { UpdateResult } from 'typeorm';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
@@ -15,19 +15,23 @@ import { CreateSubscriptionEvent } from '../subscription/events';
 import { UserService } from '../user/user.service';
 import { MentionService } from '../mention/mention.service';
 import { Comment } from './comment.entity';
-import { TypeOrmCommentRepository } from './repository/type-orm.comment.repository';
-import { MikroOrmCommentRepository } from './repository/mikro-orm-comment.repository';
+import { TypeOrmCommentRepository } from './repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Logger } from '../logger';
 
 @Injectable()
 export class CommentService extends TenantAwareCrudService<Comment> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmCommentRepository: TypeOrmCommentRepository,
-		readonly mikroOrmCommentRepository: MikroOrmCommentRepository,
+		@InjectRepository(Comment)
+		private readonly typeOrmCommentRepository: TypeOrmCommentRepository,
 		private readonly _eventBus: EventBus,
 		private readonly userService: UserService,
 		private readonly mentionService: MentionService
 	) {
-		super(typeOrmCommentRepository, mikroOrmCommentRepository);
+		super(typeOrmCommentRepository);
 	}
 
 	/**
@@ -84,7 +88,7 @@ export class CommentService extends TenantAwareCrudService<Comment> {
 			// Return created Comment
 			return comment;
 		} catch (error) {
-			console.log(error); // Debug Logging
+			this.logger.error(`Error while creating comment: ${error}`);
 			throw new BadRequestException('Comment post failed', error);
 		}
 	}
@@ -128,7 +132,7 @@ export class CommentService extends TenantAwareCrudService<Comment> {
 
 			return updatedComment;
 		} catch (error) {
-			console.log(error); // Debug Logging
+			this.logger.error(`Error while updating comment: ${error}`);
 			throw new BadRequestException('Comment update failed', error);
 		}
 	}

@@ -3,12 +3,9 @@ import { AccountingTemplateTypeEnum, IAccountingTemplate } from '@gauzy/contract
 import { isMySQL } from '@gauzy/config';
 import { TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity } from './../core/decorators/entity';
-import { MikroOrmAccountingTemplateRepository } from './repository/mikro-orm-accounting-template.repository';
 
-@MultiORMEntity('accounting_template', { mikroOrmRepository: () => MikroOrmAccountingTemplateRepository })
-export class AccountingTemplate extends TenantOrganizationBaseEntity
-	implements IAccountingTemplate {
-
+@MultiORMEntity('accounting_template')
+export class AccountingTemplate extends TenantOrganizationBaseEntity implements IAccountingTemplate {
 	@ApiProperty({ type: () => String })
 	@ColumnIndex()
 	@MultiORMColumn()
@@ -24,7 +21,7 @@ export class AccountingTemplate extends TenantOrganizationBaseEntity
 	mjml?: string;
 
 	@ApiProperty({ type: () => String })
-	@MultiORMColumn({ ...(isMySQL() ? { type: "longtext" } : {}) })
+	@MultiORMColumn({ ...(isMySQL() ? { type: 'longtext' } : {}) })
 	hbs?: string;
 
 	@ApiProperty({ type: () => String, enum: AccountingTemplateTypeEnum })

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { IsNull } from 'typeorm';
 import {
@@ -24,26 +24,30 @@ import { environment as env } from '@gauzy/config';
 import { deepMerge, IAppIntegrationConfig } from '@gauzy/common';
 import { RequestContext } from '../core/context';
 import { EmailSendService } from './../email-send/email-send.service';
-import { Organization, EmailHistory } from './../core/entities/internal';
-import { TypeOrmEmailHistoryRepository } from './../email-history/repository/type-orm-email-history.repository';
-import { MikroOrmEmailHistoryRepository } from './../email-history/repository/mikro-orm-email-history.repository';
-import { TypeOrmEmailTemplateRepository } from './../email-template/repository/type-orm-email-template.repository';
-import { MikroOrmEmailTemplateRepository } from './../email-template/repository/mikro-orm-email-template.repository';
+import { Organization, EmailHistory, EmailTemplate } from './../core/entities/internal';
+import { TypeOrmEmailHistoryRepository } from './../email-history/repository';
+import { TypeOrmEmailTemplateRepository } from './../email-template/repository';
 import { TypeOrmOrganizationRepository } from './../organization/repository';
-import { MikroOrmOrganizationRepository } from './../organization/repository/mikro-orm-organization.repository';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { Logger } from '../logger';
 const DISALLOW_EMAIL_SERVER_DOMAIN: string[] = ['@example.com'];
 
 @Injectable()
 export class EmailService {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmEmailHistoryRepository: TypeOrmEmailHistoryRepository,
-		readonly mikroOrmEmailHistoryRepository: MikroOrmEmailHistoryRepository,
-		readonly typeOrmEmailTemplateRepository: TypeOrmEmailTemplateRepository,
-		readonly mikroOrmEmailTemplateRepository: MikroOrmEmailTemplateRepository,
-		readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
-		readonly mikroOrmOrganizationRepository: MikroOrmOrganizationRepository,
-		readonly emailSendService: EmailSendService
+		@InjectRepository(EmailHistory)
+		private readonly typeOrmEmailHistoryRepository: TypeOrmEmailHistoryRepository,
+
+		@InjectRepository(EmailTemplate)
+		private readonly typeOrmEmailTemplateRepository: TypeOrmEmailTemplateRepository,
+
+		@InjectRepository(Organization)
+		private readonly typeOrmOrganizationRepository: TypeOrmOrganizationRepository,
+
+		private readonly emailSendService: EmailSendService
 	) {}
 
 	/**
@@ -105,7 +109,7 @@ export class EmailService {
 
 				body.message = sendResult.originalMessage;
 			} catch (error) {
-				console.log(`Error while sending payment receipt ${invoiceNumber}: %s`, error?.message);
+				this.logger.error(`Error while sending payment receipt ${invoiceNumber}: ${error}`);
 				throw new BadRequestException(
 					`Error while sending payment receipt ${invoiceNumber}: ${error?.message}`
 				);
@@ -177,7 +181,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.log(`Error while sending email invoice ${invoiceNumber}: %s`, error?.message);
+				this.logger.error(`Error while sending email invoice ${invoiceNumber}: ${error}`);
 				throw new BadRequestException(`Error while sending email invoice ${invoiceNumber}: ${error?.message}`);
 			} finally {
 				await this.createEmailRecord(body);
@@ -237,8 +241,8 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.log(`Error while sending invite organization contact: %s`, error?.message);
-				throw new BadRequestException(`Error while sending invite organization contact: ${error?.message}`);
+				this.logger.error(`Error while sending invite organization contact: ${error}`);
+				throw new BadRequestException(`Error while sending invite organization contact: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -284,7 +288,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.log(`Error while sending invite user: %s`, error);
+				this.logger.error(`Error while sending invite user: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -333,7 +337,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.log(`Error while invite team: %s`, error);
+				this.logger.error(`Error while invite team: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -379,7 +383,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.error(error);
+				this.logger.error(`Error while invite employee: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -421,7 +425,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.error(error);
+				this.logger.error(`Error while send accept invitation email: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -485,13 +489,13 @@ export class EmailService {
 
 					body['message'] = send.originalMessage;
 				} catch (error) {
-					console.log('Error while get email instance during welcome user', error);
+					this.logger.error(`Error while get email instance during welcome user: ${error}`);
 				} finally {
 					await this.createEmailRecord(body);
 				}
 			}
 		} catch (error) {
-			console.log('Error while sending welcome user', error);
+			this.logger.error(`Error while sending welcome user: ${error}`);
 		}
 	}
 
@@ -542,7 +546,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.error(error);
+				this.logger.error(`Error while send confirmation email link: ${error}`);
 			}
 		}
 	}
@@ -604,7 +608,7 @@ export class EmailService {
 			// Record the original message
 			body.message = send.originalMessage;
 		} catch (error) {
-			console.error('Failed to send password reset email:', error);
+			this.logger.error(`Error while send password reset email: ${error}`);
 		} finally {
 			// Create an email record
 			await this.createEmailRecord(body);
@@ -668,7 +672,7 @@ export class EmailService {
 			// Record the original message
 			body.message = send.originalMessage;
 		} catch (error) {
-			console.error('Failed to send multi-tenant password reset email:', error);
+			this.logger.error(`Error while send multi-tenant password reset email: ${error}`);
 		} finally {
 			await this.createEmailRecord(body);
 		}
@@ -717,7 +721,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.error(error);
+				this.logger.error(`Error while send appointment mail: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -767,7 +771,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.error(error);
+				this.logger.error(`Error while set timesheet action: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -818,7 +822,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.error(error);
+				this.logger.error(`Error while timesheet submit: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -886,11 +890,11 @@ export class EmailService {
 					// Update the body with the original message
 					body['message'] = send.originalMessage;
 				} else {
-					console.error('Error while getting email instance for password-less authentication');
+					this.logger.error('Error while getting email instance for password-less authentication');
 				}
 			} catch (error) {
 				// Handle errors during email sending
-				console.log('Error while sending password-less authentication code: %s', error);
+				this.logger.error(`Error while sending password-less authentication code: ${error}`);
 			}
 		}
 	}
@@ -902,7 +906,7 @@ export class EmailService {
 	 * @param languageCode
 	 */
 	async emailReset(user: IUser, languageCode: LanguagesEnum, verificationCode: string, organization: IOrganization) {
-		const integration = Object.assign({}, env.appIntegrationConfig);
+		const integration = { ...env.appIntegrationConfig };
 
 		const sendOptions = {
 			template: EmailTemplateEnum.EMAIL_RESET,
@@ -937,7 +941,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.log('Error while sending password less authentication code: %s', error);
+				this.logger.error(`Error while sending password less authentication code: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -993,7 +997,7 @@ export class EmailService {
 
 				body['message'] = send.originalMessage;
 			} catch (error) {
-				console.error(error);
+				this.logger.error(`Error while organization team join request: ${error}`);
 			} finally {
 				await this.createEmailRecord(body);
 			}
@@ -1050,7 +1054,7 @@ export class EmailService {
 
 				body.message = sendResult.originalMessage;
 			} catch (error) {
-				console.log(`Error while sending rejection email to ${candidateName}: %s`, error?.message);
+				this.logger.error(`Error while sending rejection email to ${candidateName}: ${error}`);
 				throw new BadRequestException(
 					`Error while sending rejection email to ${candidateName}: ${error?.message}`
 				);
@@ -1100,7 +1104,7 @@ export class EmailService {
 
 				return await this.typeOrmEmailHistoryRepository.save(emailHistory);
 			} catch (error) {
-				console.log(`Error while re-sending mail: %s`, error?.message);
+				this.logger.error(`Error while re-sending mail: ${error}`);
 
 				emailHistory.status = EmailStatusEnum.FAILED;
 				await this.typeOrmEmailHistoryRepository.save(emailHistory);
@@ -1168,7 +1172,7 @@ export class EmailService {
 				'>Click here</a>'
 		});
 
-		console.log('Message sent: %s', info.messageId);
-		console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+		this.logger.verbose(`Message sent: ${info.messageId}`);
+		this.logger.verbose(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
 	}
 }

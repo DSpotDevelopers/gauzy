@@ -4,18 +4,15 @@ import { In } from 'typeorm';
 import { OrganizationVendor } from './organization-vendor.entity';
 import { Expense } from '../expense/expense.entity';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmOrganizationVendorRepository } from './repository/type-orm-organization-vendor.repository';
-import { MikroOrmOrganizationVendorRepository } from './repository/mikro-orm-organization-vendor.repository';
+import { TypeOrmOrganizationVendorRepository } from './repository';
 
 @Injectable()
 export class OrganizationVendorService extends TenantAwareCrudService<OrganizationVendor> {
 	constructor(
 		@InjectRepository(OrganizationVendor)
-		typeOrmOrganizationVendorRepository: TypeOrmOrganizationVendorRepository,
-
-		mikroOrmOrganizationVendorRepository: MikroOrmOrganizationVendorRepository
+		private readonly typeOrmOrganizationVendorRepository: TypeOrmOrganizationVendorRepository
 	) {
-		super(typeOrmOrganizationVendorRepository, mikroOrmOrganizationVendorRepository);
+		super(typeOrmOrganizationVendorRepository);
 	}
 
 	async deleteVendor(vendorId) {

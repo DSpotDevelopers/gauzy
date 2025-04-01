@@ -17,12 +17,11 @@ export abstract class BaseSocialAuth {
 
 	/**
 	 * Register a new user with OAuth data
-	 * 
+	 *
 	 * @param userInfo - The user information to register.
 	 * @returns The result of the registration.
 	 */
 	public abstract registerOAuth(userInfo: IOAuthCreateUser): Promise<IOAuthValidateResponse>;
-
 }
 
 @Injectable()

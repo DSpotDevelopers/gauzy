@@ -1,5 +1,6 @@
 import { EventBus } from '@nestjs/cqrs';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
 	ActionTypeEnum,
 	ActorTypeEnum,
@@ -21,21 +22,26 @@ import { MentionService } from '../../mention/mention.service';
 import { CreateSubscriptionEvent } from '../../subscription/events';
 import { Task } from '../task.entity';
 import { ScreeningTask } from './screening-task.entity';
-import { TypeOrmScreeningTaskRepository } from './repository/type-orm-screening-task.repository';
-import { MikroOrmScreeningTaskRepository } from './repository/mikro-orm-screening-task.repository';
+import { TypeOrmScreeningTaskRepository } from './repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class ScreeningTasksService extends TenantAwareCrudService<ScreeningTask> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		private readonly eventBus: EventBus,
-		readonly typeOrmScreeningTaskRepository: TypeOrmScreeningTaskRepository,
-		readonly mikroOrmScreeningTaskRepository: MikroOrmScreeningTaskRepository,
+
+		@InjectRepository(ScreeningTask)
+		private readonly typeOrmScreeningTaskRepository: TypeOrmScreeningTaskRepository,
+
 		private readonly taskService: TaskService,
 		private readonly organizationProjectService: OrganizationProjectService,
 		private readonly mentionService: MentionService,
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmScreeningTaskRepository, mikroOrmScreeningTaskRepository);
+		super(typeOrmScreeningTaskRepository);
 	}
 
 	/**
@@ -62,7 +68,7 @@ export class ScreeningTasksService extends TenantAwareCrudService<ScreeningTask>
 
 			// Log info if both projectId and project are not provided
 			if (!project) {
-				console.warn('No projectId or project provided. Proceeding without project information');
+				this.logger.warn('No projectId or project provided. Proceeding without project information');
 			}
 
 			// Retrieve the maximum task number for the specified project, or handle null projectId if no project
@@ -143,6 +149,7 @@ export class ScreeningTasksService extends TenantAwareCrudService<ScreeningTask>
 			// Return the created screening task
 			return screeningTask;
 		} catch (error) {
+			this.logger.error(`Failed to create screening task: ${error}`);
 			throw new HttpException('Screening task creation failed', HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -196,6 +203,7 @@ export class ScreeningTasksService extends TenantAwareCrudService<ScreeningTask>
 			// Return the updated screening task
 			return updatedScreeningTask;
 		} catch (error) {
+			this.logger.error(`Failed to update screening task with ID ${id}: ${error}`);
 			throw new HttpException(`Failed to update screening task with ID ${id}`, HttpStatus.BAD_REQUEST);
 		}
 	}

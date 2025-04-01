@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
 import { htmlToText } from 'html-to-text';
 import { environment as env } from '@gauzy/config';
@@ -20,12 +20,15 @@ import {
 	IntegrationEntity,
 	PermissionsEnum
 } from '@gauzy/contracts';
-import { EmployeeService, IntegrationTenantService, RequestContext } from '@gauzy/core';
+import { EmployeeService, IntegrationTenantService, RequestContext, Logger } from '@gauzy/core';
 import { EmployeeJobPost } from './employee-job.entity';
 import { JobPost } from './jobPost.entity';
 
 @Injectable()
 export class EmployeeJobPostService {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	constructor(
 		private readonly _employeeService: EmployeeService,
 		private readonly _gauzyAIService: GauzyAIService,
@@ -68,7 +71,7 @@ export class EmployeeJobPostService {
 			});
 			input.proposal = plainText;
 		} catch (error) {
-			console.log('Error while applying job', error);
+			this.logger.error(`Error while applying job: ${error}`);
 			// Handle the error here, you might want to throw it or return a specific error result
 		}
 		// Return the result of applying for the job
@@ -104,7 +107,7 @@ export class EmployeeJobPostService {
 				});
 
 				// Check if integration exists
-				if (!!integration) {
+				if (integration) {
 					const integrationId = integration['id'];
 
 					// Check if job matching entity sync is enabled
@@ -144,20 +147,19 @@ export class EmployeeJobPostService {
 					// If integration not enabled, we want to show fake jobs in UI
 					jobs = await this.getRandomEmployeeJobPosts(employees, data.limit);
 				}
-			} else {
 				// If it's production, we should return empty here because we don't want fake jobs in production
-				if (env.production === false) {
-					jobs = await this.getRandomEmployeeJobPosts(employees, data.limit);
-				} else {
-					jobs = {
-						items: [],
-						total: 0
-					};
-				}
+			} else if (env.production === false) {
+				jobs = await this.getRandomEmployeeJobPosts(employees, data.limit);
+			} else {
+				jobs = {
+					items: [],
+					total: 0
+				};
 			}
 
 			return jobs;
 		} catch (error) {
+			this.logger.error(`Error while finding all employee job posts: ${error}`);
 			return {
 				items: [],
 				total: 0

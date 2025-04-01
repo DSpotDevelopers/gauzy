@@ -4,9 +4,8 @@ import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
 import { ID, IUser, IUserOrganization } from '@gauzy/contracts';
 import { TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmUserOrganizationRepository } from './repository/mikro-orm-user-organization.repository';
 
-@MultiORMEntity('user_organization', { mikroOrmRepository: () => MikroOrmUserOrganizationRepository })
+@MultiORMEntity('user_organization')
 export class UserOrganization extends TenantOrganizationBaseEntity implements IUserOrganization {
 	@ApiPropertyOptional({ type: () => Boolean, default: true })
 	@IsOptional()

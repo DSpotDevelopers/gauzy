@@ -3,18 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IPagination, IProductTypeTranslatable, LanguagesEnum } from '@gauzy/contracts';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { ProductType } from './product-type.entity';
-import { MikroOrmProductTypeRepository } from './repository/mikro-orm-product-type.repository';
-import { TypeOrmProductTypeRepository } from './repository/type-orm-product-type.repository';
+import { TypeOrmProductTypeRepository } from './repository';
 
 @Injectable()
 export class ProductTypeService extends TenantAwareCrudService<ProductType> {
 	constructor(
 		@InjectRepository(ProductType)
-		typeOrmProductTypeRepository: TypeOrmProductTypeRepository,
-
-		mikroOrmProductTypeRepository: MikroOrmProductTypeRepository
+		private readonly typeOrmProductTypeRepository: TypeOrmProductTypeRepository
 	) {
-		super(typeOrmProductTypeRepository, mikroOrmProductTypeRepository);
+		super(typeOrmProductTypeRepository);
 	}
 
 	/**
@@ -95,7 +92,7 @@ export class ProductTypeService extends TenantAwareCrudService<ProductType> {
 	async mapTranslatedProductType(type: IProductTypeTranslatable, languageCode: LanguagesEnum) {
 		try {
 			if (languageCode) {
-				return Object.assign({}, type, type.translate(languageCode));
+				return { ...type, ...type.translate(languageCode) };
 			} else {
 				return type;
 			}

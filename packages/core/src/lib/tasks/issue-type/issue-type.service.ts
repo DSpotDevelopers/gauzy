@@ -1,7 +1,6 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere, SelectQueryBuilder } from 'typeorm';
-import { Knex as KnexConnection } from 'knex';
-import { InjectConnection } from 'nest-knexjs';
 import {
 	IIssueType,
 	IIssueTypeCreateInput,
@@ -15,17 +14,19 @@ import { IssueType } from './issue-type.entity';
 import { TaskStatusPrioritySizeService } from './../task-status-priority-size.service';
 import { DEFAULT_GLOBAL_ISSUE_TYPES } from './default-global-issue-types';
 import { RequestContext } from './../../core/context';
-import { MikroOrmIssueTypeRepository } from './repository/mikro-orm-issue-type.repository';
-import { TypeOrmIssueTypeRepository } from './repository/type-orm-issue-type.repository';
+import { TypeOrmIssueTypeRepository } from './repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class IssueTypeService extends TaskStatusPrioritySizeService<IssueType> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmIssueTypeRepository: TypeOrmIssueTypeRepository,
-		readonly mikroOrmIssueTypeRepository: MikroOrmIssueTypeRepository,
-		@InjectConnection() readonly knexConnection: KnexConnection
+		@InjectRepository(IssueType)
+		private readonly typeOrmIssueTypeRepository: TypeOrmIssueTypeRepository
 	) {
-		super(typeOrmIssueTypeRepository, mikroOrmIssueTypeRepository, knexConnection);
+		super(typeOrmIssueTypeRepository);
 	}
 
 	/**
@@ -68,7 +69,7 @@ export class IssueTypeService extends TaskStatusPrioritySizeService<IssueType> {
 			const [items, total] = await query.getManyAndCount();
 			return { items, total };
 		} catch (error) {
-			console.log('Invalid request parameter: Some required parameters are missing or incorrect', error);
+			this.logger.error(`Error getting all issue types: ${error}`);
 			return await this.getDefaultEntities();
 		}
 	}
@@ -114,6 +115,7 @@ export class IssueTypeService extends TaskStatusPrioritySizeService<IssueType> {
 			// Save the created or fetched issue types to the repository and return the result.
 			return await this.typeOrmRepository.save(issueTypes);
 		} catch (error) {
+			this.logger.error(`Error bulk creating tenants issue types: ${error}`);
 			throw new BadRequestException(
 				'Failed to create or fetch issue types for the specified tenants. Some required parameters are missing or incorrect.',
 				error
@@ -149,6 +151,7 @@ export class IssueTypeService extends TaskStatusPrioritySizeService<IssueType> {
 			);
 			return await this.typeOrmRepository.save(issueTypes);
 		} catch (error) {
+			this.logger.error(`Error bulk creating organization issue types: ${error}`);
 			throw new BadRequestException(
 				'Failed to create or fetch issue types for the specified tenants. Some required parameters are missing or incorrect.',
 				error
@@ -192,6 +195,7 @@ export class IssueTypeService extends TaskStatusPrioritySizeService<IssueType> {
 			);
 			return issueTypes;
 		} catch (error) {
+			this.logger.error(`Error bulk creating issue types for the organization entity: ${error}`);
 			// If an error occurs, throw an HttpException with a more specific message.
 			throw new HttpException(
 				'Failed to create bulk issue types for the organization entity.',
@@ -243,6 +247,7 @@ export class IssueTypeService extends TaskStatusPrioritySizeService<IssueType> {
 
 			return items;
 		} catch (error) {
+			this.logger.error(`Error marking issue type as default: ${error}`);
 			// If an error occurs, throw a BadRequestException
 			throw new BadRequestException(error);
 		}

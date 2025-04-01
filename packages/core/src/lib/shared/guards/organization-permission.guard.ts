@@ -1,4 +1,4 @@
-import { MultiORM, environment as env } from '@gauzy/config';
+import { environment as env } from '@gauzy/config';
 import { CanActivate, ExecutionContext, Inject, Injectable, Type } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -9,19 +9,15 @@ import * as camelcase from 'camelcase';
 import { PermissionsEnum, RolesEnum } from '@gauzy/contracts';
 import { isEmpty, PERMISSIONS_METADATA, removeDuplicates } from '@gauzy/common';
 import { RequestContext } from './../../core/context';
-import { MikroOrmEmployeeRepository, TypeOrmEmployeeRepository } from '../../employee/repository';
-import { MultiORMEnum, getORMType } from '../../core/utils';
-
-// Get the type of the Object-Relational Mapping (ORM) used in the application.
-const ormType: MultiORM = getORMType();
+import { TypeOrmEmployeeRepository } from '../../employee/repository';
+import { MultiORMEnum } from '../../core/utils';
 
 @Injectable()
 export class OrganizationPermissionGuard implements CanActivate {
 	constructor(
-		@Inject(CACHE_MANAGER) private cacheManager: Cache,
+		@Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 		readonly _reflector: Reflector,
-		readonly _typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		readonly _mikroOrmEmployeeRepository: MikroOrmEmployeeRepository
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository
 	) {}
 
 	/**
@@ -43,7 +39,7 @@ export class OrganizationPermissionGuard implements CanActivate {
 			return true;
 		}
 
-		let isAuthorized: boolean = false;
+		let isAuthorized = false;
 
 		// Check user authorization
 		const token = RequestContext.currentToken();
@@ -116,68 +112,30 @@ export class OrganizationPermissionGuard implements CanActivate {
 	 */
 	async checkOrganizationPermission(tenantId: string, employeeId: string, permissions: string[]): Promise<boolean> {
 		try {
-			switch (ormType) {
-				case MultiORMEnum.MikroORM:
-					try {
-						// Create a QueryBuilder for the Employee entity
-						const mikroOrmQueryBuilder = this._mikroOrmEmployeeRepository.createQueryBuilder('employee');
-						// Join with another table/entity, 'organization'
-						mikroOrmQueryBuilder.innerJoin(`${mikroOrmQueryBuilder.alias}.organization`, 'organization');
-						// Add a condition for the employee ID
-						mikroOrmQueryBuilder.where({ id: employeeId });
-						// Add a condition for the tenant ID
-						mikroOrmQueryBuilder.andWhere({ tenantId: tenantId });
-						// Directly add the OR conditions to the query if permissions array is not empty
-						if (permissions.length > 0) {
-							const orConditions = permissions.map((permission: string) => {
-								const field = `organization.${camelcase(permission)}`;
-								return { [field]: true };
-							});
-							// Use OR condition for each permission
-							mikroOrmQueryBuilder.andWhere({ $or: orConditions });
-						}
-						// Execute the query and get the count
-						const count = await mikroOrmQueryBuilder.getCount();
-						// Returns true if at least one record is found, false otherwise
-						return count > 0;
-					} catch (error) {
-						console.log(
-							`Error occurred while checking ${MultiORMEnum.TypeORM} organization permission:`,
-							error
-						);
-						return false;
-					}
-				case MultiORMEnum.TypeORM:
-					try {
-						// Create a query builder for the 'employee' entity
-						const typeOrmQueryBuilder = this._typeOrmEmployeeRepository.createQueryBuilder('employee');
-						// (Optional) Inner join with another table/entity, for example, 'organization'
-						typeOrmQueryBuilder.innerJoin(`${typeOrmQueryBuilder.alias}.organization`, 'organization');
-						// Add a condition for the employee ID
-						typeOrmQueryBuilder.where(`${typeOrmQueryBuilder.alias}.id = :employeeId`, { employeeId });
-						// Add a condition for the tenant ID
-						typeOrmQueryBuilder.andWhere(`${typeOrmQueryBuilder.alias}.tenantId = :tenantId`, { tenantId });
-						// Use OR condition for each permission
-						typeOrmQueryBuilder.andWhere(
-							new Brackets((qb: WhereExpressionBuilder) => {
-								permissions.forEach((permission) => {
-									qb.orWhere(`organization.${camelcase(permission)} = true`);
-								});
-							})
-						);
-						// Execute the query
-						const count = await typeOrmQueryBuilder.getCount(); // Execute the query and get the count
-						// Returns true if at least one permission is allowed in the organization, false otherwise
-						return count > 0;
-					} catch (error) {
-						console.log(
-							`Error occurred while checking ${MultiORMEnum.TypeORM} organization permission:`,
-							error
-						);
-						return false;
-					}
-				default:
-					break;
+			try {
+				// Create a query builder for the 'employee' entity
+				const typeOrmQueryBuilder = this.typeOrmEmployeeRepository.createQueryBuilder('employee');
+				// (Optional) Inner join with another table/entity, for example, 'organization'
+				typeOrmQueryBuilder.innerJoin(`${typeOrmQueryBuilder.alias}.organization`, 'organization');
+				// Add a condition for the employee ID
+				typeOrmQueryBuilder.where(`${typeOrmQueryBuilder.alias}.id = :employeeId`, { employeeId });
+				// Add a condition for the tenant ID
+				typeOrmQueryBuilder.andWhere(`${typeOrmQueryBuilder.alias}.tenantId = :tenantId`, { tenantId });
+				// Use OR condition for each permission
+				typeOrmQueryBuilder.andWhere(
+					new Brackets((qb: WhereExpressionBuilder) => {
+						permissions.forEach((permission) => {
+							qb.orWhere(`organization.${camelcase(permission)} = true`);
+						});
+					})
+				);
+				// Execute the query
+				const count = await typeOrmQueryBuilder.getCount(); // Execute the query and get the count
+				// Returns true if at least one permission is allowed in the organization, false otherwise
+				return count > 0;
+			} catch (error) {
+				console.log(`Error occurred while checking ${MultiORMEnum.TypeORM} organization permission:`, error);
+				return false;
 			}
 		} catch (error) {
 			// Handle any potential errors, log, and optionally rethrow or return a default value.

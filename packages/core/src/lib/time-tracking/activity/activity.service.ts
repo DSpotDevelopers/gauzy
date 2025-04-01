@@ -18,12 +18,9 @@ import { isNotEmpty } from '@gauzy/common';
 import { DatabaseTypeEnum, getConfig, isSqlite, isBetterSqlite3, isMySQL, isPostgres } from '@gauzy/config';
 import { prepareSQLQuery as p } from './../../database/database.helper';
 import { Employee, OrganizationProject } from './../../core/entities/internal';
-import { TypeOrmActivityRepository } from './repository/type-orm-activity.repository';
-import { MikroOrmActivityRepository } from './repository/mikro-orm-activity.repository';
-import { TypeOrmEmployeeRepository } from '../../employee/repository/type-orm-employee.repository';
-import { MikroOrmEmployeeRepository } from '../../employee/repository/mikro-orm-employee.repository';
-import { TypeOrmOrganizationProjectRepository } from '../../organization-project/repository/type-orm-organization-project.repository';
-import { MikroOrmOrganizationProjectRepository } from '../../organization-project/repository/mikro-orm-organization-project.repository';
+import { TypeOrmActivityRepository } from './repository';
+import { TypeOrmEmployeeRepository } from '../../employee/repository';
+import { TypeOrmOrganizationProjectRepository } from '../../organization-project/repository';
 
 const config = getConfig();
 
@@ -31,23 +28,17 @@ const config = getConfig();
 export class ActivityService extends TenantAwareCrudService<Activity> {
 	constructor(
 		@InjectRepository(Activity)
-		typeOrmActivityRepository: TypeOrmActivityRepository,
-
-		mikroOrmActivityRepository: MikroOrmActivityRepository,
+		private readonly typeOrmActivityRepository: TypeOrmActivityRepository,
 
 		@InjectRepository(Employee)
-		private typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-
-		mikroOrmEmployeeRepository: MikroOrmEmployeeRepository,
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
 
 		@InjectRepository(OrganizationProject)
-		private typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository,
-
-		mikroOrmOrganizationProjectRepository: MikroOrmOrganizationProjectRepository,
+		private readonly typeOrmOrganizationProjectRepository: TypeOrmOrganizationProjectRepository,
 
 		private readonly commandBus: CommandBus
 	) {
-		super(typeOrmActivityRepository, mikroOrmActivityRepository);
+		super(typeOrmActivityRepository);
 	}
 
 	async getDailyActivities(request: IGetActivitiesInput): Promise<IDailyActivity[]> {
@@ -155,7 +146,11 @@ export class ActivityService extends TenantAwareCrudService<Activity> {
 		const query = this.filterQuery(request);
 		if (RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE)) {
 			query.leftJoinAndSelect(`${query.alias}.employee`, 'activityEmployee');
-			query.leftJoinAndSelect(`activityEmployee.user`, 'activityUser', p('"employee"."userId" = activityUser.id'));
+			query.leftJoinAndSelect(
+				`activityEmployee.user`,
+				'activityUser',
+				p('"employee"."userId" = activityUser.id')
+			);
 		}
 
 		query.orderBy(`${query.alias}.duration`, 'DESC');
@@ -220,12 +215,12 @@ export class ActivityService extends TenantAwareCrudService<Activity> {
 					isSqlite() || isBetterSqlite3()
 						? `datetime("${query.alias}"."date" || ' ' || "${query.alias}"."time") Between :startDate AND :endDate`
 						: isPostgres()
-							? `concat("${query.alias}"."date", ' ', "${query.alias}"."time")::timestamp Between :startDate AND :endDate`
-							: isMySQL()
-								? p(
-									`concat("${query.alias}"."date", ' ', "${query.alias}"."time") Between :startDate AND :endDate`
-								)
-								: '',
+						? `concat("${query.alias}"."date", ' ', "${query.alias}"."time")::timestamp Between :startDate AND :endDate`
+						: isMySQL()
+						? p(
+								`concat("${query.alias}"."date", ' ', "${query.alias}"."time") Between :startDate AND :endDate`
+						  )
+						: '',
 					{
 						startDate,
 						endDate

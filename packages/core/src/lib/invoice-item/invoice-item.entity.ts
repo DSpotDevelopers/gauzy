@@ -21,11 +21,9 @@ import {
 } from '../core/entities/internal';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmInvoiceItemRepository } from './repository/mikro-orm-invoice-item.repository';
 
-@MultiORMEntity('invoice_item', { mikroOrmRepository: () => MikroOrmInvoiceItemRepository })
+@MultiORMEntity('invoice_item')
 export class InvoiceItem extends TenantOrganizationBaseEntity implements IInvoiceItem {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@MultiORMColumn({ nullable: true })
@@ -138,7 +136,7 @@ export class InvoiceItem extends TenantOrganizationBaseEntity implements IInvoic
 		nullable: true,
 
 		/** Defines the database cascade action on delete. */
-		onDelete: 'SET NULL',
+		onDelete: 'SET NULL'
 	})
 	@JoinColumn()
 	project?: IOrganizationProject;

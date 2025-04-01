@@ -1,14 +1,18 @@
 import { IMatchingCriterions, PermissionsEnum } from '@gauzy/contracts';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RequestContext, TypeOrmEmployeeRepository } from '@gauzy/core';
+import { Employee, RequestContext, TypeOrmEmployeeRepository } from '@gauzy/core';
 import { JobPresetUpworkJobSearchCriterion } from '../../job-preset-upwork-job-search-criterion.entity';
 import { SavePresetCriterionCommand } from '../save-preset-criterion.command';
-import { TypeOrmJobPresetUpworkJobSearchCriterionRepository } from '../../repository/type-orm-job-preset-upwork-job-search-criterion.repository';
+import { TypeOrmJobPresetUpworkJobSearchCriterionRepository } from '../../repository';
 
 @CommandHandler(SavePresetCriterionCommand)
 export class SavePresetCriterionHandler implements ICommandHandler<SavePresetCriterionCommand> {
 	constructor(
+		@InjectRepository(Employee)
 		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
+		@InjectRepository(JobPresetUpworkJobSearchCriterion)
 		private readonly typeOrmJobPresetUpworkJobSearchCriterionRepository: TypeOrmJobPresetUpworkJobSearchCriterionRepository
 	) {}
 

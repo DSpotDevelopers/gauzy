@@ -2,19 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ICandidateInterviewersDeleteInput, ICandidateInterviewersCreateInput } from '@gauzy/contracts';
 import { TenantAwareCrudService } from './../core/crud';
-import { TypeOrmCandidateInterviewersRepository } from './repository/type-orm-candidate-interviewers.repository';
-import { MikroOrmCandidateInterviewersRepository } from './repository/mikro-orm-candidate-interviewers.repository';
+import { TypeOrmCandidateInterviewersRepository } from './repository';
 import { CandidateInterviewers } from './candidate-interviewers.entity';
 
 @Injectable()
 export class CandidateInterviewersService extends TenantAwareCrudService<CandidateInterviewers> {
 	constructor(
 		@InjectRepository(CandidateInterviewers)
-		typeOrmCandidateInterviewersRepository: TypeOrmCandidateInterviewersRepository,
-
-		mikroOrmCandidateInterviewersRepository: MikroOrmCandidateInterviewersRepository
+		private readonly typeOrmCandidateInterviewersRepository: TypeOrmCandidateInterviewersRepository
 	) {
-		super(typeOrmCandidateInterviewersRepository, mikroOrmCandidateInterviewersRepository);
+		super(typeOrmCandidateInterviewersRepository);
 	}
 
 	/**

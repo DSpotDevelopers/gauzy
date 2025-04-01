@@ -1,15 +1,5 @@
-import {
-	RelationId,
-	JoinTable,
-	JoinColumn
-} from 'typeorm';
-import {
-	IEmployee,
-	IEquipment,
-	IEquipmentSharing,
-	IEquipmentSharingPolicy,
-	IOrganizationTeam
-} from '@gauzy/contracts';
+import { RelationId, JoinTable, JoinColumn } from 'typeorm';
+import { IEmployee, IEquipment, IEquipmentSharing, IEquipmentSharingPolicy, IOrganizationTeam } from '@gauzy/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import {
 	Employee,
@@ -18,13 +8,16 @@ import {
 	OrganizationTeam,
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmEquipmentSharingRepository } from './repository/mikro-orm-equipment-sharing.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne
+} from './../core/decorators/entity';
 
-@MultiORMEntity('equipment_sharing', { mikroOrmRepository: () => MikroOrmEquipmentSharingRepository })
-export class EquipmentSharing extends TenantOrganizationBaseEntity
-	implements IEquipmentSharing {
-
+@MultiORMEntity('equipment_sharing')
+export class EquipmentSharing extends TenantOrganizationBaseEntity implements IEquipmentSharing {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn({ nullable: true })
 	name: string;
@@ -75,8 +68,8 @@ export class EquipmentSharing extends TenantOrganizationBaseEntity
 	equipmentId: IEquipment['id'];
 
 	/**
-	* Equipment
-	*/
+	 * Equipment
+	 */
 	@ApiProperty({ type: () => EquipmentSharingPolicy })
 	@MultiORMManyToOne(() => EquipmentSharingPolicy, (it) => it.equipmentSharings, {
 		onDelete: 'CASCADE'
@@ -105,7 +98,7 @@ export class EquipmentSharing extends TenantOrganizationBaseEntity
 		owner: true,
 		pivotTable: 'equipment_shares_employees',
 		joinColumn: 'equipmentSharingId',
-		inverseJoinColumn: 'employeeId',
+		inverseJoinColumn: 'employeeId'
 	})
 	@JoinTable({
 		name: 'equipment_shares_employees'
@@ -121,7 +114,7 @@ export class EquipmentSharing extends TenantOrganizationBaseEntity
 		owner: true,
 		pivotTable: 'equipment_shares_teams',
 		joinColumn: 'equipmentSharingId',
-		inverseJoinColumn: 'organizationTeamId',
+		inverseJoinColumn: 'organizationTeamId'
 	})
 	@JoinTable({
 		name: 'equipment_shares_teams'

@@ -35,9 +35,8 @@ import {
 	MultiORMManyToOne,
 	VirtualMultiOrmColumn
 } from '../../core/decorators/entity';
-import { MikroOrmTimeLogRepository } from './repository/mikro-orm-time-log.repository';
 
-@MultiORMEntity('time_log', { mikroOrmRepository: () => MikroOrmTimeLogRepository })
+@MultiORMEntity('time_log')
 export class TimeLog extends TenantOrganizationBaseEntity implements ITimeLog {
 	@ApiProperty({ type: () => 'timestamptz' })
 	@IsDateString()

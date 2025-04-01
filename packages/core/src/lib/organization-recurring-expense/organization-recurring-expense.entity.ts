@@ -1,26 +1,15 @@
-import {
-	CurrenciesEnum,
-	IOrganizationRecurringExpense
-} from '@gauzy/contracts';
+import { CurrenciesEnum, IOrganizationRecurringExpense } from '@gauzy/contracts';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-	IsDate,
-	IsEnum,
-	IsNotEmpty,
-	IsNumber,
-	IsOptional,
-	IsString,
-	Max,
-	Min,
-	IsBoolean
-} from 'class-validator';
+import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, IsBoolean } from 'class-validator';
 import { ColumnNumericTransformerPipe } from './../shared/pipes';
 import { TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity } from './../core/decorators/entity';
-import { MikroOrmOrganizationRecurringExpenseRepository } from './repository/mikro-orm-organization-recurring-expense.repository';
 
-@MultiORMEntity('organization_recurring_expense', { mikroOrmRepository: () => MikroOrmOrganizationRecurringExpenseRepository })
-export class OrganizationRecurringExpense extends TenantOrganizationBaseEntity implements IOrganizationRecurringExpense {
+@MultiORMEntity('organization_recurring_expense')
+export class OrganizationRecurringExpense
+	extends TenantOrganizationBaseEntity
+	implements IOrganizationRecurringExpense
+{
 	@ApiProperty({ type: () => Number, minimum: 1, maximum: 31 })
 	@IsNumber()
 	@IsNotEmpty()

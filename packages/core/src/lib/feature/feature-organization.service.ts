@@ -1,24 +1,27 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { IFeature, IFeatureOrganization, IFeatureOrganizationUpdateInput, ITenant } from '@gauzy/contracts';
 import { isNotEmpty } from '@gauzy/common';
 import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from './../core/context';
 import { FeatureOrganization } from './feature-organization.entity';
 import { FeatureService } from './feature.service';
-import { TypeOrmFeatureOrganizationRepository } from './repository/type-orm-feature-organization.repository';
-import { MikroOrmFeatureOrganizationRepository } from './repository/mikro-orm-feature-organization.repository';
+import { TypeOrmFeatureOrganizationRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class FeatureOrganizationService extends TenantAwareCrudService<FeatureOrganization> {
-	constructor(
-		readonly typeOrmFeatureOrganizationRepository: TypeOrmFeatureOrganizationRepository,
+	@Logger()
+	protected readonly logger: NestLogger;
 
-		readonly mikroOrmFeatureOrganizationRepository: MikroOrmFeatureOrganizationRepository,
+	constructor(
+		@InjectRepository(FeatureOrganization)
+		private readonly typeOrmFeatureOrganizationRepository: TypeOrmFeatureOrganizationRepository,
 
 		@Inject(forwardRef(() => FeatureService))
 		private readonly _featureService: FeatureService
 	) {
-		super(typeOrmFeatureOrganizationRepository, mikroOrmFeatureOrganizationRepository);
+		super(typeOrmFeatureOrganizationRepository);
 	}
 
 	/**
@@ -48,19 +51,17 @@ export class FeatureOrganizationService extends TenantAwareCrudService<FeatureOr
 				});
 				await this.typeOrmRepository.save(featureOrganization);
 			} else {
-				featureOrganizations.map((item: IFeatureOrganization) => {
-					return new FeatureOrganization(
-						Object.assign(item, {
-							...entity,
-							tenantId
-						})
-					);
+				featureOrganizations.forEach((item: IFeatureOrganization) => {
+					Object.assign(item, {
+						...entity,
+						tenantId
+					});
 				});
 				await this.typeOrmRepository.save(featureOrganizations);
 			}
 			return true;
 		} catch (error) {
-			console.log('Error while updating feature organization', error);
+			this.logger.error(`Error while updating feature organization: ${error}`);
 			return false;
 		}
 	}
@@ -81,11 +82,14 @@ export class FeatureOrganizationService extends TenantAwareCrudService<FeatureOr
 
 		for (const feature of features) {
 			const isEnabled = feature.isEnabled;
-			const tenantFeatureOrganizations = tenants.map((tenant) => new FeatureOrganization({
-				isEnabled,
-				tenant,
-				feature
-			}));
+			const tenantFeatureOrganizations = tenants.map(
+				(tenant) =>
+					new FeatureOrganization({
+						isEnabled,
+						tenant,
+						feature
+					})
+			);
 
 			featureOrganizations.push(...tenantFeatureOrganizations);
 		}

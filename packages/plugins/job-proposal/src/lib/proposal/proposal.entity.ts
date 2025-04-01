@@ -14,9 +14,8 @@ import {
 	Taggable,
 	TenantOrganizationBaseEntity
 } from '@gauzy/core';
-import { MikroOrmProposalRepository } from './repository/mikro-orm-proposal.repository';
 
-@MultiORMEntity('proposal', { mikroOrmRepository: () => MikroOrmProposalRepository })
+@MultiORMEntity('proposal')
 export class Proposal extends TenantOrganizationBaseEntity implements IProposal, Taggable {
 	/**
 	 * The URL of the posted job associated with this proposal.
@@ -56,9 +55,9 @@ export class Proposal extends TenantOrganizationBaseEntity implements IProposal,
 	proposalContent: string;
 
 	/**
-	* The status of the proposal (e.g., 'SENT', 'ACCEPTED').
-	* Enum-based property to enforce valid statuses defined by ProposalStatusEnum.
-	*/
+	 * The status of the proposal (e.g., 'SENT', 'ACCEPTED').
+	 * Enum-based property to enforce valid statuses defined by ProposalStatusEnum.
+	 */
 	@ApiProperty({ type: () => String, enum: ProposalStatusEnum })
 	@IsEnum(ProposalStatusEnum)
 	@MultiORMColumn()

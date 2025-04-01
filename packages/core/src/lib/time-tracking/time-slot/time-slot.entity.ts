@@ -13,9 +13,8 @@ import {
 	MultiORMOneToMany,
 	VirtualMultiOrmColumn
 } from './../../core/decorators/entity';
-import { MikroOrmTimeSlotRepository } from './repository/mikro-orm-time-slot.repository';
 
-@MultiORMEntity('time_slot', { mikroOrmRepository: () => MikroOrmTimeSlotRepository })
+@MultiORMEntity('time_slot')
 export class TimeSlot extends TenantOrganizationBaseEntity implements ITimeSlot {
 	@ApiPropertyOptional({ type: () => Number, default: 0 })
 	@IsOptional()

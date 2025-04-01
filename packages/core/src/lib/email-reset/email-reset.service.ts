@@ -17,16 +17,13 @@ import { EmailService } from './../email-send/email.service';
 import { EmployeeService } from './../employee/employee.service';
 import { AuthService } from './../auth/auth.service';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { TypeOrmEmailResetRepository } from './repository/type-orm-email-reset.repository';
-import { MikroOrmEmailResetRepository } from './repository/mikro-orm-email-reset.repository';
+import { TypeOrmEmailResetRepository } from './repository';
 
 @Injectable()
 export class EmailResetService extends TenantAwareCrudService<EmailReset> {
 	constructor(
 		@InjectRepository(EmailReset)
-		typeOrmEmailResetRepository: TypeOrmEmailResetRepository,
-
-		mikroOrmEmailResetRepository: MikroOrmEmailResetRepository,
+		private readonly typeOrmEmailResetRepository: TypeOrmEmailResetRepository,
 
 		private readonly userService: UserService,
 		private readonly commandBus: CommandBus,
@@ -35,7 +32,7 @@ export class EmailResetService extends TenantAwareCrudService<EmailReset> {
 		private readonly employeeService: EmployeeService,
 		private readonly authService: AuthService
 	) {
-		super(typeOrmEmailResetRepository, mikroOrmEmailResetRepository);
+		super(typeOrmEmailResetRepository);
 	}
 
 	async requestChangeEmail(request: UserEmailDTO, languageCode: LanguagesEnum) {
@@ -54,10 +51,10 @@ export class EmailResetService extends TenantAwareCrudService<EmailReset> {
 			 * User with email already exist
 			 */
 			if (user.email === request.email || (await this.userService.checkIfExistsEmail(request.email))) {
-				return new Object({
+				return {
 					status: HttpStatus.OK,
 					message: `OK`
-				});
+				};
 			}
 
 			const verificationCode = generateRandomAlphaNumericCode(ALPHA_NUMERIC_CODE_LENGTH);
@@ -91,10 +88,11 @@ export class EmailResetService extends TenantAwareCrudService<EmailReset> {
 			);
 		} finally {
 			// we reply "OK" in any case for security reasons
-			return new Object({
+			// eslint-disable-next-line no-unsafe-finally
+			return {
 				status: HttpStatus.OK,
 				message: `OK`
-			});
+			};
 		}
 	}
 
@@ -119,10 +117,10 @@ export class EmailResetService extends TenantAwareCrudService<EmailReset> {
 				(await this.userService.checkIfExistsEmail(record.email))
 			) {
 				// we reply with OK, but just do not update email for the user if something is wrong
-				return new Object({
+				return {
 					status: HttpStatus.OK,
 					message: `OK`
-				});
+				};
 			}
 
 			// we only do update if all checks completed above
@@ -136,10 +134,11 @@ export class EmailResetService extends TenantAwareCrudService<EmailReset> {
 			);
 		} finally {
 			// we reply "OK" in any case for security reasons
-			return new Object({
+			// eslint-disable-next-line no-unsafe-finally
+			return {
 				status: HttpStatus.OK,
 				message: `OK`
-			});
+			};
 		}
 	}
 

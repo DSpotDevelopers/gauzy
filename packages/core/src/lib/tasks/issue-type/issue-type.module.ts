@@ -8,7 +8,7 @@ import { IssueTypeController } from './issue-type.controller';
 import { IssueType } from './issue-type.entity';
 import { IssueTypeService } from './issue-type.service';
 import { CommandHandlers } from './commands/handlers';
-import { TypeOrmIssueTypeRepository } from './repository/type-orm-issue-type.repository';
+import { TypeOrmIssueTypeRepository } from './repository';
 
 @Module({
 	imports: [

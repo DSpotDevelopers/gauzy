@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
 import { FindManyOptions, FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 import {
@@ -17,16 +17,21 @@ import { activityLogUpdatedFieldsAndValues, generateActivityLogDescription } fro
 import { ActivityLogEvent } from './events/activity-log.event';
 import { GetActivityLogsDTO, allowedOrderDirections, allowedOrderFields } from './dto/get-activity-logs.dto';
 import { ActivityLog } from './activity-log.entity';
-import { MikroOrmActivityLogRepository, TypeOrmActivityLogRepository } from './repository';
+import { TypeOrmActivityLogRepository } from './repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Logger } from '../logger';
 
 @Injectable()
 export class ActivityLogService extends TenantAwareCrudService<ActivityLog> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmActivityLogRepository: TypeOrmActivityLogRepository,
-		readonly mikroOrmActivityLogRepository: MikroOrmActivityLogRepository,
+		@InjectRepository(ActivityLog)
+		private readonly typeOrmActivityLogRepository: TypeOrmActivityLogRepository,
 		private readonly _eventBus: EventBus
 	) {
-		super(typeOrmActivityLogRepository, mikroOrmActivityLogRepository);
+		super(typeOrmActivityLogRepository);
 	}
 
 	/**
@@ -47,7 +52,7 @@ export class ActivityLogService extends TenantAwareCrudService<ActivityLog> {
 			// Create the activity log entry using the provided input along with the tenantId and creatorId
 			return await super.create({ ...input, tenantId, creatorId });
 		} catch (error) {
-			console.log('Error while creating activity log:', error);
+			this.logger.error(`Error while creating activity log: ${error}`);
 			throw new BadRequestException('Error while creating activity log', error);
 		}
 	}
@@ -154,7 +159,7 @@ export class ActivityLogService extends TenantAwareCrudService<ActivityLog> {
 			);
 
 			// Add updated fields and values to the log
-			jsonFields = Object.assign({}, { updatedFields, previousValues, updatedValues });
+			jsonFields = { updatedFields, previousValues, updatedValues };
 		}
 
 		// Emit the event to log the activity

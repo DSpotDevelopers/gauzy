@@ -2,18 +2,17 @@ import { IGoal, GoalLevelEnum, IKeyResult, IOrganizationTeam, IEmployee } from '
 import { RelationId } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsEnum, IsString } from 'class-validator';
+import { Employee, KeyResult, OrganizationTeam, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import {
-	Employee,
-	KeyResult,
-	OrganizationTeam,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmGoalRepository } from './repository/mikro-orm-goal.repository';
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('goal', { mikroOrmRepository: () => MikroOrmGoalRepository })
+@MultiORMEntity('goal')
 export class Goal extends TenantOrganizationBaseEntity implements IGoal {
-
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()
 	name: string;

@@ -1,17 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ID, IReaction, IUser, ReactionEntityEnum } from '@gauzy/contracts';
 import { TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
-import { MikroOrmReactionRepository } from './repository/mikro-orm-reaction.repository';
 
-@MultiORMEntity('reaction', { mikroOrmRepository: () => MikroOrmReactionRepository })
+@MultiORMEntity('reaction')
 export class Reaction extends TenantOrganizationBaseEntity implements IReaction {
-	[EntityRepositoryType]?: MikroOrmReactionRepository;
-
 	@ApiProperty({ type: () => String, enum: ReactionEntityEnum })
 	@IsNotEmpty()
 	@IsEnum(ReactionEntityEnum)

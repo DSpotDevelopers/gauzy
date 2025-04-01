@@ -5,134 +5,118 @@ import { chain } from 'underscore';
 
 @Injectable()
 export class ActivityMapService {
-	constructor() {}
-
 	mapByDate(activities: IActivity[]) {
-		const dailyLogs: any = this.groupByDate(activities).map(
-			(byDateActivity: IActivity[], date) => {
+		const dailyLogs: any = this.groupByDate(activities)
+			.map((byDateActivity: IActivity[], date) => {
 				const sum = this.getDurationSum(byDateActivity);
-				const byEmployee = this.groupByEmployee(byDateActivity).map(
-					(byEmployeeActivity: IActivity[]) => {
-						const byProject = this.groupByProject(
-							byEmployeeActivity
-						).map((byProjectActivity: IActivity[]) => {
-							const project =
-								byProjectActivity.length > 0 &&
-								byProjectActivity[0]
-									? byProjectActivity[0].project
-									: null;
+				const byEmployee = this.groupByEmployee(byDateActivity)
+					.map((byEmployeeActivity: IActivity[]) => {
+						const byProject = this.groupByProject(byEmployeeActivity)
+							.map((byProjectActivity: IActivity[]) => {
+								const project =
+									byProjectActivity.length > 0 && byProjectActivity[0]
+										? byProjectActivity[0].project
+										: null;
 
-							return {
-								project,
-								activity: byProjectActivity.map((row) =>
-									this.mapActivitiesPercentage(row, sum)
-								)
-							};
-						}).value();
+								return {
+									project,
+									activity: byProjectActivity.map((row) => this.mapActivitiesPercentage(row, sum))
+								};
+							})
+							.value();
 
 						const employee =
-							byEmployeeActivity.length > 0 &&
-							byEmployeeActivity[0]
+							byEmployeeActivity.length > 0 && byEmployeeActivity[0]
 								? byEmployeeActivity[0].employee
 								: null;
 						return {
 							employee,
 							projects: byProject
 						};
-					}
-				).value();
+					})
+					.value();
 
 				return {
 					date,
 					employees: byEmployee
 				};
-			}
-		).value();
+			})
+			.value();
 		return dailyLogs;
 	}
 
 	mapByEmployee(activities: IActivity[]) {
-		const byEmployee: any = this.groupByEmployee(activities).map(
-			(byEmployeeActivity: IActivity[]) => {
+		const byEmployee: any = this.groupByEmployee(activities)
+			.map((byEmployeeActivity: IActivity[]) => {
 				const sum = this.getDurationSum(byEmployeeActivity);
-				const dailyLogs = this.groupByDate(byEmployeeActivity).map(
-					(byDateActivity: IActivity[], date) => {
-						const byProject = this.groupByProject(
-							byDateActivity
-						).map((byProjectActivity: IActivity[]) => {
-							const project =
-								byProjectActivity.length > 0 &&
-								byProjectActivity[0]
-									? byProjectActivity[0].project
-									: null;
-							return {
-								project,
-								activity: byProjectActivity.map((row) =>
-									this.mapActivitiesPercentage(row, sum)
-								)
-							};
-						}).value();
+				const dailyLogs = this.groupByDate(byEmployeeActivity)
+					.map((byDateActivity: IActivity[], date) => {
+						const byProject = this.groupByProject(byDateActivity)
+							.map((byProjectActivity: IActivity[]) => {
+								const project =
+									byProjectActivity.length > 0 && byProjectActivity[0]
+										? byProjectActivity[0].project
+										: null;
+								return {
+									project,
+									activity: byProjectActivity.map((row) => this.mapActivitiesPercentage(row, sum))
+								};
+							})
+							.value();
 
 						return {
 							date,
 							projects: byProject
 						};
-					}
-				).value();
+					})
+					.value();
 
 				const employee =
-					byEmployeeActivity.length > 0 && byEmployeeActivity[0]
-						? byEmployeeActivity[0].employee
-						: null;
+					byEmployeeActivity.length > 0 && byEmployeeActivity[0] ? byEmployeeActivity[0].employee : null;
 				return {
 					employee,
 					dates: dailyLogs
 				};
-			}
-		).value();
+			})
+			.value();
 		return byEmployee;
 	}
 
 	mapByProject(activities: IActivity[]) {
-		const byEmployee: any = this.groupByProject(activities).map(
-			(byProjectActivity: IActivity[]) => {
+		const byEmployee: any = this.groupByProject(activities)
+			.map((byProjectActivity: IActivity[]) => {
 				const sum = this.getDurationSum(byProjectActivity);
 
-				const dailyLogs = this.groupByDate(byProjectActivity).map(
-					(byDateActivity: IActivity[], date) => {
-						const byProject = this.groupByEmployee(
-							byDateActivity
-						).map((byEmployeeActivity: IActivity[]) => {
-							const employee =
-								byEmployeeActivity.length > 0 &&
-								byEmployeeActivity[0]
-									? byEmployeeActivity[0].employee
-									: null;
-							return {
-								employee,
-								activity: byEmployeeActivity.map((row) =>
-									this.mapActivitiesPercentage(row, sum)
-								)
-							};
-						}).value();
+				const dailyLogs = this.groupByDate(byProjectActivity)
+					.map((byDateActivity: IActivity[], date) => {
+						const byProject = this.groupByEmployee(byDateActivity)
+							.map((byEmployeeActivity: IActivity[]) => {
+								const employee =
+									byEmployeeActivity.length > 0 && byEmployeeActivity[0]
+										? byEmployeeActivity[0].employee
+										: null;
+								return {
+									employee,
+									activity: byEmployeeActivity.map((row) => this.mapActivitiesPercentage(row, sum))
+								};
+							})
+							.value();
 
 						return {
 							date,
 							employees: byProject
 						};
-					}
-				).value();
+					})
+					.value();
 
 				const project =
-					byProjectActivity.length > 0 && byProjectActivity[0]
-						? byProjectActivity[0].project
-						: null;
+					byProjectActivity.length > 0 && byProjectActivity[0] ? byProjectActivity[0].project : null;
 				return {
 					project,
 					dates: dailyLogs
 				};
-			}
-		).value();
+			})
+			.value();
 		return byEmployee;
 	}
 
@@ -155,7 +139,7 @@ export class ActivityMapService {
 	}
 
 	private mapActivitiesPercentage(activity, sum = 0) {
-		activity.duration_percentage = (((parseInt(activity.duration, 10) * 100) / sum).toFixed(2)) || 0;
+		activity.duration_percentage = ((parseInt(activity.duration, 10) * 100) / sum).toFixed(2) || 0;
 		return activity;
 	}
 

@@ -1,17 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RelationId } from 'typeorm';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ISocialAccount, IUser, ProviderEnum } from '@gauzy/contracts';
 import { TenantBaseEntity, User } from '../../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../../core/decorators/entity';
-import { MicroOrmSocialAccountRepository } from './repository';
 
-@MultiORMEntity('social_account', { mikroOrmRepository: () => MicroOrmSocialAccountRepository })
+@MultiORMEntity('social_account')
 export class SocialAccount extends TenantBaseEntity implements ISocialAccount {
-	[EntityRepositoryType]?: MicroOrmSocialAccountRepository;
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsEnum(ProviderEnum, { message: 'provider `$value` must be a valid enum value' })

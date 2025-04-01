@@ -9,7 +9,7 @@ import { RolePermissionModule } from '../role-permission/role-permission.module'
 import { EmailHistoryService } from './email-history.service';
 import { CommandHandlers } from './commands/handler';
 import { EmailSendModule } from './../email-send/email-send.module';
-import { TypeOrmEmailHistoryRepository } from './repository/type-orm-email-history.repository';
+import { TypeOrmEmailHistoryRepository } from './repository';
 
 @Module({
 	imports: [

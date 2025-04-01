@@ -1,6 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { isMySQL, isPostgres } from '@gauzy/config';
@@ -8,12 +6,9 @@ import { BaseEntityEnum, ActionTypeEnum, ActorTypeEnum, IActivityLog, ID, IUser,
 import { TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from '../core/decorators/entity';
 import { ActorTypeTransformerPipe } from '../shared/pipes';
-import { MikroOrmActivityLogRepository } from './repository/mikro-orm-activity-log.repository';
 
-@MultiORMEntity('activity_log', { mikroOrmRepository: () => MikroOrmActivityLogRepository })
+@MultiORMEntity('activity_log')
 export class ActivityLog extends TenantOrganizationBaseEntity implements IActivityLog {
-	[EntityRepositoryType]?: MikroOrmActivityLogRepository;
-
 	@ApiProperty({ enum: BaseEntityEnum })
 	@IsNotEmpty()
 	@IsEnum(BaseEntityEnum)

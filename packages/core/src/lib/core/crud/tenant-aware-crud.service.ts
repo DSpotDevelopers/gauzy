@@ -1,14 +1,14 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, Logger as NestLogger } from '@nestjs/common';
 import { DeleteResult, FindOptionsWhere, FindManyOptions, FindOneOptions, Repository, UpdateResult } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { IPagination, IUser, PermissionsEnum } from '@gauzy/contracts';
 import { isNotEmpty } from '@gauzy/common';
-import { MikroOrmBaseEntityRepository } from '../../core/repository/mikro-orm-base-entity.repository';
 import { RequestContext } from '../context';
 import { TenantBaseEntity } from '../entities/internal';
 import { CrudService } from './crud.service';
 import { ICrudService, IPartialEntity } from './icrud.service';
 import { ITryRequest } from './try-request';
+import { Logger } from '../../logger';
 
 /**
  * This abstract class adds tenantId to all query filters if a user is available in the current RequestContext
@@ -18,8 +18,13 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	extends CrudService<T>
 	implements ICrudService<T>
 {
-	constructor(typeOrmRepository: Repository<T>, mikroOrmRepository: MikroOrmBaseEntityRepository<T>) {
-		super(typeOrmRepository, mikroOrmRepository);
+	@Logger()
+	protected readonly logger: NestLogger;
+
+	private readonly tenantLogger = new NestLogger(`GZY - ${TenantAwareCrudService.name}`);
+
+	constructor(typeOrmRepository: Repository<T>) {
+		super(typeOrmRepository);
 	}
 
 	/**
@@ -29,24 +34,17 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	 */
 	private findConditionsWithEmployeeByUser(): FindOptionsWhere<T> {
 		const employeeId = RequestContext.currentEmployeeId();
+		const queryCondition =
+			!RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE) &&
+			this.typeOrmRepository.metadata?.hasColumnWithPropertyPath('employeeId')
+				? { employee: { id: employeeId }, employeeId: employeeId }
+				: {};
 		return (
 			/**
 			 * If the employee has logged in, retrieve their own data unless
 			 * they have the permission to change the selected employee.
 			 */
-			(
-				isNotEmpty(employeeId)
-					? !RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE) &&
-					  this.typeOrmRepository.metadata?.hasColumnWithPropertyPath('employeeId')
-						? {
-								employee: {
-									id: employeeId
-								},
-								employeeId: employeeId
-						  }
-						: {}
-					: {}
-			) as FindOptionsWhere<T>
+			(isNotEmpty(employeeId) ? queryCondition : {}) as FindOptionsWhere<T>
 		);
 	}
 
@@ -59,12 +57,7 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	private findConditionsWithTenantByUser(user: IUser): FindOptionsWhere<T> {
 		return {
 			...(this.typeOrmRepository.metadata?.hasColumnWithPropertyPath('tenantId')
-				? {
-						tenant: {
-							id: user.tenantId
-						},
-						tenantId: user.tenantId
-				  }
+				? { tenant: { id: user.tenantId }, tenantId: user.tenantId }
 				: {}),
 			...this.findConditionsWithEmployeeByUser()
 		} as FindOptionsWhere<T>;
@@ -91,16 +84,9 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 			});
 			return wheres;
 		}
-		return (
-			where
-				? {
-						...where,
-						...this.findConditionsWithTenantByUser(user)
-				  }
-				: {
-						...this.findConditionsWithTenantByUser(user)
-				  }
-		) as FindOptionsWhere<T>;
+		return where
+			? { ...where, ...this.findConditionsWithTenantByUser(user) }
+			: { ...this.findConditionsWithTenantByUser(user) };
 	}
 
 	/**
@@ -111,25 +97,17 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	 */
 	private findOneWithTenant(filter?: FindOneOptions<T>): FindOneOptions<T> {
 		const user = RequestContext.currentUser();
-		if (!user || !user.tenantId) {
+		if (!user?.tenantId) {
 			return filter;
 		}
 		if (!filter) {
-			return {
-				where: this.findConditionsWithTenantByUser(user)
-			};
+			return { where: this.findConditionsWithTenantByUser(user) };
 		}
 		if (!filter.where) {
-			return {
-				...filter,
-				where: this.findConditionsWithTenantByUser(user)
-			};
+			return { ...filter, where: this.findConditionsWithTenantByUser(user) };
 		}
 		if (filter.where instanceof Object) {
-			return {
-				...filter,
-				where: this.findConditionsWithTenant(user, filter.where)
-			};
+			return { ...filter, where: this.findConditionsWithTenant(user, filter.where) };
 		}
 		return filter;
 	}
@@ -142,25 +120,17 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	 */
 	private findManyWithTenant(filter?: FindManyOptions<T>): FindManyOptions<T> {
 		const user = RequestContext.currentUser();
-		if (!user || !user.tenantId) {
+		if (!user?.tenantId) {
 			return filter;
 		}
 		if (!filter) {
-			return {
-				where: this.findConditionsWithTenantByUser(user)
-			};
+			return { where: this.findConditionsWithTenantByUser(user) };
 		}
 		if (!filter.where) {
-			return {
-				...filter,
-				where: this.findConditionsWithTenantByUser(user)
-			};
+			return { ...filter, where: this.findConditionsWithTenantByUser(user) };
 		}
 		if (filter.where instanceof Object) {
-			return {
-				...filter,
-				where: this.findConditionsWithTenant(user, filter.where)
-			};
+			return { ...filter, where: this.findConditionsWithTenant(user, filter.where) };
 		}
 		return filter;
 	}
@@ -189,10 +159,7 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	 */
 	public async countBy(options?: FindOptionsWhere<T>): Promise<number> {
 		const user = RequestContext.currentUser();
-		return await super.countBy({
-			...options,
-			...this.findConditionsWithTenantByUser(user)
-		});
+		return await super.countBy({ ...options, ...this.findConditionsWithTenantByUser(user) });
 	}
 
 	/**
@@ -267,10 +234,7 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	 */
 	public async findOneOrFailByWhereOptions(options: FindOptionsWhere<T>): Promise<ITryRequest<T>> {
 		const user = RequestContext.currentUser();
-		return await super.findOneOrFailByWhereOptions({
-			...options,
-			...this.findConditionsWithTenantByUser(user)
-		});
+		return await super.findOneOrFailByWhereOptions({ ...options, ...this.findConditionsWithTenantByUser(user) });
 	}
 
 	/*
@@ -310,10 +274,7 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 	 */
 	public async findOneByWhereOptions(options: FindOptionsWhere<T>): Promise<T> {
 		const user = RequestContext.currentUser();
-		return await super.findOneByWhereOptions({
-			...options,
-			...this.findConditionsWithTenantByUser(user)
-		});
+		return await super.findOneByWhereOptions({ ...options, ...this.findConditionsWithTenantByUser(user) });
 	}
 
 	/**
@@ -327,30 +288,21 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 		const tenantId = RequestContext.currentTenantId();
 		const employeeId = RequestContext.currentEmployeeId();
 
+		const queryCondition =
+			!RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE) &&
+			this.typeOrmRepository.metadata?.hasColumnWithPropertyPath('employeeId')
+				? { employee: { id: employeeId }, employeeId: employeeId }
+				: {};
+
 		return await super.create({
 			...entity,
 			...(this.typeOrmRepository.metadata?.hasColumnWithPropertyPath('tenantId')
-				? {
-						tenant: {
-							id: tenantId
-						},
-						tenantId
-				  }
+				? { tenant: { id: tenantId }, tenantId }
 				: {}),
 			/**
 			 * If employee has login & create data for self
 			 */
-			...(isNotEmpty(employeeId)
-				? !RequestContext.hasPermission(PermissionsEnum.CHANGE_SELECTED_EMPLOYEE) &&
-				  this.typeOrmRepository.metadata?.hasColumnWithPropertyPath('employeeId')
-					? {
-							employee: {
-								id: employeeId
-							},
-							employeeId: employeeId
-					  }
-					: {}
-				: {})
+			...(isNotEmpty(employeeId) ? queryCondition : {})
 		});
 	}
 
@@ -366,12 +318,7 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 		return await super.save({
 			...entity,
 			...(this.typeOrmRepository.metadata?.hasColumnWithPropertyPath('tenantId')
-				? {
-						tenant: {
-							id: tenantId
-						},
-						tenantId
-				  }
+				? { tenant: { id: tenantId }, tenantId }
 				: {})
 		});
 	}
@@ -390,7 +337,7 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 		if (typeof id === 'string') {
 			await this.findOneByIdString(id);
 		} else if (typeof id === 'object') {
-			await this.findOneByWhereOptions(id as FindOptionsWhere<T>);
+			await this.findOneByWhereOptions(id);
 		}
 		return await super.update(id, partialEntity);
 	}
@@ -415,12 +362,9 @@ export abstract class TenantAwareCrudService<T extends TenantBaseEntity>
 			const user = RequestContext.currentUser();
 
 			// Proceed with the delete operation using the merged criteria
-			return await super.delete({
-				...where,
-				...this.findConditionsWithTenantByUser(user)
-			});
+			return await super.delete({ ...where, ...this.findConditionsWithTenantByUser(user) });
 		} catch (err) {
-			console.error('Error during delete operation:', err);
+			this.tenantLogger.error(`Error during delete operation: ${err}`);
 			throw new NotFoundException(`The record was not found`, err);
 		}
 	}

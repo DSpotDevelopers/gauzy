@@ -3,10 +3,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ICandidateExperience, ICandidate, ID } from '@gauzy/contracts';
 import { Candidate, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmCandidateExperienceRepository } from './repository/mikro-orm-candidate-experience.repository';
 import { IsOptional, IsUUID } from 'class-validator';
 
-@MultiORMEntity('candidate_experience', { mikroOrmRepository: () => MikroOrmCandidateExperienceRepository })
+@MultiORMEntity('candidate_experience')
 export class CandidateExperience extends TenantOrganizationBaseEntity implements ICandidateExperience {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()

@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
 import { FindManyOptions, Between, Raw } from 'typeorm';
 import * as moment from 'moment';
 import { IPagination } from '@gauzy/contracts';
 import { isPostgres } from '@gauzy/config';
 import { TenantAwareCrudService } from '@gauzy/core';
 import { Proposal } from './proposal.entity';
-import { MikroOrmProposalRepository } from './repository/mikro-orm-proposal.repository';
-import { TypeOrmProposalRepository } from './repository/type-orm-proposal.repository';
+import { TypeOrmProposalRepository } from './repository';
 
 @Injectable()
 export class ProposalService extends TenantAwareCrudService<Proposal> {
 	constructor(
-		readonly typeOrmProposalRepository: TypeOrmProposalRepository,
-		readonly mikroOrmProposalRepository: MikroOrmProposalRepository
+		@InjectRepository(Proposal)
+		private readonly typeOrmProposalRepository: TypeOrmProposalRepository
 	) {
-		super(typeOrmProposalRepository, mikroOrmProposalRepository);
+		super(typeOrmProposalRepository);
 	}
 
 	/**

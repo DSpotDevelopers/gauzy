@@ -8,7 +8,7 @@ import { TaskLinkedIssue } from './task-linked-issue.entity';
 import { CommandHandlers } from './commands/handlers';
 import { TaskLinkedIssueController } from './task-linked-issue.controller';
 import { TaskLinkedIssueService } from './task-linked-issue.service';
-import { TypeOrmTaskLinkedIssueRepository } from './repository/type-orm-linked-issue.repository';
+import { TypeOrmTaskLinkedIssueRepository } from './repository';
 
 @Module({
 	imports: [

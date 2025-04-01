@@ -1,19 +1,25 @@
 import { In } from 'typeorm';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
 import { GauzyAIService } from '@gauzy/plugin-integration-ai';
-import { TypeOrmEmployeeRepository } from '@gauzy/core';
+import { Employee, TypeOrmEmployeeRepository } from '@gauzy/core';
 import { EmployeeUpworkJobsSearchCriterion } from '../../employee-upwork-jobs-search-criterion.entity';
 import { JobPreset } from '../../job-preset.entity';
 import { SaveEmployeePresetCommand } from '../save-employee-preset.command';
-import { TypeOrmJobPresetRepository } from '../../repository/type-orm-job-preset.repository';
-import { TypeOrmEmployeeUpworkJobsSearchCriterionRepository } from '../../repository/type-orm-employee-upwork-jobs-search-criterion.repository';
+import { TypeOrmJobPresetRepository, TypeOrmEmployeeUpworkJobsSearchCriterionRepository } from '../../repository';
 
 @CommandHandler(SaveEmployeePresetCommand)
 export class SaveEmployeePresetHandler implements ICommandHandler<SaveEmployeePresetCommand> {
 	constructor(
-		private readonly _typeOrmJobPresetRepository: TypeOrmJobPresetRepository,
-		private readonly _typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
-		private readonly _typeOrmEmployeeUpworkJobsSearchCriterionRepository: TypeOrmEmployeeUpworkJobsSearchCriterionRepository,
+		@InjectRepository(JobPreset)
+		private readonly typeOrmJobPresetRepository: TypeOrmJobPresetRepository,
+
+		@InjectRepository(Employee)
+		private readonly typeOrmEmployeeRepository: TypeOrmEmployeeRepository,
+
+		@InjectRepository(EmployeeUpworkJobsSearchCriterion)
+		private readonly typeOrmEmployeeUpworkJobsSearchCriterionRepository: TypeOrmEmployeeUpworkJobsSearchCriterionRepository,
+
 		private readonly _gauzyAIService: GauzyAIService
 	) {}
 
@@ -28,13 +34,13 @@ export class SaveEmployeePresetHandler implements ICommandHandler<SaveEmployeePr
 		const { employeeId } = input;
 
 		// Find the employee with related data
-		let employee = await this._typeOrmEmployeeRepository.findOne({
+		let employee = await this.typeOrmEmployeeRepository.findOne({
 			where: { id: employeeId },
 			relations: ['user', 'organization', 'customFields.jobPresets']
 		});
 
 		// Find the job preset with related criteria
-		const jobPreset = await this._typeOrmJobPresetRepository.findOne({
+		const jobPreset = await this.typeOrmJobPresetRepository.findOne({
 			where: { id: In(input.jobPresetIds) },
 			relations: { jobPresetCriterions: true }
 		});
@@ -46,19 +52,19 @@ export class SaveEmployeePresetHandler implements ICommandHandler<SaveEmployeePr
 
 		// Update employee custom fields with job presets
 		employee.customFields['jobPresets'] = input.jobPresetIds.map((id) => new JobPreset({ id }));
-		await this._typeOrmEmployeeRepository.save(employee);
+		await this.typeOrmEmployeeRepository.save(employee);
 
 		// Delete existing employee job search criteria
-		await this._typeOrmEmployeeUpworkJobsSearchCriterionRepository.delete({ employeeId });
+		await this.typeOrmEmployeeUpworkJobsSearchCriterionRepository.delete({ employeeId });
 
 		// Save new employee job search criteria
-		await this._typeOrmEmployeeUpworkJobsSearchCriterionRepository.save(employeeCriterions);
+		await this.typeOrmEmployeeUpworkJobsSearchCriterionRepository.save(employeeCriterions);
 
 		// Sync Gauzy employee job search criteria
 		this._gauzyAIService.syncGauzyEmployeeJobSearchCriteria(employee, employeeCriterions);
 
 		// Find the employee with related data
-		employee = await this._typeOrmEmployeeRepository.findOne({
+		employee = await this.typeOrmEmployeeRepository.findOne({
 			where: { id: employeeId },
 			relations: ['customFields.jobPresets']
 		});

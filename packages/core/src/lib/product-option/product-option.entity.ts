@@ -2,17 +2,18 @@ import { JoinColumn, RelationId } from 'typeorm';
 import { IProductOptionTranslatable, IProductOptionTranslation } from '@gauzy/contracts';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
-import {
-	TenantOrganizationBaseEntity,
-	ProductOptionTranslation
-} from '../core/entities/internal';
+import { TenantOrganizationBaseEntity, ProductOptionTranslation } from '../core/entities/internal';
 import { ProductOptionGroup } from './product-option-group.entity';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmProductOptionRepository } from './repository/mikro-orm-product-option.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('product_option', { mikroOrmRepository: () => MikroOrmProductOptionRepository })
+@MultiORMEntity('product_option')
 export class ProductOption extends TenantOrganizationBaseEntity implements IProductOptionTranslatable {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@MultiORMColumn()
@@ -53,7 +54,7 @@ export class ProductOption extends TenantOrganizationBaseEntity implements IProd
 	@ApiProperty({ type: () => ProductOptionTranslation, isArray: true })
 	@MultiORMOneToMany(() => ProductOptionTranslation, (translation) => translation.reference, {
 		/** Eager relations are always loaded automatically when relation's owner entity is loaded using find* methods. */
-		eager: true,
+		eager: true
 	})
 	translations: IProductOptionTranslation[];
 }

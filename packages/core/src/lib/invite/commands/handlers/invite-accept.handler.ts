@@ -11,12 +11,13 @@ import { InviteAcceptEmployeeCommand } from '../invite.accept-employee.command';
 import { InviteAcceptUserCommand } from '../invite.accept-user.command';
 import { InviteAcceptCommand } from '../invite-accept.command';
 import { User } from './../../../core/entities/internal';
-import { TypeOrmUserRepository } from './../../../user/repository/type-orm-user.repository';
+import { TypeOrmUserRepository } from './../../../user/repository';
 
 @CommandHandler(InviteAcceptCommand)
 export class InviteAcceptHandler implements ICommandHandler<InviteAcceptCommand> {
 	constructor(
-		@InjectRepository(User) private readonly typeOrmUserRepository: TypeOrmUserRepository,
+		@InjectRepository(User)
+		private readonly typeOrmUserRepository: TypeOrmUserRepository,
 
 		private readonly commandBus: CommandBus,
 		private readonly inviteService: InviteService,
@@ -79,7 +80,7 @@ export class InviteAcceptHandler implements ICommandHandler<InviteAcceptCommand>
 	 * @param user
 	 * @returns
 	 */
-	private async _authorizeUser(user: IUser): Promise<Object> {
+	private async _authorizeUser(user: IUser): Promise<object> {
 		try {
 			const { id, email } = user;
 			await this.typeOrmUserRepository.findOneOrFail({

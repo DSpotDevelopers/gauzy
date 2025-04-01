@@ -22,9 +22,9 @@ import { SubscriptionService } from '../../../subscription/subscription.service'
 import { TaskService } from './../../task.service';
 import { ActivityLogService } from '../../../activity-log/activity-log.service';
 import { Task } from './../../task.entity';
-import { TypeOrmIntegrationMapRepository } from '../../../integration-map/repository/type-orm-integration-map.repository';
-import { TypeOrmTaskStatusRepository } from '../../statuses/repository/type-orm-task-status.repository';
-import { TypeOrmTaskRepository } from '../../repository/type-orm-task.repository';
+import { TypeOrmIntegrationMapRepository } from '../../../integration-map/repository';
+import { TypeOrmTaskStatusRepository } from '../../statuses/repository';
+import { TypeOrmTaskRepository } from '../../repository';
 
 @CommandHandler(AutomationTaskSyncCommand)
 export class AutomationTaskSyncHandler implements ICommandHandler<AutomationTaskSyncCommand> {

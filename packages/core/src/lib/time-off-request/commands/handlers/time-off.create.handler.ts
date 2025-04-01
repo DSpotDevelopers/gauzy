@@ -1,13 +1,17 @@
 import { ICommandHandler, CommandHandler } from '@nestjs/cqrs';
 import { BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { StatusTypesMapRequestApprovalEnum, ApprovalPolicyTypesStringEnum, RequestApprovalStatusTypesEnum } from '@gauzy/contracts';
+import {
+	StatusTypesMapRequestApprovalEnum,
+	ApprovalPolicyTypesStringEnum,
+	RequestApprovalStatusTypesEnum
+} from '@gauzy/contracts';
 import { TimeOffRequest } from '../../time-off-request.entity';
 import { RequestApproval } from '../../../request-approval/request-approval.entity';
 import { TimeOffCreateCommand } from '../time-off.create.command';
 import { RequestContext } from '../../../core/context';
-import { TypeOrmRequestApprovalRepository } from '../../../request-approval/repository/type-orm-request-approval.repository';
-import { TypeOrmTimeOffRequestRepository } from '../../repository/type-orm-time-off-request.repository';
+import { TypeOrmRequestApprovalRepository } from '../../../request-approval/repository';
+import { TypeOrmTimeOffRequestRepository } from '../../repository';
 
 @CommandHandler(TimeOffCreateCommand)
 export class TimeOffCreateHandler implements ICommandHandler<TimeOffCreateCommand> {
@@ -17,11 +21,9 @@ export class TimeOffCreateHandler implements ICommandHandler<TimeOffCreateComman
 
 		@InjectRepository(RequestApproval)
 		private readonly typeOrmRequestApprovalRepository: TypeOrmRequestApprovalRepository
-	) { }
+	) {}
 
-	public async execute(
-		command?: TimeOffCreateCommand
-	): Promise<TimeOffRequest> {
+	public async execute(command?: TimeOffCreateCommand): Promise<TimeOffRequest> {
 		try {
 			const { timeOff } = command;
 			const request = new TimeOffRequest();
@@ -32,7 +34,9 @@ export class TimeOffCreateHandler implements ICommandHandler<TimeOffCreateComman
 			const requestApproval = new RequestApproval();
 			requestApproval.requestId = timeOffRequestSaved.id;
 			requestApproval.requestType = ApprovalPolicyTypesStringEnum.TIME_OFF;
-			requestApproval.status = timeOffRequestSaved.status ? StatusTypesMapRequestApprovalEnum[timeOffRequestSaved.status] : RequestApprovalStatusTypesEnum.REQUESTED;
+			requestApproval.status = timeOffRequestSaved.status
+				? StatusTypesMapRequestApprovalEnum[timeOffRequestSaved.status]
+				: RequestApprovalStatusTypesEnum.REQUESTED;
 			requestApproval.createdBy = RequestContext.currentUser().id;
 			requestApproval.createdByName = RequestContext.currentUser().name;
 			requestApproval.name = 'Request time off';

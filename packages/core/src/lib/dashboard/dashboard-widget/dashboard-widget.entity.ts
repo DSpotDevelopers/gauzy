@@ -1,6 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsOptional, IsString, IsNumber, IsBoolean, IsUUID, IsNotEmpty } from 'class-validator';
 import { isMySQL, isPostgres } from '@gauzy/config';
@@ -21,12 +19,9 @@ import {
 	TenantOrganizationBaseEntity
 } from './../../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../../core/decorators/entity';
-import { MikroOrmDashboardWidgetRepository } from './repository/mikro-orm-dashboard-widget.repository';
 
-@MultiORMEntity('dashboard_widget', { mikroOrmRepository: () => MikroOrmDashboardWidgetRepository })
+@MultiORMEntity('dashboard_widget')
 export class DashboardWidget extends TenantOrganizationBaseEntity implements IDashboardWidget {
-	[EntityRepositoryType]?: MikroOrmDashboardWidgetRepository;
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsString()

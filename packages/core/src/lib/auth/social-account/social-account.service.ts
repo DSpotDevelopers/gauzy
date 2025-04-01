@@ -1,26 +1,32 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial } from 'typeorm';
 import { ISocialAccount, ISocialAccountBase } from '@gauzy/contracts';
 import { TenantAwareCrudService } from '../../core/crud';
 import { SocialAccount } from './social-account.entity';
-import { MicroOrmSocialAccountRepository, TypeOrmSocialAccountRepository } from './repository';
+import { TypeOrmSocialAccountRepository } from './repository';
 import { User, UserService } from '../../user';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class SocialAccountService extends TenantAwareCrudService<SocialAccount> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		@InjectRepository(SocialAccount) readonly typeOrmSocialAccountRepository: TypeOrmSocialAccountRepository,
-		readonly mikroOrmSocialAccountRepository: MicroOrmSocialAccountRepository,
+		@InjectRepository(SocialAccount)
+		private readonly typeOrmSocialAccountRepository: TypeOrmSocialAccountRepository,
+
 		private readonly userService: UserService
 	) {
-		super(typeOrmSocialAccountRepository, mikroOrmSocialAccountRepository);
+		super(typeOrmSocialAccountRepository);
 	}
 
 	async registerSocialAccount(partialEntity: DeepPartial<ISocialAccount>): Promise<ISocialAccount> {
 		try {
 			return await this.typeOrmRepository.save(partialEntity);
 		} catch (error) {
+			this.logger.error(`Error while registering social account: ${error}`);
 			throw new BadRequestException('Could not create this account');
 		}
 	}
@@ -44,6 +50,7 @@ export class SocialAccountService extends TenantAwareCrudService<SocialAccount> 
 			}
 			return user;
 		} catch (error) {
+			this.logger.error(`Error while finding user by social id: ${error}`);
 			throw new BadRequestException('The user with this account details does not exists');
 		}
 	}

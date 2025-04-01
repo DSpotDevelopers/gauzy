@@ -1,21 +1,12 @@
 import { IInvoice, IInvoiceEstimateHistory } from '@gauzy/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
-import {
-	JoinColumn,
-	RelationId,
-} from 'typeorm';
-import {
-	Invoice,
-	TenantOrganizationBaseEntity,
-	User,
-} from '../core/entities/internal';
+import { JoinColumn, RelationId } from 'typeorm';
+import { Invoice, TenantOrganizationBaseEntity, User } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmInvoiceEstimateHistoryRepository } from './repository/mikro-orm-invoice-estimate-history.repository';
 
-@MultiORMEntity('invoice_estimate_history', { mikroOrmRepository: () => MikroOrmInvoiceEstimateHistoryRepository })
+@MultiORMEntity('invoice_estimate_history')
 export class InvoiceEstimateHistory extends TenantOrganizationBaseEntity implements IInvoiceEstimateHistory {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@MultiORMColumn()
@@ -34,7 +25,7 @@ export class InvoiceEstimateHistory extends TenantOrganizationBaseEntity impleme
 	*/
 	@ApiProperty({ type: () => User })
 	@MultiORMManyToOne(() => User, {
-		onDelete: 'SET NULL',
+		onDelete: 'SET NULL'
 	})
 	@JoinColumn()
 	user: User;
@@ -48,7 +39,7 @@ export class InvoiceEstimateHistory extends TenantOrganizationBaseEntity impleme
 
 	@ApiProperty({ type: () => Invoice })
 	@MultiORMManyToOne(() => Invoice, (invoice) => invoice.invoiceItems, {
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	invoice: IInvoice;
 

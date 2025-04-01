@@ -1,19 +1,21 @@
-import {
-	RelationId,
-	JoinColumn
-} from 'typeorm';
+import { RelationId, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
 import { IReport, IReportCategory, IReportOrganization } from '@gauzy/contracts';
 import { BaseEntity } from '../core/entities/internal';
 import { ReportCategory } from './report-category.entity';
 import { ReportOrganization } from './report-organization.entity';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne, MultiORMOneToMany, VirtualMultiOrmColumn } from './../core/decorators/entity';
-import { MikroOrmReportRepository } from './repository/mikro-orm-report.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToOne,
+	MultiORMOneToMany,
+	VirtualMultiOrmColumn
+} from './../core/decorators/entity';
 
-@MultiORMEntity('report', { mikroOrmRepository: () => MikroOrmReportRepository })
+@MultiORMEntity('report')
 export class Report extends BaseEntity implements IReport {
-
 	@ApiProperty({ type: () => String })
 	@IsString()
 	@IsNotEmpty()

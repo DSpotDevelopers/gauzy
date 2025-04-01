@@ -10,7 +10,7 @@ import { EmailSendModule } from '../email-send/email-send.module';
 import { EmployeeModule } from '../employee/employee.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
-import { TypeOrmEmployeeAppointmentRepository } from './repository/type-orm-employee-appointment.repository';
+import { TypeOrmEmployeeAppointmentRepository } from './repository';
 
 @Module({
 	imports: [

@@ -1,17 +1,7 @@
-import {
-	RelationId,
-	JoinColumn,
-	JoinTable
-} from 'typeorm';
+import { RelationId, JoinColumn, JoinTable } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional } from 'class-validator';
-import {
-	IInvoiceItem,
-	IImageAsset,
-	IProductTranslatable,
-	ITag,
-	IWarehouse
-} from '@gauzy/contracts';
+import { IInvoiceItem, IImageAsset, IProductTranslatable, ITag, IWarehouse } from '@gauzy/contracts';
 import {
 	ImageAsset,
 	InvoiceItem,
@@ -24,12 +14,17 @@ import {
 	ProductOptionGroup,
 	WarehouseProduct
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmProductRepository } from './repository/mikro-orm-product.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('product', { mikroOrmRepository: () => MikroOrmProductRepository })
+@MultiORMEntity('product')
 export class Product extends TranslatableBase implements IProductTranslatable {
-
 	@ApiPropertyOptional({ type: () => Boolean })
 	@MultiORMColumn({ default: true })
 	enabled: boolean;
@@ -176,7 +171,7 @@ export class Product extends TranslatableBase implements IProductTranslatable {
 		owner: true,
 		pivotTable: 'tag_product',
 		joinColumn: 'productId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_product'
@@ -192,7 +187,7 @@ export class Product extends TranslatableBase implements IProductTranslatable {
 		owner: true,
 		pivotTable: 'product_gallery_item',
 		joinColumn: 'productId',
-		inverseJoinColumn: 'imageAssetId',
+		inverseJoinColumn: 'imageAssetId'
 	})
 	@JoinTable({
 		name: 'product_gallery_item'

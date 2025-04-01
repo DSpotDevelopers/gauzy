@@ -1,7 +1,5 @@
 import { JoinColumn, JoinTable, RelationId } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import {
 	IsArray,
 	IsBoolean,
@@ -42,15 +40,10 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from '../core/decorators/entity';
-import { MikroOrmOrganizationProjectModuleRepository } from './repository/mikro-orm-organization-project-module.repository';
 import { OrganizationProjectModuleEmployee } from './organization-project-module-employee.entity';
 
-@MultiORMEntity('organization_project_module', {
-	mikroOrmRepository: () => MikroOrmOrganizationProjectModuleRepository
-})
+@MultiORMEntity('organization_project_module')
 export class OrganizationProjectModule extends TenantOrganizationBaseEntity implements IOrganizationProjectModule {
-	[EntityRepositoryType]?: MikroOrmOrganizationProjectModuleRepository;
-
 	@ApiProperty({ type: () => String })
 	@IsNotEmpty()
 	@IsString()

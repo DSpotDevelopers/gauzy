@@ -51,9 +51,8 @@ import {
 	MultiORMOneToOne,
 	VirtualMultiOrmColumn
 } from './../core/decorators/entity';
-import { MikroOrmCandidateRepository } from './repository/mikro-orm-candidate.repository';
 
-@MultiORMEntity('candidate', { mikroOrmRepository: () => MikroOrmCandidateRepository })
+@MultiORMEntity('candidate')
 export class Candidate extends TenantOrganizationBaseEntity implements ICandidate {
 	@ApiPropertyOptional({ type: () => Number })
 	@IsOptional()

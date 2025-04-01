@@ -3,18 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IPagination, IProductCategoryTranslatable, LanguagesEnum } from '@gauzy/contracts';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { ProductCategory } from './product-category.entity';
-import { TypeOrmProductCategoryRepository } from './repository/type-orm-product-category.repository';
-import { MikroOrmProductCategoryRepository } from './repository/mikro-orm-product-category.repository';
+import { TypeOrmProductCategoryRepository } from './repository';
 
 @Injectable()
 export class ProductCategoryService extends TenantAwareCrudService<ProductCategory> {
 	constructor(
 		@InjectRepository(ProductCategory)
-		typeOrmProductCategoryRepository: TypeOrmProductCategoryRepository,
-
-		mikroOrmProductCategoryRepository: MikroOrmProductCategoryRepository
+		private readonly typeOrmProductCategoryRepository: TypeOrmProductCategoryRepository
 	) {
-		super(typeOrmProductCategoryRepository, mikroOrmProductCategoryRepository);
+		super(typeOrmProductCategoryRepository);
 	}
 
 	/**
@@ -26,7 +23,7 @@ export class ProductCategoryService extends TenantAwareCrudService<ProductCatego
 	 */
 	public async pagination(options: PaginationParams<ProductCategory>, language: LanguagesEnum) {
 		const { items, total } = await super.paginate(options);
-		return await this.mapTranslatedProductCategories(items as any, language).then((items) => {
+		return await this.mapTranslatedProductCategories(items, language).then((items) => {
 			return { items, total };
 		});
 	}
@@ -63,7 +60,7 @@ export class ProductCategoryService extends TenantAwareCrudService<ProductCatego
 			where,
 			relations
 		});
-		return await this.mapTranslatedProductCategories(items as any, language).then((items) => {
+		return await this.mapTranslatedProductCategories(items, language).then((items) => {
 			return { items, total };
 		});
 	}
@@ -78,9 +75,10 @@ export class ProductCategoryService extends TenantAwareCrudService<ProductCatego
 	async mapTranslatedProductCategories(items: IProductCategoryTranslatable[], languageCode: LanguagesEnum) {
 		if (languageCode) {
 			return Promise.all(
-				items.map((category: IProductCategoryTranslatable) =>
-					Object.assign({}, category, category.translate(languageCode))
-				)
+				items.map((category: IProductCategoryTranslatable) => ({
+					...category,
+					...category.translate(languageCode)
+				}))
 			);
 		} else {
 			return items;
@@ -97,7 +95,7 @@ export class ProductCategoryService extends TenantAwareCrudService<ProductCatego
 	async mapTranslatedProductType(type: IProductCategoryTranslatable, languageCode: LanguagesEnum) {
 		try {
 			if (languageCode) {
-				return Object.assign({}, type, type.translate(languageCode));
+				return { ...type, ...type.translate(languageCode) };
 			} else {
 				return type;
 			}

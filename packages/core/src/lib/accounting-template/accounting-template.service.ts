@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, IsNull, SelectQueryBuilder, WhereExpressionBuilder } from 'typeorm';
 import * as mjml2html from 'mjml';
@@ -16,18 +16,18 @@ import { AccountingTemplate } from './accounting-template.entity';
 import { PaginationParams, TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from './../core/context';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { TypeOrmAccountingTemplateRepository } from './repository/type-orm-accounting-template.repository';
-import { MikroOrmAccountingTemplateRepository } from './repository/mikro-orm-accounting-template.repository';
-
+import { TypeOrmAccountingTemplateRepository } from './repository';
+import { Logger } from '../logger';
 @Injectable()
 export class AccountingTemplateService extends TenantAwareCrudService<AccountingTemplate> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(AccountingTemplate)
-		typeOrmAccountingTemplateRepository: TypeOrmAccountingTemplateRepository,
-
-		mikroOrmAccountingTemplateRepository: MikroOrmAccountingTemplateRepository
+		private readonly typeOrmAccountingTemplateRepository: TypeOrmAccountingTemplateRepository
 	) {
-		super(typeOrmAccountingTemplateRepository, mikroOrmAccountingTemplateRepository);
+		super(typeOrmAccountingTemplateRepository);
 	}
 
 	generatePreview(input) {
@@ -36,7 +36,9 @@ export class AccountingTemplateService extends TenantAwareCrudService<Accounting
 		try {
 			const mjmlTohtml = mjml2html(data);
 			textToHtml = mjmlTohtml.errors.length ? data : mjmlTohtml.html;
-		} catch (error) { }
+		} catch (error) {
+			this.logger.error(`Error generating HTML preview: ${error}`);
+		}
 
 		const handlebarsTemplate = Handlebars.compile(textToHtml);
 
@@ -162,13 +164,14 @@ export class AccountingTemplateService extends TenantAwareCrudService<Accounting
 				organizationId: input.organizationId,
 				tenantId
 			});
-			let entity: AccountingTemplate = {
+			const entity: AccountingTemplate = {
 				...record,
 				hbs: mjml2html(record.mjml).html,
 				mjml: input.mjml
 			};
 			return await this.update(record.id, entity);
 		} catch (error) {
+			this.logger.error(`Error saving accounting template: ${error}`);
 			const entity = new AccountingTemplate();
 			entity.languageCode = input.languageCode;
 			entity.templateType = input.templateType;
@@ -203,6 +206,7 @@ export class AccountingTemplateService extends TenantAwareCrudService<Accounting
 				tenantId
 			});
 		} catch (error) {
+			this.logger.error(`Error getting accounting template: ${error}`);
 			try {
 				return await this.typeOrmRepository.findOneBy({
 					languageCode,
@@ -211,6 +215,7 @@ export class AccountingTemplateService extends TenantAwareCrudService<Accounting
 					tenantId: IsNull()
 				});
 			} catch (error) {
+				this.logger.error(`Error getting accounting template without organization and tenant: ${error}`);
 				try {
 					return await this.typeOrmRepository.findOneBy({
 						languageCode: LanguagesEnum.ENGLISH,
@@ -219,6 +224,9 @@ export class AccountingTemplateService extends TenantAwareCrudService<Accounting
 						tenantId
 					});
 				} catch (error) {
+					this.logger.error(
+						`Error getting accounting template without organization, tenant and default language: ${error}`
+					);
 					return await this.typeOrmRepository.findOneBy({
 						languageCode: LanguagesEnum.ENGLISH,
 						templateType,
@@ -246,16 +254,8 @@ export class AccountingTemplateService extends TenantAwareCrudService<Accounting
 					brandColor: true
 				}
 			},
-			...(params && params.relations
-				? {
-					relations: params.relations
-				}
-				: {}),
-			...(params && params.order
-				? {
-					order: params.order
-				}
-				: {})
+			...(params?.relations ? { relations: params.relations } : {}),
+			...(params?.order ? { order: params.order } : {})
 		});
 		query.where((qb: SelectQueryBuilder<AccountingTemplate>) => {
 			qb.andWhere(

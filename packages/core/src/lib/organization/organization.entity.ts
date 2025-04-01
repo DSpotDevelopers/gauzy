@@ -55,9 +55,8 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToMany
 } from './../core/decorators/entity';
-import { MikroOrmOrganizationRepository } from './repository/mikro-orm-organization.repository';
 
-@MultiORMEntity('organization', { mikroOrmRepository: () => MikroOrmOrganizationRepository })
+@MultiORMEntity('organization')
 export class Organization extends TenantBaseEntity implements IOrganization {
 	@ApiProperty({ type: () => String, required: true })
 	@IsNotEmpty()

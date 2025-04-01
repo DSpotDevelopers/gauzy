@@ -1,8 +1,6 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere } from 'typeorm';
-import { Knex as KnexConnection } from 'knex';
-import { InjectConnection } from 'nest-knexjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
 	ID,
@@ -15,29 +13,25 @@ import {
 	ITaskStatusUpdateInput,
 	ITenant
 } from '@gauzy/contracts';
-import { isPostgres } from '@gauzy/config';
 import { RequestContext } from '../../core/context';
-import { MultiORMEnum } from '../../core/utils';
 import { IPartialEntity } from '../../core/crud/icrud.service';
 import { TaskStatusPrioritySizeService } from '../task-status-priority-size.service';
 import { TaskStatus } from './status.entity';
 import { DEFAULT_GLOBAL_STATUSES } from './default-global-statuses';
 import { TASK_STATUSES_TEMPLATES } from './standard-statuses-template';
-import { MikroOrmTaskStatusRepository, TypeOrmTaskStatusRepository } from './repository';
+import { TypeOrmTaskStatusRepository } from './repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus> {
-	// Logger for tracking operations
-	logger = new Logger('TaskStatusService'); // Update with your service name
+	@Logger()
+	protected readonly logger: NestLogger;
 
 	constructor(
 		@InjectRepository(TaskStatus)
-		readonly typeOrmTaskStatusRepository: TypeOrmTaskStatusRepository,
-		readonly mikroOrmTaskStatusRepository: MikroOrmTaskStatusRepository,
-		@InjectConnection() readonly knexConnection: KnexConnection
+		private readonly typeOrmTaskStatusRepository: TypeOrmTaskStatusRepository
 	) {
-		console.log(`TaskStatusService initialized. Unique Service ID: ${uuidv4()} `);
-		super(typeOrmTaskStatusRepository, mikroOrmTaskStatusRepository, knexConnection);
+		super(typeOrmTaskStatusRepository);
 	}
 
 	/**
@@ -58,6 +52,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return await this.save({ ...partialEntity, ...workFlow });
 		} catch (error) {
 			// Handle errors and return an appropriate error response
+			this.logger.error(`Failed to add task status: ${error}`);
 			throw new HttpException(`Failed to add task status: ${error.message}`, HttpStatus.BAD_REQUEST);
 		}
 	}
@@ -71,16 +66,9 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 	 */
 	async fetchAll(params: ITaskStatusFindInput): Promise<IPagination<TaskStatus>> {
 		try {
-			if (this.ormType == MultiORMEnum.TypeORM && isPostgres()) {
-				return await super.fetchAllByKnex(params);
-			} else {
-				return await super.fetchAll(params);
-			}
+			return await super.fetchAll(params);
 		} catch (error) {
-			console.log(
-				'Failed to retrieve task statuses. Ensure that the provided parameters are valid and complete.',
-				error
-			);
+			this.logger.error(`Failed to retrieve task statuses: ${error}`);
 			throw new BadRequestException(
 				'Failed to retrieve task statuses. Ensure that the provided parameters are valid and complete.',
 				error
@@ -132,7 +120,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return await this.typeOrmRepository.save(statuses);
 		} catch (error) {
 			// If an error occurs during the creation process, log the error.
-			console.error('Error while creating task statuses', error.message);
+			this.logger.error(`Failed to create bulk task statuses for tenants: ${error}`);
 		}
 	}
 
@@ -186,7 +174,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return await this.typeOrmRepository.save(statuses);
 		} catch (error) {
 			// If an error occurs during the creation process, log the error.
-			console.error('Error while creating task statuses for organization', error.message);
+			this.logger.error(`Failed to create bulk task statuses for organization: ${error}`);
 		}
 	}
 
@@ -240,7 +228,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return statuses;
 		} catch (error) {
 			// If an error occurs during the creation process, log the error.
-			console.error('Error while creating task statuses', error);
+			this.logger.error(`Failed to create bulk task statuses for organization: ${error}`);
 		}
 	}
 
@@ -266,7 +254,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return { success: true, list };
 		} catch (error) {
 			// Handle errors during reordering
-			this.logger.error('Error during reordering of task statues:', error); // Log the error for debugging
+			this.logger.error(`Error during reordering of task statues: ${error}`); // Log the error for debugging
 			throw new BadRequestException('An error occurred while reordering task statues. Please try again.', error); // Return error
 		}
 	}
@@ -315,6 +303,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return items;
 		} catch (error) {
 			// If an error occurs, throw a BadRequestException
+			this.logger.error(`Failed to mark task status as default: ${error}`);
 			throw new BadRequestException(error);
 		}
 	}

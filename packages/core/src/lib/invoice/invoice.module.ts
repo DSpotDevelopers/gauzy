@@ -12,7 +12,7 @@ import { EstimateEmailModule } from '../estimate-email/estimate-email.module';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
 import { OrganizationModule } from './../organization/organization.module';
 import { PdfmakerService } from './pdfmaker.service';
-import { TypeOrmInvoiceRepository } from './repository/type-orm-invoice.repository';
+import { TypeOrmInvoiceRepository } from './repository';
 
 @Module({
 	imports: [

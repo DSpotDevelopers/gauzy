@@ -2,15 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { RelationId } from 'typeorm';
 import { IsNumber } from 'class-validator';
 import { IEmployee, ITask, ITaskEstimation } from '@gauzy/contracts';
-import {
-	Employee,
-	TenantOrganizationBaseEntity,
-	Task,
-} from './../../core/entities/internal';
+import { Employee, TenantOrganizationBaseEntity, Task } from './../../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../../core/decorators/entity';
-import { MikroOrmTaskEstimationRepository } from './repository/mikro-orm-estimation.repository';
 
-@MultiORMEntity('task_estimation', { mikroOrmRepository: () => MikroOrmTaskEstimationRepository })
+@MultiORMEntity('task_estimation')
 export class TaskEstimation extends TenantOrganizationBaseEntity implements ITaskEstimation {
 	@ApiProperty({ type: () => Number })
 	@IsNumber()
@@ -36,13 +31,13 @@ export class TaskEstimation extends TenantOrganizationBaseEntity implements ITas
 	*/
 	@ApiProperty({ type: () => Employee })
 	@MultiORMManyToOne(() => Employee, (employee) => employee.estimations, {
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	employee?: IEmployee;
 
 	@ApiProperty({ type: () => Task })
 	@MultiORMManyToOne(() => Task, (task) => task.estimations, {
-		onDelete: 'CASCADE',
+		onDelete: 'CASCADE'
 	})
 	task?: ITask;
 }

@@ -5,11 +5,7 @@
   - Request Approval table has the one to many relationships to RequestApprovalEmployee table
   - Request Approval table has the many to many relationships to the Employee table through the RequestApprovalEmployee table.
 */
-import {
-	RelationId,
-	JoinColumn,
-	JoinTable
-} from 'typeorm';
+import { RelationId, JoinColumn, JoinTable } from 'typeorm';
 import {
 	IRequestApproval,
 	ApprovalPolicyTypesStringEnum,
@@ -27,10 +23,16 @@ import {
 	Tag,
 	TenantOrganizationBaseEntity
 } from '../core/entities/internal';
-import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToMany, MultiORMManyToOne, MultiORMOneToMany } from './../core/decorators/entity';
-import { MikroOrmRequestApprovalRepository } from './repository/mikro-orm-request-approval.repository';
+import {
+	ColumnIndex,
+	MultiORMColumn,
+	MultiORMEntity,
+	MultiORMManyToMany,
+	MultiORMManyToOne,
+	MultiORMOneToMany
+} from './../core/decorators/entity';
 
-@MultiORMEntity('request_approval', { mikroOrmRepository: () => MikroOrmRequestApprovalRepository })
+@MultiORMEntity('request_approval')
 export class RequestApproval extends TenantOrganizationBaseEntity implements IRequestApproval {
 	@ApiProperty({ type: () => String })
 	@IsString()
@@ -76,8 +78,8 @@ export class RequestApproval extends TenantOrganizationBaseEntity implements IRe
 	*/
 
 	/**
-	*  ApprovalPolicy
-	*/
+	 *  ApprovalPolicy
+	 */
 	@ApiProperty({ type: () => ApprovalPolicy })
 	@MultiORMManyToOne(() => ApprovalPolicy, {
 		nullable: true,
@@ -129,7 +131,7 @@ export class RequestApproval extends TenantOrganizationBaseEntity implements IRe
 		owner: true,
 		pivotTable: 'tag_request_approval',
 		joinColumn: 'requestApprovalId',
-		inverseJoinColumn: 'tagId',
+		inverseJoinColumn: 'tagId'
 	})
 	@JoinTable({
 		name: 'tag_request_approval'

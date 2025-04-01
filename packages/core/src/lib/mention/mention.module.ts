@@ -8,7 +8,7 @@ import { SubscriptionModule } from '../subscription/subscription.module';
 import { MentionController } from './mention.controller';
 import { Mention } from './mention.entity';
 import { EventHandlers } from './events/handlers';
-import { TypeOrmMentionRepository } from './repository/type-orm-mention.repository';
+import { TypeOrmMentionRepository } from './repository';
 
 @Global()
 @Module({

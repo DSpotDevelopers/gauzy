@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateResult } from 'typeorm';
 import {
 	IResourceLink,
@@ -14,18 +15,22 @@ import { RequestContext } from '../core/context';
 import { UserService } from '../user/user.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ResourceLink } from './resource-link.entity';
-import { TypeOrmResourceLinkRepository } from './repository/type-orm-resource-link.repository';
-import { MikroOrmResourceLinkRepository } from './repository/mikro-orm-resource-link.repository';
+import { TypeOrmResourceLinkRepository } from './repository';
+import { Logger } from '../logger';
 
 @Injectable()
 export class ResourceLinkService extends TenantAwareCrudService<ResourceLink> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
-		readonly typeOrmResourceLinkRepository: TypeOrmResourceLinkRepository,
-		readonly mikroOrmResourceLinkRepository: MikroOrmResourceLinkRepository,
+		@InjectRepository(ResourceLink)
+		private readonly typeOrmResourceLinkRepository: TypeOrmResourceLinkRepository,
+
 		private readonly userService: UserService,
 		private readonly activityLogService: ActivityLogService
 	) {
-		super(typeOrmResourceLinkRepository, mikroOrmResourceLinkRepository);
+		super(typeOrmResourceLinkRepository);
 	}
 
 	/**
@@ -67,7 +72,7 @@ export class ResourceLinkService extends TenantAwareCrudService<ResourceLink> {
 
 			return resourceLink;
 		} catch (error) {
-			console.log(error); // Debug Logging
+			this.logger.error(`Error while creating resource link: ${error}`);
 			throw new BadRequestException('Resource Link creation failed', error);
 		}
 	}
@@ -109,7 +114,7 @@ export class ResourceLinkService extends TenantAwareCrudService<ResourceLink> {
 			// return updated Resource Link
 			return updatedResourceLink;
 		} catch (error) {
-			console.log(error); // Debug Logging
+			this.logger.error(`Error while updating resource link: ${error}`);
 			throw new BadRequestException('Resource Link update failed', error);
 		}
 	}

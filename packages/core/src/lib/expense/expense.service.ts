@@ -10,18 +10,15 @@ import { TenantAwareCrudService } from './../core/crud';
 import { RequestContext } from '../core/context';
 import { getDateRangeFormat, getDaysBetweenDates } from './../core/utils';
 import { prepareSQLQuery as p } from './../database/database.helper';
-import { TypeOrmExpenseRepository } from './repository/type-orm-expense.repository';
-import { MikroOrmExpenseRepository } from './repository/mikro-orm-expense.repository';
+import { TypeOrmExpenseRepository } from './repository';
 
 @Injectable()
 export class ExpenseService extends TenantAwareCrudService<Expense> {
 	constructor(
 		@InjectRepository(Expense)
-		typeOrmExpenseRepository: TypeOrmExpenseRepository,
-
-		mikroOrmExpenseRepository: MikroOrmExpenseRepository
+		private readonly typeOrmExpenseRepository: TypeOrmExpenseRepository
 	) {
-		super(typeOrmExpenseRepository, mikroOrmExpenseRepository);
+		super(typeOrmExpenseRepository);
 	}
 
 	/**
@@ -39,17 +36,17 @@ export class ExpenseService extends TenantAwareCrudService<Expense> {
 			const endOfMonth = moment(moment(filterDate).endOf('month').format('YYYY-MM-DD hh:mm:ss')).toDate();
 			return filter
 				? await this.findAll({
-					where: {
-						valueDate: Between<Date>(startOfMonth, endOfMonth),
-						...(filter.where as Object)
-					},
-					relations: filter.relations
-				})
+						where: {
+							valueDate: Between<Date>(startOfMonth, endOfMonth),
+							...(filter.where as object)
+						},
+						relations: filter.relations
+				  })
 				: await this.findAll({
-					where: {
-						valueDate: Between(startOfMonth, endOfMonth)
-					}
-				});
+						where: {
+							valueDate: Between(startOfMonth, endOfMonth)
+						}
+				  });
 		}
 		return await this.findAll(filter || {});
 	}

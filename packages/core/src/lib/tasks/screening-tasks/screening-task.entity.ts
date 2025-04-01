@@ -1,6 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EntityRepositoryType } from '@mikro-orm/core';
 import { JoinColumn, RelationId } from 'typeorm';
 import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { ID, IScreeningTask, ITask, IUser, ScreeningTaskStatusEnum } from '@gauzy/contracts';
@@ -12,12 +10,9 @@ import {
 	MultiORMManyToOne,
 	MultiORMOneToOne
 } from '../../core/decorators/entity';
-import { MikroOrmScreeningTaskRepository } from './repository/mikro-orm-screening-task.repository';
 
-@MultiORMEntity('screening_task', { mikroOrmRepository: () => MikroOrmScreeningTaskRepository })
+@MultiORMEntity('screening_task')
 export class ScreeningTask extends TenantOrganizationBaseEntity implements IScreeningTask {
-	[EntityRepositoryType]?: MikroOrmScreeningTaskRepository;
-
 	@ApiProperty({ enum: ScreeningTaskStatusEnum })
 	@IsNotEmpty()
 	@IsEnum(ScreeningTaskStatusEnum)

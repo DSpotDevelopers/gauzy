@@ -7,14 +7,12 @@ import { UpdateEmployeeTotalWorkedHoursCommand } from '../../../../employee/comm
 import { TimeSlotBulkDeleteCommand } from './../../../time-slot/commands';
 import { TimeLogDeleteCommand } from '../time-log-delete.command';
 import { TimeLog } from './../../time-log.entity';
-import { TypeOrmTimeLogRepository } from '../../repository/type-orm-time-log.repository';
-import { MikroOrmTimeLogRepository } from '../..//repository/mikro-orm-time-log.repository';
+import { TypeOrmTimeLogRepository } from '../../repository';
 
 @CommandHandler(TimeLogDeleteCommand)
 export class TimeLogDeleteHandler implements ICommandHandler<TimeLogDeleteCommand> {
 	constructor(
 		readonly typeOrmTimeLogRepository: TypeOrmTimeLogRepository,
-		readonly mikroOrmTimeLogRepository: MikroOrmTimeLogRepository,
 		private readonly _commandBus: CommandBus
 	) {}
 
@@ -69,7 +67,7 @@ export class TimeLogDeleteHandler implements ICommandHandler<TimeLogDeleteComman
 			return ids as TimeLog[];
 		} else {
 			// Return single TimeLog object wrapped in an array
-			return [ids as TimeLog];
+			return [ids];
 		}
 	}
 

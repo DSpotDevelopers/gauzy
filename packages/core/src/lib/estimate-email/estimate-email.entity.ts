@@ -3,12 +3,9 @@ import { isMySQL } from '@gauzy/config';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { MultiORMColumn, MultiORMEntity } from './../core/decorators/entity';
-import { MikroOrmEstimateEmailRepository } from './repository/mikro-orm-estimate-email.repository';
 
-@MultiORMEntity('estimate_email', { mikroOrmRepository: () => MikroOrmEstimateEmailRepository })
-export class EstimateEmail extends TenantOrganizationBaseEntity
-	implements IEstimateEmail {
-
+@MultiORMEntity('estimate_email')
+export class EstimateEmail extends TenantOrganizationBaseEntity implements IEstimateEmail {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn({
 		...(isMySQL() ? { type: 'text' } : {})

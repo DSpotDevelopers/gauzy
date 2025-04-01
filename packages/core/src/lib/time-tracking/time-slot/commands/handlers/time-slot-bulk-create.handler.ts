@@ -7,8 +7,8 @@ import { TimeSlotBulkCreateCommand } from './../time-slot-bulk-create.command';
 import { TimeSlotMergeCommand } from './../time-slot-merge.command';
 import { RequestContext } from '../../../../core/context';
 import { getDateRangeFormat } from './../../../../core/utils';
-import { TypeOrmTimeSlotRepository } from '../../repository/type-orm-time-slot.repository';
-import { TypeOrmTimeLogRepository } from '../../../time-log/repository/type-orm-time-log.repository';
+import { TypeOrmTimeSlotRepository } from '../../repository';
+import { TypeOrmTimeLogRepository } from '../../../time-log/repository';
 
 @CommandHandler(TimeSlotBulkCreateCommand)
 export class TimeSlotBulkCreateHandler implements ICommandHandler<TimeSlotBulkCreateCommand> {

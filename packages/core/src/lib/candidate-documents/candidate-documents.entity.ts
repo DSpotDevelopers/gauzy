@@ -2,14 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RelationId } from 'typeorm';
 import { ICandidateDocument, ICandidate } from '@gauzy/contracts';
 import { IsString } from 'class-validator';
-import {
-	Candidate,
-	TenantOrganizationBaseEntity
-} from '../core/entities/internal';
+import { Candidate, TenantOrganizationBaseEntity } from '../core/entities/internal';
 import { ColumnIndex, MultiORMColumn, MultiORMEntity, MultiORMManyToOne } from './../core/decorators/entity';
-import { MikroOrmCandidateDocumentRepository } from './repository/mikro-orm-candidate-document.repository';
 
-@MultiORMEntity('candidate_document', { mikroOrmRepository: () => MikroOrmCandidateDocumentRepository })
+@MultiORMEntity('candidate_document')
 export class CandidateDocument extends TenantOrganizationBaseEntity implements ICandidateDocument {
 	@ApiProperty({ type: () => String })
 	@MultiORMColumn()

@@ -1,22 +1,22 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger as NestLogger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial } from 'typeorm';
 import { IImageAsset } from '@gauzy/contracts';
 import { RequestContext } from './../core/context';
 import { TenantAwareCrudService } from './../core/crud';
-import { MikroOrmImageAssetRepository } from './repository/mikro-orm-image-asset.repository';
-import { TypeOrmImageAssetRepository } from './repository/type-orm-image-asset.repository';
+import { TypeOrmImageAssetRepository } from './repository';
 import { ImageAsset } from './image-asset.entity';
-
+import { Logger } from '../logger';
 @Injectable()
 export class ImageAssetService extends TenantAwareCrudService<ImageAsset> {
+	@Logger()
+	protected readonly logger: NestLogger;
+
 	constructor(
 		@InjectRepository(ImageAsset)
-		typeOrmImageAssetRepository: TypeOrmImageAssetRepository,
-
-		mikroOrmImageAssetRepository: MikroOrmImageAssetRepository
+		private readonly typeOrmImageAssetRepository: TypeOrmImageAssetRepository
 	) {
-		super(typeOrmImageAssetRepository, mikroOrmImageAssetRepository);
+		super(typeOrmImageAssetRepository);
 	}
 
 	/**
@@ -30,13 +30,13 @@ export class ImageAssetService extends TenantAwareCrudService<ImageAsset> {
 		try {
 			return await super.create(entity);
 		} catch (error) {
-			console.log(`Error while creating image assets for user (${user.name})`, error);
+			this.logger.error(`Error while creating image assets for user (${user.name}): ${error}`);
 			throw new BadRequestException(error);
 		}
 	}
 
 	async deleteAsset(imageId: string): Promise<ImageAsset> {
-		let result = await this.typeOrmRepository.findOne({
+		const result = await this.typeOrmRepository.findOne({
 			where: { id: imageId },
 			relations: ['productGallery', 'productFeaturedImage']
 		});

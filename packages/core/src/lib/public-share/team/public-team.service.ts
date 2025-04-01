@@ -1,25 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger as NestLogger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, FindOptionsWhere } from 'typeorm';
 import {
 	IDateRangePicker,
 	IOrganizationTeam,
 	IOrganizationTeamEmployee,
 	IOrganizationTeamStatisticInput,
-	ITimerStatus,
+	ITimerStatus
 } from '@gauzy/contracts';
 import { parseToBoolean } from '@gauzy/common';
 import { OrganizationTeam } from './../../core/entities/internal';
 import { StatisticService } from './../../time-tracking/statistic';
 import { TimerService } from './../../time-tracking/timer/timer.service';
 import { TypeOrmOrganizationTeamRepository } from '../../organization-team/repository';
+import { Logger } from '../../logger';
 
 @Injectable()
 export class PublicTeamService {
+	@Logger()
+	private readonly logger: NestLogger;
+
 	constructor(
-		protected readonly typeOrmOrganizationTeamRepository: TypeOrmOrganizationTeamRepository,
+		@InjectRepository(OrganizationTeam)
+		private readonly typeOrmOrganizationTeamRepository: TypeOrmOrganizationTeamRepository,
+
 		protected readonly statisticService: StatisticService,
 		protected readonly timerService: TimerService
-	) { }
+	) {}
 
 	/**
 	 * Find a public organization team by profile link with the specified options.
@@ -33,7 +40,7 @@ export class PublicTeamService {
 		options: IDateRangePicker & IOrganizationTeamStatisticInput
 	): Promise<IOrganizationTeam> {
 		const findOptions: FindOneOptions<OrganizationTeam> = {
-            select: {
+			select: {
 				organization: {
 					id: true,
 					name: true,
@@ -58,23 +65,24 @@ export class PublicTeamService {
 					}
 				}
 			},
-            where: {
-                public: true,
-                ...params,
-            },
-			...(options.relations ? { relations: options.relations } : {}),
-        };
+			where: {
+				public: true,
+				...params
+			},
+			...(options.relations ? { relations: options.relations } : {})
+		};
 
 		try {
-            const team = await this.typeOrmOrganizationTeamRepository.findOneOrFail(findOptions);
+			const team = await this.typeOrmOrganizationTeamRepository.findOneOrFail(findOptions);
 
-            if (team.members?.length) {
-                team.members = await this.syncMembers(team, team.members, options);
-            }
-            return team;
-        } catch (error) {
-            throw new NotFoundException('Organization team not found');
-        }
+			if (team.members?.length) {
+				team.members = await this.syncMembers(team, team.members, options);
+			}
+			return team;
+		} catch (error) {
+			this.logger.error(`Error while finding public team: ${error}`);
+			throw new NotFoundException('Organization team not found');
+		}
 	}
 
 	/**
@@ -86,20 +94,15 @@ export class PublicTeamService {
 	 * @returns A promise resolving to an array of updated team members
 	 */
 	async syncMembers(
-        organizationTeam: IOrganizationTeam,
-        members: IOrganizationTeamEmployee[],
-        options: IDateRangePicker & IOrganizationTeamStatisticInput
-    ): Promise<IOrganizationTeamEmployee[]> {
-        const {
-            startDate,
-            endDate,
-            withLastWorkedTask,
-            source,
-        } = options;
+		organizationTeam: IOrganizationTeam,
+		members: IOrganizationTeamEmployee[],
+		options: IDateRangePicker & IOrganizationTeamStatisticInput
+	): Promise<IOrganizationTeamEmployee[]> {
+		const { startDate, endDate, withLastWorkedTask, source } = options;
 
-        const employeeIds = members.map((member: IOrganizationTeamEmployee) => member.employeeId);
+		const employeeIds = members.map((member: IOrganizationTeamEmployee) => member.employeeId);
 
-        try {
+		try {
 			const { id: organizationTeamId, organizationId, tenantId } = organizationTeam;
 
 			// Retrieve timer statistics with optional task relation
@@ -109,7 +112,7 @@ export class PublicTeamService {
 				organizationId,
 				tenantId,
 				organizationTeamId,
-				...(parseToBoolean(withLastWorkedTask) ? { relations: ['task'] } : {}),
+				...(parseToBoolean(withLastWorkedTask) ? { relations: ['task'] } : {})
 			});
 
 			// Map the timer statistics by employee ID for easier lookup
@@ -133,7 +136,7 @@ export class PublicTeamService {
 						organizationId,
 						tenantId,
 						organizationTeamId,
-						employeeIds: [employeeId],
+						employeeIds: [employeeId]
 					}),
 					this.statisticService.getTasks({
 						organizationId,
@@ -141,8 +144,8 @@ export class PublicTeamService {
 						organizationTeamId,
 						employeeIds: [employeeId],
 						startDate,
-						endDate,
-					}),
+						endDate
+					})
 				]);
 
 				// Return the updated member with additional information
@@ -151,14 +154,14 @@ export class PublicTeamService {
 					lastWorkedTask: parseToBoolean(withLastWorkedTask) ? timerWorkedStatus?.lastLog?.task : null,
 					timerStatus: timerWorkedStatus?.timerStatus,
 					totalWorkedTasks,
-					totalTodayTasks,
+					totalTodayTasks
 				};
 			});
 
 			// Execute all promises and return the result
 			return await Promise.all(memberPromises);
-        } catch (error) {
-            console.error( 'Error while retrieving team members worked tasks', error);
-        }
-    }
+		} catch (error) {
+			this.logger.error(`Error while retrieving team members worked tasks: ${error}`);
+		}
+	}
 }

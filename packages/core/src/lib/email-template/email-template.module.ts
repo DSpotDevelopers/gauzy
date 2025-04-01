@@ -10,7 +10,7 @@ import { EmailTemplateController } from './email-template.controller';
 import { QueryHandlers } from './queries/handlers';
 import { CommandHandlers } from './commands/handlers';
 import { RolePermissionModule } from '../role-permission/role-permission.module';
-import { TypeOrmEmailTemplateRepository } from './repository/type-orm-email-template.repository';
+import { TypeOrmEmailTemplateRepository } from './repository';
 
 @Module({
 	imports: [
