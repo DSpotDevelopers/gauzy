@@ -236,7 +236,7 @@ export class InvoiceService extends TenantAwareCrudService<Invoice> {
 			taxValue: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TAX_VALUE', { lang: language }),
 			taxType: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.TAX_TYPE', { lang: language }),
 			currency: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.CURRENCY', { lang: language }),
-			terms: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICES_SELECT_TERMS', {
+			notes: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.INVOICES_SELECT_NOTES', {
 				lang: language
 			}),
 			paid: this.i18n.translate('USER_ORGANIZATION.INVOICES_PAGE.PAID', { lang: language }),

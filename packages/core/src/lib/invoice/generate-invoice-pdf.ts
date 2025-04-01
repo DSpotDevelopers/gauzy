@@ -258,7 +258,7 @@ export async function generateInvoicePdfDefinition(
 						text: [
 							{
 								bold: true,
-								text: `${translatedText.terms}\n\n`
+								text: `${translatedText.notes}\n\n`
 							},
 							`${invoice.terms}`
 						]
