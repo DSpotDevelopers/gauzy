@@ -1,3 +1,4 @@
+import { getCurrencySymbol } from '@gauzy/common';
 import { IInvoice, IOrganization, IOrganizationContact, InvoiceTypeEnum } from '@gauzy/contracts';
 
 export async function generateInvoicePdfDefinition(
@@ -12,8 +13,8 @@ export async function generateInvoicePdfDefinition(
 		const currentItem = [
 			`${item.description}`,
 			`${item.quantity}`,
-			`${invoice.currency} ${item.price}`,
-			`${invoice.currency} ${item.totalValue}`
+			`${getCurrencySymbol(invoice.currency)} ${item.price}`,
+			`${getCurrencySymbol(invoice.currency)} ${item.totalValue}`
 		];
 		switch (invoice.invoiceType) {
 			case InvoiceTypeEnum.BY_EMPLOYEE_HOURS: {
@@ -185,7 +186,7 @@ export async function generateInvoicePdfDefinition(
 							},
 							{
 								alignment: 'right',
-								text: `${invoice.taxType === 'FLAT' ? invoice.currency : ''} ${invoice.tax}${invoice.taxType === 'PERCENT' ? '%' : ''}`
+								text: `${invoice.taxType !== 'PERCENT' ? getCurrencySymbol(invoice.currency) : ''} ${invoice.tax}${invoice.taxType === 'PERCENT' ? '%' : ''}`
 							}
 						],
 						[
@@ -197,7 +198,7 @@ export async function generateInvoicePdfDefinition(
 							},
 							{
 								alignment: 'right',
-								text: `${invoice.tax2Type === 'FLAT' ? invoice.currency : ''} ${invoice.tax2}${invoice.tax2Type === 'PERCENT' ? '%' : ''}`
+								text: `${invoice.tax2Type !== 'PERCENT' ? getCurrencySymbol(invoice.currency) : ''} ${invoice.tax2}${invoice.tax2Type === 'PERCENT' ? '%' : ''}`
 							}
 						],
 						[
@@ -209,7 +210,7 @@ export async function generateInvoicePdfDefinition(
 							},
 							{
 								alignment: 'right',
-								text: `${invoice.discountType === 'FLAT' ? invoice.currency : ''} ${invoice.discountValue}${invoice.discountType === 'PERCENT' ? '%' : ''}`
+								text: `${invoice.discountType !== 'PERCENT' ? getCurrencySymbol(invoice.currency) : ''} ${invoice.discountValue}${invoice.discountType === 'PERCENT' ? '%' : ''}`
 							}
 						],
 						[
@@ -222,7 +223,7 @@ export async function generateInvoicePdfDefinition(
 							{
 								bold: true,
 								alignment: 'right',
-								text: `${invoice.currency} ${invoice.totalValue}`
+								text: `${getCurrencySymbol(invoice.currency)} ${invoice.totalValue}`
 							}
 						],
 						...(invoice.hasRemainingAmountInvoiced ? [
@@ -235,7 +236,7 @@ export async function generateInvoicePdfDefinition(
 								},
 								{
 									alignment: 'right',
-									text: `${invoice.currency} ${invoice.alreadyPaid}`
+									text: `${getCurrencySymbol(invoice.currency)} ${invoice.alreadyPaid}`
 								}
 							],
 							[
@@ -247,7 +248,7 @@ export async function generateInvoicePdfDefinition(
 								},
 								{
 									alignment: 'right',
-									text: `${invoice.currency} ${invoice.amountDue}`
+									text: `${getCurrencySymbol(invoice.currency)} ${invoice.amountDue}`
 								}
 							]
 						] : [['', '', ''], ['', '', '']]),

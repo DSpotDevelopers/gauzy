@@ -72,6 +72,7 @@ export * from './lib/income.model';
 export * from './lib/integration-setting.model';
 export * from './lib/integration.model';
 export * from './lib/invite.model';
+export * from './lib/invoice-currency.model';
 export * from './lib/invoice-estimate-history.model';
 export * from './lib/invoice-item.model';
 export * from './lib/invoice.model';
