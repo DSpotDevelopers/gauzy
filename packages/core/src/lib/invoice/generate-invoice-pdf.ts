@@ -1,5 +1,6 @@
 import { getCurrencySymbol } from '@gauzy/common';
 import { IInvoice, IOrganization, IOrganizationContact, InvoiceTypeEnum } from '@gauzy/contracts';
+import * as moment from 'moment';
 
 export async function generateInvoicePdfDefinition(
 	invoice: IInvoice,
@@ -98,7 +99,7 @@ export async function generateInvoicePdfDefinition(
 								bold: true,
 								text: `${invoice.isEstimate ? translatedText.estimate : translatedText.invoice} ${translatedText.date}: `
 							},
-							`${invoice.invoiceDate.toString().slice(0, 10)}`
+							`${moment(invoice.invoiceDate).format(organization.dateFormat)}`
 						]
 					}
 				]
@@ -112,7 +113,7 @@ export async function generateInvoicePdfDefinition(
 								bold: true,
 								text: `${translatedText.dueDate}: `
 							},
-							`${invoice.dueDate.toString().slice(0, 10)}`
+							`${moment(invoice.dueDate).format(organization.dateFormat)}`
 						]
 					}
 				]
