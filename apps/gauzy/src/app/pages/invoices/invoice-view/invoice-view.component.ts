@@ -47,7 +47,8 @@ export class InvoiceViewComponent extends TranslationBaseComponent implements On
 			'invoiceItems.expense',
 			'invoiceItems.task',
 			'fromOrganization',
-			'toContact'
+			'toContact',
+			'fromUser'
 		];
 
 		this.invoice$ = this._activatedRoute.paramMap.pipe(
