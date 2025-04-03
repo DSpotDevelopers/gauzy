@@ -33,7 +33,7 @@ import {
 import { distinctUntilChange, isNotEmpty, toUTC } from '@gauzy/ui-core/common';
 import { Router } from '@angular/router';
 import { first, map, filter, tap, debounceTime } from 'rxjs/operators';
-import { Subject, firstValueFrom, combineLatest, BehaviorSubject } from 'rxjs';
+import { Subject, firstValueFrom, combineLatest, BehaviorSubject, merge } from 'rxjs';
 import moment from 'moment';
 import { NgxPermissionsService } from 'ngx-permissions';
 import { API_PREFIX, ComponentEnum } from '@gauzy/ui-core/common';
@@ -59,21 +59,20 @@ import {
 	generateCsv,
 	getAdjustDateRangeFutureAllowed
 } from '@gauzy/ui-core/shared';
-import { InvoiceSendMutationComponent } from './invoice-send/invoice-send-mutation.component';
-import { InvoicePaidComponent } from './table-components';
-import { InvoiceEmailMutationComponent } from './invoice-email/invoice-email-mutation.component';
-import { InvoiceDownloadMutationComponent } from './invoice-download/invoice-download-mutation.component';
-import { AddInternalNoteComponent } from './add-internal-note/add-internal-note.component';
-import { PublicLinkComponent } from './public-link/public-link.component';
+import { AddInternalNoteComponent } from '../../add-internal-note/add-internal-note.component';
+import { InvoiceDownloadMutationComponent } from '../../invoice-download/invoice-download-mutation.component';
+import { InvoiceEmailMutationComponent } from '../../invoice-email/invoice-email-mutation.component';
+import { InvoiceSendMutationComponent } from '../../invoice-send/invoice-send-mutation.component';
+import { PublicLinkComponent } from '../../public-link/public-link.component';
+import { InvoicePaidComponent } from '../../table-components';
 
 @UntilDestroy({ checkProperties: true })
 @Component({
-	selector: 'ngx-invoices',
-	templateUrl: './invoices.component.html',
-	styleUrls: ['invoices.component.scss']
+	selector: 'ngx-invoices-by-role',
+	templateUrl: './invoices-by-role.component.html',
+	styleUrls: ['invoices-by-role.component.scss']
 })
-//TODO: GZY-161 - Refactor after clarifying requirements
-export class InvoicesComponent extends PaginationFilterBaseComponent implements AfterViewInit, OnInit {
+export class InvoicesByRoleComponent extends PaginationFilterBaseComponent implements AfterViewInit, OnInit {
 	settingsSmartTable: object;
 	smartTableSource: ServerDataSource;
 	selectedInvoice: IInvoice;
@@ -89,7 +88,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 	invoiceStatusTypes = Object.values(InvoiceStatusTypesEnum);
 	estimateStatusTypes = Object.values(EstimateStatusTypesEnum);
 	settingsContextMenu: NbMenuItem[];
-	contextMenus = [];
+	//contextMenus = [];
 	columns: string[] = [];
 	perPage = 10;
 	histories: IInvoiceEstimateHistory[] = [];
@@ -127,7 +126,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 	/*
 	 * Search Tab Form
 	 */
-	public searchForm: UntypedFormGroup = InvoicesComponent.searchBuildForm(this.fb);
+	public searchForm: UntypedFormGroup = InvoicesByRoleComponent.searchBuildForm(this.fb);
 	static searchBuildForm(fb: UntypedFormBuilder): UntypedFormGroup {
 		return fb.group({
 			invoiceNumber: [],
@@ -144,7 +143,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 	/*
 	 * History Tab Form
 	 */
-	public historyForm: UntypedFormGroup = InvoicesComponent.historyBuildForm(this.fb);
+	public historyForm: UntypedFormGroup = InvoicesByRoleComponent.historyBuildForm(this.fb);
 	static historyBuildForm(fb: UntypedFormBuilder): UntypedFormGroup {
 		return fb.group({
 			comment: ['', Validators.required],
@@ -166,9 +165,9 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		private readonly dialogService: NbDialogService,
 		private readonly toastrService: ToastrService,
 		private readonly invoicesService: InvoicesService,
-		private readonly invoiceItemService: InvoiceItemService,
+		//private readonly invoiceItemService: InvoiceItemService,
 		private readonly router: Router,
-		private readonly nbMenuService: NbMenuService,
+		//private readonly nbMenuService: NbMenuService,
 		private readonly invoiceEstimateHistoryService: InvoiceEstimateHistoryService,
 		private readonly ngxPermissionsService: NgxPermissionsService,
 		private readonly httpClient: HttpClient
@@ -181,80 +180,74 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		this.columns = this.getColumns();
 		this._applyTranslationOnSmartTable();
 		this._loadSmartTableSettings();
-		this.loadMenu();
-	}
 
-	ngAfterViewInit() {
-		this.invoices$
-			.pipe(
+		merge(
+			this.invoices$.pipe(
 				debounceTime(100),
-				tap(() => this._clearItem()),
-				tap(() => this.getInvoices()),
-				untilDestroyed(this)
-			)
-			.subscribe();
-		this.nbTab$
-			.pipe(
+				tap(() => {
+					this._clearItem();
+					this.getInvoices();
+				})
+			),
+			this.nbTab$.pipe(
 				distinctUntilChange(),
 				debounceTime(100),
 				filter(() => this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID),
-				tap(() => this._refresh$.next(true)),
-				tap(() => this.invoices$.next(true)),
-				untilDestroyed(this)
-			)
-			.subscribe();
-		this.pagination$
-			.pipe(
+				tap(() => this.invoices$.next(true))
+			),
+			this.pagination$.pipe(
 				debounceTime(100),
 				distinctUntilChange(),
-				tap(() => this.invoices$.next(true)),
-				untilDestroyed(this)
-			)
-			.subscribe();
-		const storeOrganization$ = this.store.selectedOrganization$;
-		const storeDateRange$ = this.dateRangePickerBuilderService.selectedDateRange$;
-		combineLatest([storeOrganization$, storeDateRange$])
-			.pipe(
+				tap(() => this.invoices$.next(true))
+			),
+			combineLatest([
+				this.store.selectedOrganization$,
+				this.dateRangePickerBuilderService.selectedDateRange$
+			]).pipe(
 				debounceTime(300),
 				distinctUntilChange(),
 				filter(([organization, dateRange]) => !!organization && !!dateRange),
 				tap(([organization, dateRange]) => {
 					this.organization = organization as IOrganization;
 					this.selectedDateRange = dateRange as IDateRangePicker;
-				}),
-				tap(() => this._refresh$.next(true)),
-				tap(() => this.invoices$.next(true)),
-				untilDestroyed(this)
-			)
-			.subscribe();
-		this._refresh$
-			.pipe(
+					this._refresh$.next(true);
+					this.invoices$.next(true);
+				})
+			),
+			this._refresh$.pipe(
 				filter(() => this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID),
-				tap(() => this.refreshPagination()),
-				tap(() => (this.invoices = [])),
-				untilDestroyed(this)
+				tap(() => {
+					this.refreshPagination();
+					this.invoices = [];
+				})
 			)
+		)
+			.pipe(untilDestroyed(this))
 			.subscribe();
 	}
 
 	setView() {
 		this.viewComponentName = this.isEstimate ? ComponentEnum.ESTIMATES : ComponentEnum.INVOICES;
+
 		this.store
 			.componentLayout$(this.viewComponentName)
 			.pipe(
 				distinctUntilChange(),
-				tap((componentLayout) => (this.dataLayoutStyle = componentLayout)),
-				tap(() => this.closeActionsPopover()),
-				tap(() => this.refreshPagination()),
+				tap((componentLayout) => {
+					this.dataLayoutStyle = componentLayout;
+					this.refreshPagination();
+				}),
 				filter((componentLayout) => componentLayout === ComponentLayoutStyleEnum.CARDS_GRID),
-				tap(() => (this.invoices = [])),
-				tap(() => this.invoices$.next(true)),
+				tap(() => {
+					this.invoices = [];
+					this.invoices$.next(true);
+				}),
 				untilDestroyed(this)
 			)
 			.subscribe();
 	}
 
-	loadMenu() {
+	/*loadMenu() {
 		this.contextMenus = [
 			{
 				title: this.getTranslation('INVOICES_PAGE.ACTION.DUPLICATE'),
@@ -307,9 +300,9 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 			);
 		}
 		this.nbMenuService.onItemClick().pipe(first());
-	}
+	}*/
 
-	selectMenu(selectedItem?: IInvoice) {
+	/*selectMenu(selectedItem?: IInvoice) {
 		if (selectedItem) {
 			this.selectInvoice({
 				isSelected: true,
@@ -327,15 +320,14 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 	}
 
 	bulkAction(action: string) {
-		if (action === this.getTranslation('INVOICES_PAGE.ACTION.DUPLICATE')) this.duplicated(this.selectedInvoice);
-		if (action === this.getTranslation('INVOICES_PAGE.ACTION.SEND')) this.send(this.selectedInvoice);
+		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.DUPLICATE')) this.duplicated(this.selectedInvoice);
+		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.SEND')) this.send(this.selectedInvoice);
 		if (action === this.getTranslation('INVOICES_PAGE.ACTION.CONVERT_TO_INVOICE'))
 			this.convert(this.selectedInvoice);
-		if (action === this.getTranslation('INVOICES_PAGE.ACTION.EMAIL')) this.email(this.selectedInvoice);
-		if (action === this.getTranslation('INVOICES_PAGE.ACTION.DELETE')) this.delete(this.selectedInvoice);
-		if (action === this.getTranslation('INVOICES_PAGE.ACTION.PAYMENTS')) this.payments();
-		if (action === this.getTranslation('INVOICES_PAGE.ACTION.NOTE')) this.addInternalNote();
-	}
+		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.EMAIL')) this.email(this.selectedInvoice);
+		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.DELETE')) this.delete(this.selectedInvoice);
+		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.NOTE')) this.addInternalNote();
+	}*/
 
 	async add() {
 		await this.navigateBasedOnPermissions(this.isEstimate, 'add');
@@ -351,12 +343,10 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		}
 
 		const { id } = this.selectedInvoice;
-		//TODO: GZY-161 - was commented because we have not generated invoices per user
-		//await this.navigateBasedOnPermissions(this.isEstimate, 'edit', id);
-		this.router.navigate([`/pages/accounting/invoices/edit-by-organization`, id]);
+		await this.navigateBasedOnPermissions(this.isEstimate, 'edit', id);
 	}
 
-	async duplicated(selectedItem?: IInvoice) {
+	/*async duplicated(selectedItem?: IInvoice) {
 		this.invoicesService.changeValue(true);
 		if (selectedItem) {
 			this.selectInvoice({
@@ -446,7 +436,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 			this.toastrService.success('INVOICES_PAGE.INVOICES_DUPLICATE_INVOICE');
 			this.router.navigate([`/pages/accounting/invoices/edit`, id]);
 		}
-	}
+	}*/
 
 	private async navigateBasedOnPermissions(isEstimate: boolean, baseRoute: string, id?: string) {
 		let route = '';
@@ -472,22 +462,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		this.router.navigate(id ? [route, id] : [route]);
 	}
 
-	download(selectedItem?: IInvoice) {
-		if (selectedItem) {
-			this.selectInvoice({
-				isSelected: true,
-				data: selectedItem
-			});
-		}
-		this.dialogService.open(InvoiceDownloadMutationComponent, {
-			context: {
-				invoice: this.selectedInvoice,
-				isEstimate: this.isEstimate
-			}
-		});
-	}
-
-	send(selectedItem?: IInvoice) {
+	/*send(selectedItem?: IInvoice) {
 		if (selectedItem) {
 			this.selectInvoice({
 				isSelected: true,
@@ -511,7 +486,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		} else {
 			this.toastrService.warning('INVOICES_PAGE.SEND.NOT_LINKED');
 		}
-	}
+	}*/
 
 	async convert(selectedItem?: IInvoice) {
 		if (selectedItem) {
@@ -567,7 +542,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		}
 	}
 
-	email(selectedItem?: IInvoice) {
+	/*email(selectedItem?: IInvoice) {
 		if (selectedItem) {
 			this.selectInvoice({
 				isSelected: true,
@@ -587,14 +562,9 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 				untilDestroyed(this)
 			)
 			.subscribe();
-	}
+	}*/
 
-	payments() {
-		const { id } = this.selectedInvoice;
-		this.router.navigate([`/pages/accounting/invoices/payments`, id]);
-	}
-
-	addInternalNote() {
+	/*addInternalNote() {
 		this.dialogService
 			.open(AddInternalNoteComponent, {
 				context: {
@@ -667,7 +637,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		].join(',');
 
 		generateCsv(data, headers, fileName);
-	}
+	}*/
 
 	/*
 	 * Register Smart Table Source Config
@@ -698,7 +668,8 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 				'fromOrganization',
 				'toContact',
 				'historyRecords',
-				'historyRecords.user'
+				'historyRecords.user',
+				'createdBy'
 			],
 			join: {
 				alias: 'invoice',
@@ -720,8 +691,9 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 				...(this.filters.where ? this.filters.where : {})
 			},
 			resultMap: (invoice: IInvoice) => {
+				console.log(invoice);
 				return Object.assign({}, invoice, {
-					organizationContactName: invoice.toContact ? invoice.toContact.name : null,
+					toOrganization: invoice.toOrganization ? invoice.toOrganization.name : null,
 					status: this.statusMapper(invoice.status),
 					tax: this.taxMapper(invoice.taxType, invoice.tax),
 					tax2: this.taxMapper(invoice.tax2Type, invoice.tax2),
@@ -820,7 +792,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		}
 	}
 
-	async generatePublicLink(selectedItem: IInvoice) {
+	/*async generatePublicLink(selectedItem: IInvoice) {
 		if (selectedItem) {
 			this.selectInvoice({
 				isSelected: true,
@@ -832,15 +804,15 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 				invoice: this.selectedInvoice
 			}
 		});
-	}
+	}*/
 
-	async archive() {
+	/*async archive() {
 		await this.invoicesService.updateAction(this.selectedInvoice.id, {
 			isArchived: true
 		});
 		this._refresh$.next(true);
 		this.invoices$.next(true);
-	}
+	}*/
 
 	async selectInvoice({ isSelected, data }) {
 		this.disableButton = !isSelected;
@@ -874,6 +846,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 
 	private statusMapper = (value: string) => {
 		let badgeClass;
+		console.log(value);
 		if (value) {
 			badgeClass = ['sent', 'viewed', 'accepted', 'active', 'fully paid'].includes(value.toLowerCase())
 				? 'success'
@@ -1145,10 +1118,10 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		this._loadSmartTableSettings();
 	}
 
-	toggleActionsPopover() {
+	/*toggleActionsPopover() {
 		this.popups.last.toggle();
 		this.popups.first.hide();
-	}
+	}*/
 
 	toggleTableSettingsPopover() {
 		this.popups.first.toggle();
@@ -1157,7 +1130,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 		}
 	}
 
-	closeActionsPopover() {
+	/*closeActionsPopover() {
 		if (this.popups) {
 			const actionsPopup = this.popups.first;
 			const settingsPopup = this.popups.last;
@@ -1169,7 +1142,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 				actionsPopup.hide();
 			}
 		}
-	}
+	}*/
 
 	private _applyTranslationOnSmartTable() {
 		this.translateService.onLangChange
@@ -1182,7 +1155,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 
 	onChangeTab(tab: NbTabComponent) {
 		this.nbTab$.next(tab.tabId);
-		this.closeActionsPopover();
+		//this.closeActionsPopover();
 	}
 
 	private _clearItem() {
@@ -1236,8 +1209,8 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 	 * Handle event when user click outside tag
 	 * @param event is a boolean
 	 */
-	onClickOutside(event: boolean) {
+	/*onClickOutside(event: boolean) {
 		// Close popover after click any button inside
 		if (event) this.toggleActionsPopover();
-	}
+	}*/
 }
