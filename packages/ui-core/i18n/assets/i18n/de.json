@@ -3101,6 +3101,11 @@
 			"GENERATE": "Erstellen Sie einen Link zu dem {{Text}}, den jeder mit dem Link sehen kann.",
 			"ACCESS": "Jeder, der Zugriff auf diesen Link hat, kann den {{ Text }} anzeigen.",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "Beim Löschen der Rechnung ist ein Fehler aufgetreten",
+			"DOWNLOAD": "Beim Herunterladen der Rechnung ist ein Fehler aufgetreten",
+			"PRINT": "Beim Drucken der Rechnung ist ein Fehler aufgetreten"
 		}
 	},
 	"PAYMENTS_PAGE": {

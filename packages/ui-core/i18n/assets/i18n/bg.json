@@ -3163,6 +3163,11 @@
 			"GENERATE": "Generate a link to the {{ text }} that anyone with the link can view.",
 			"ACCESS": "Anyone with access to this link can view the {{ text }}.",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "Възникна грешка при изтриването на фактурата",
+			"DOWNLOAD": "Възникна грешка при изтеглянето на фактурата",
+			"PRINT": "Възникна грешка при отпечатването на фактурата"
 		}
 	},
 	"PAYMENTS_PAGE": {

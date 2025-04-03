@@ -3228,6 +3228,11 @@
 			"GENERATE": "Generate a link to the {{ text }} that anyone with the link can view.",
 			"ACCESS": "Anyone with access to this link can view the {{ text }}.",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "Error occurred while deleting the invoice",
+			"DOWNLOAD": "Error occurred while downloading the invoice",
+			"PRINT": "Error ocurred while printing the invoice"
 		}
 	},
 	"PAYMENTS_PAGE": {

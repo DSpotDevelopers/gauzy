@@ -3128,6 +3128,11 @@
 			"GENERATE": "Generate a link to the {{ text }} that anyone with the link can view.",
 			"ACCESS": "Anyone with access to this link can view the {{ text }}.",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "אירעה שגיאה בעת מחיקת החשבונית",
+			"DOWNLOAD": "אירעה שגיאה בעת הורדת החשבונית",
+			"PRINT": "אירעה שגיאה בעת הדפסת החשבונית"
 		}
 	},
 	"PAYMENTS_PAGE": {

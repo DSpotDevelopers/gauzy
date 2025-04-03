@@ -3105,6 +3105,11 @@
 			"GENERATE": "Genereer een link naar de {{ text }} waar iedereen met de link het kan bekijken.",
 			"ACCESS": "Iedereen met toegang tot deze link kan de {{ text }} bekijken.",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "Er is een fout opgetreden tijdens het verwijderen van de factuur",
+			"DOWNLOAD": "Er is een fout opgetreden tijdens het downloaden van de factuur",
+			"PRINT": "Er is een fout opgetreden tijdens het afdrukken van de factuur"
 		}
 	},
 	"PAYMENTS_PAGE": {

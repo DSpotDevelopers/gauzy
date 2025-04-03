@@ -3105,6 +3105,11 @@
 			"GENERATE": "Gerar um link para o {{ text }} que qualquer pessoa com o link possa visualizar.",
 			"ACCESS": "Qualquer pessoa com acesso a este link pode visualizar o {{ text }}.",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "Ocorreu um erro ao excluir a fatura",
+			"DOWNLOAD": "Ocorreu um erro ao baixar a fatura",
+			"PRINT": "Ocorreu um erro ao imprimir a fatura"
 		}
 	},
 	"PAYMENTS_PAGE": {

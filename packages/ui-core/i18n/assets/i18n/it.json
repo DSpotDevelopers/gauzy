@@ -3105,6 +3105,11 @@
 			"GENERATE": "Genera un collegamento al {{ text }} che chiunque con il collegamento può visualizzare",
 			"ACCESS": "Chiunque abbia accesso a questo link può visualizzare il {{ text }}",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "Si è verificato un errore durante l'eliminazione della fattura",
+			"DOWNLOAD": "Si è verificato un errore durante il download della fattura",
+			"PRINT": "Si è verificato un errore durante la stampa della fattura"
 		}
 	},
 	"PAYMENTS_PAGE": {

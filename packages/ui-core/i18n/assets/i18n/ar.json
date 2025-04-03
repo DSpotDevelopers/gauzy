@@ -3103,6 +3103,11 @@
 			"GENERATE": "أنشئ رابطًا لـ {{ text }} يمكن لأي شخص يمتلك الرابط رؤيته.",
 			"ACCESS": "أي شخص لديه وصول إلى هذا الرابط يمكنه عرض {{ text }}.",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "حدث خطأ أثناء حذف الفاتورة",
+			"DOWNLOAD": "حدث خطأ أثناء تنزيل الفاتورة",
+			"PRINT": "حدث خطأ أثناء طباعة الفاتورة"
 		}
 	},
 	"PAYMENTS_PAGE": {

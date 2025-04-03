@@ -3105,6 +3105,11 @@
 			"GENERATE": "Wygeneruj link do {{ text }}, który będzie można przeglądać przez każdą osobę posiadającą link",
 			"ACCESS": "Każda osoba mająca dostęp do tego linku może zobaczyć {{ text }}",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "Wystąpił błąd podczas usuwania faktury",
+			"DOWNLOAD": "Wystąpił błąd podczas pobierania faktury",
+			"PRINT": "Wystąpił błąd podczas drukowania faktury"
 		}
 	},
 	"PAYMENTS_PAGE": {

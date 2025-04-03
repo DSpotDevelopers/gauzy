@@ -3105,6 +3105,11 @@
 			"GENERATE": "生成一个链接，任何具有链接的人都可以查看{{ text }}。",
 			"ACCESS": "任何有权访问此链接的人都可以查看{{ text }}。",
 			"COPY_TO_CLIPBOARD_TOOLTIP": "Copy public link to clipboard"
+		},
+		"ERRORS": {
+			"DELETE": "删除发票时出错",
+			"DOWNLOAD": "下载发票时出错",
+			"PRINT": "打印发票时出错"
 		}
 	},
 	"PAYMENTS_PAGE": {
