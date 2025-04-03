@@ -50,7 +50,7 @@
 								<div class="font-weight-bold text-left mr-2">
 									{{ 'INVOICES_PAGE.CURRENCY' | translate }}:
 								</div>
-								<div>{{ invoice?.fromOrganization?.currency }}</div>
+								<div>{{ invoice?.currency }}</div>
 							</div>
 						</div>
 					</div>
@@ -89,7 +89,7 @@
 							<span *ngIf="invoice.taxType !== discountTaxTypes.PERCENT">
 								{{
 									invoice?.tax || 0
-										| currency : invoice?.currency
+										| currency : invoice?.currency : 'code'
 										| position : invoice?.fromOrganization.currencyPosition
 								}}
 							</span>
@@ -104,7 +104,7 @@
 							<span *ngIf="invoice.taxType !== discountTaxTypes.PERCENT">
 								{{
 									invoice?.tax2 || 0
-										| currency : invoice?.currency
+										| currency : invoice?.currency : 'code'
 										| position : invoice?.fromOrganization.currencyPosition
 								}}
 							</span>
@@ -121,7 +121,7 @@
 							<span *ngIf="invoice.discountType !== discountTaxTypes.PERCENT">
 								{{
 									invoice.discountValue || 0
-										| currency : invoice?.currency
+										| currency : invoice?.currency : 'code'
 										| position : invoice?.fromOrganization.currencyPosition
 								}}
 							</span>
@@ -132,7 +132,7 @@
 						<div class="font-weight-bold">
 							{{
 								invoice?.totalValue || 0
-									| currency : invoice?.currency
+									| currency : invoice?.currency : 'code'
 									| position : invoice?.fromOrganization?.currencyPosition
 							}}
 						</div>
