@@ -37,14 +37,24 @@
 									}}:
 								</div>
 								<div>
-									{{ invoice?.invoiceDate | dateFormat : invoice?.fromOrganization?.dateFormat }}
+									{{
+										invoice?.invoiceDate
+											| dateFormat
+												: (invoice?.toOrganization ?? invoice?.fromOrganization)?.dateFormat
+									}}
 								</div>
 							</div>
 							<div class="d-flex">
 								<div class="font-weight-bold text-left mr-2">
 									{{ 'INVOICES_PAGE.DUE_DATE' | translate }}:
 								</div>
-								<div>{{ invoice?.dueDate | dateFormat : invoice?.fromOrganization?.dateFormat }}</div>
+								<div>
+									{{
+										invoice?.dueDate
+											| dateFormat
+												: (invoice?.toOrganization ?? invoice?.fromOrganization)?.dateFormat
+									}}
+								</div>
 							</div>
 							<div class="d-flex">
 								<div class="font-weight-bold text-left mr-2">
@@ -58,7 +68,7 @@
 						<div class="font-weight-bold text-left">
 							{{ 'INVOICES_PAGE.VIEW.TO' | translate | uppercase }}:
 						</div>
-						<div>{{ invoice?.toContact?.name ?? invoice?.fromOrganization?.name }}</div>
+						<div>{{ invoice?.toOrganization?.name ?? invoice?.toContact?.name }}</div>
 					</div>
 				</div>
 			</div>
@@ -90,7 +100,8 @@
 								{{
 									invoice?.tax || 0
 										| currency : invoice?.currency : 'code'
-										| position : invoice?.fromOrganization.currencyPosition
+										| position
+											: (invoice?.toOrganization ?? invoice?.fromOrganization)?.currencyPosition
 								}}
 							</span>
 						</div>
@@ -105,7 +116,8 @@
 								{{
 									invoice?.tax2 || 0
 										| currency : invoice?.currency : 'code'
-										| position : invoice?.fromOrganization.currencyPosition
+										| position
+											: (invoice?.toOrganization ?? invoice?.fromOrganization)?.currencyPosition
 								}}
 							</span>
 						</div>
@@ -122,7 +134,8 @@
 								{{
 									invoice.discountValue || 0
 										| currency : invoice?.currency : 'code'
-										| position : invoice?.fromOrganization.currencyPosition
+										| position
+											: (invoice?.toOrganization ?? invoice?.fromOrganization)?.currencyPosition
 								}}
 							</span>
 						</div>
@@ -133,7 +146,8 @@
 							{{
 								invoice?.totalValue || 0
 									| currency : invoice?.currency : 'code'
-									| position : invoice?.fromOrganization?.currencyPosition
+									| position
+										: (invoice?.toOrganization ?? invoice?.fromOrganization)?.currencyPosition
 							}}
 						</div>
 					</div>
@@ -144,7 +158,8 @@
 							{{
 								invoice?.alreadyPaid || 0
 									| currency : invoice?.currency
-									| position : invoice?.fromOrganization?.currencyPosition
+									| position
+										: (invoice?.toOrganization ?? invoice?.fromOrganization)?.currencyPosition
 							}}
 						</div>
 					</div>
@@ -154,7 +169,8 @@
 							{{
 								invoice?.amountDue || 0
 									| currency : invoice?.currency
-									| position : invoice?.fromOrganization?.currencyPosition
+									| position
+										: (invoice?.toOrganization ?? invoice?.fromOrganization)?.currencyPosition
 							}}
 						</div>
 					</div>

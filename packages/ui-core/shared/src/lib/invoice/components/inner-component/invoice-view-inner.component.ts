@@ -77,7 +77,7 @@ export class InvoiceViewInnerComponent extends TranslationBaseComponent implemen
 						return this.getPipesTransform(
 							row.price,
 							row.currency,
-							this.invoice.fromOrganization.currencyPosition
+							(this.invoice?.toOrganization ?? this.invoice?.fromOrganization)?.currencyPosition
 						);
 					},
 					width: '20%'
@@ -94,7 +94,7 @@ export class InvoiceViewInnerComponent extends TranslationBaseComponent implemen
 						return this.getPipesTransform(
 							row.totalValue,
 							row.currency,
-							this.invoice.fromOrganization.currencyPosition
+							(this.invoice?.toOrganization ?? this.invoice?.fromOrganization)?.currencyPosition
 						);
 					},
 					width: '20%'
@@ -185,7 +185,7 @@ export class InvoiceViewInnerComponent extends TranslationBaseComponent implemen
 	 * @returns should be a string
 	 */
 	getPipesTransform(value: number, currencyCode: string, position: string): string {
-		const transform = this._currencyPipe.transform(value, currencyCode);
+		const transform = this._currencyPipe.transform(value, currencyCode, 'code');
 		return this._currencyPipePosition.transform(transform, position);
 	}
 }

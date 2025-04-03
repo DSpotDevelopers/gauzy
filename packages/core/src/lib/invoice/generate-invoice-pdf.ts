@@ -139,7 +139,7 @@ export async function generateInvoicePdfDefinition(
 						bold: true,
 						text: `${translatedText.to}:\n`
 					},
-					`${organizationContact?.name ?? organization.name}`
+					`${invoice.toOrganization?.name ?? organizationContact?.name ?? organization.name}`
 				]
 			},
 			' ',
