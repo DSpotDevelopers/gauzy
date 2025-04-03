@@ -98,11 +98,6 @@ export interface IInvoiceFindInput extends IBasePerTenantAndOrganizationEntityMo
 	isArchived?: boolean;
 }
 
-export interface IInvoiceAccessCheck {
-	invoice: IInvoice;
-	isOwnInvoice: boolean;
-}
-
 export enum InvoiceTypeEnum {
 	BY_EMPLOYEE_HOURS = 'BY_EMPLOYEE_HOURS',
 	BY_PROJECT_HOURS = 'BY_PROJECT_HOURS',
@@ -170,6 +165,7 @@ export enum InvoiceTabsEnum {
 }
 
 export enum InvoiceErrors {
-	INVALID_INVOICE = 'invalid-invoice'
+	INVALID_INVOICE = 'invalid-invoice',
+	PDF_GENERATION_FAILED = 'pdf-generation-failed'
 }
 export const EMPLOYEE_INVOICE_STATUSES: string[] = [InvoiceStatusTypesEnum.DRAFT, InvoiceStatusTypesEnum.SENT];
