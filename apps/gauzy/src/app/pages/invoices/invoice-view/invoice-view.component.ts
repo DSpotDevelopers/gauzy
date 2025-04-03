@@ -68,6 +68,8 @@ export class InvoiceViewComponent extends TranslationBaseComponent implements On
 			catchError((error) => {
 				console.log('Error while getting public invoice', error);
 				this._errorHandlingService.handleError(error);
+				// Navigate back to invoices page
+				this._router.navigate(['../../'], { relativeTo: this._activatedRoute });
 				return of(null);
 			}),
 			// Automatically unsubscribe when the component is destroyed
