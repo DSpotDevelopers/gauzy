@@ -93,7 +93,6 @@
 
 .history-list-select {
   font-weight: bold;
-  // margin: 20px 0;
   width: 50%;
 }
 
@@ -388,11 +387,7 @@ nb-tab {
 
   ::ng-deep {
     @include card_overrides(auto, $default-card-height, $default-radius);
-    @include ng-select-overrides(
-      $default-height,
-      $default-radius,
-      $default-box-shadow-inset
-    );
+    @include ng-select-overrides($default-height, $default-radius, $default-box-shadow-inset);
 
     nb-tabset .tab.active .tab-link {
       background-color: var(--gauzy-card-2);
@@ -450,7 +445,7 @@ nb-tab {
       }
       & .history-item.history-comment {
         margin-top: 6px;
-        font-size: .85rem;
+        font-size: 0.85rem;
         &.history-comment::first-letter {
           text-transform: capitalize;
         }
@@ -459,7 +454,7 @@ nb-tab {
 
     // border bottom
     & nb-list-item::after {
-      content: "";
+      content: '';
       display: block;
       width: 100%;
       border-bottom: thin solid var(--accordion-header-border-color);

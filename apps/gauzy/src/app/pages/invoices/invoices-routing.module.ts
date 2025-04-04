@@ -78,9 +78,8 @@ const routes: Routes = [
 		component: InvoiceEditByOrganizationComponent,
 		canActivate: [PermissionsGuard],
 		data: {
-			//TODO: GZY-161 - change to ORG_INVOICES_EDIT
 			permissions: {
-				only: [PermissionsEnum.ALL_ORG_VIEW, PermissionsEnum.INVOICES_EDIT],
+				only: [PermissionsEnum.ALL_ORG_VIEW, PermissionsEnum.ORG_INVOICES_EDIT],
 				redirectTo
 			}
 		}

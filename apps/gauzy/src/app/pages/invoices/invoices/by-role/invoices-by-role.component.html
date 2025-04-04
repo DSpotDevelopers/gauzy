@@ -160,18 +160,6 @@
 											</div>
 										</div>
 										<div class="row">
-											<div class="col-sm-3">
-												<div class="form-group">
-													<label for="inputOrganizationContact" class="label">
-														<span>{{ 'INVOICES_PAGE.CONTACT' | translate }}</span>
-													</label>
-													<ga-contact-select
-														[clearable]="true"
-														formControlName="organizationContact"
-														[placeholder]="'POP_UPS.ALL_CONTACTS' | translate"
-													></ga-contact-select>
-												</div>
-											</div>
 											<div class="col-sm-2">
 												<div class="form-group">
 													<label for="inputTotalValue" class="label">
@@ -500,17 +488,6 @@
 		>
 			<nb-icon status="danger" icon="trash-2-outline"> </nb-icon>
 		</button>
-		<!--<button
-			nbButton
-			nbPopoverPlacement="bottom"
-			class="action"
-			[nbPopover]="actionsPopover"
-			nbPopoverTrigger="noop"
-			(click)="toggleActionsPopover()"
-			size="small"
-		>
-			<nb-icon icon="more-vertical-outline"></nb-icon>
-		</button>-->
 	</div>
 </ng-template>
 
@@ -557,98 +534,3 @@
 		</div>
 	</div>
 </ng-template>
-
-<!--<ng-template #actionsPopover>
-	<div gauzyOutside (clickOutside)="onClickOutside($event)" class="popover-container-action d-flex flex-column">
-		<ng-container>
-			<button
-				nbButton
-				status="basic"
-				class="action primary"
-				size="small"
-				(click)="addInternalNote()"
-				[disabled]="disableButton"
-			>
-				<nb-icon icon="book-open-outline"> </nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.NOTE' | translate }}</span>
-			</button>
-			<button
-				nbButton
-				status="basic"
-				class="action primary"
-				size="small"
-				(click)="duplicated()"
-				[disabled]="disableButton"
-			>
-				<nb-icon icon="copy-outline"></nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.DUPLICATE' | translate }}</span>
-			</button>
-			<button
-				nbButton
-				status="basic"
-				class="action primary"
-				size="small"
-				(click)="send()"
-				[disabled]="!canBeSend"
-			>
-				<nb-icon icon="upload-outline"> </nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.SEND' | translate }}</span>
-			</button>
-			<button
-				nbButton
-				status="basic"
-				class="action primary"
-				size="small"
-				(click)="generatePublicLink()"
-				[disabled]="disableButton"
-			>
-				<nb-icon icon="link-2-outline"> </nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.PUBLIC_LINK' | translate }}</span>
-			</button>
-			<button
-				nbButton
-				status="basic"
-				class="action primary"
-				size="small"
-				(click)="email()"
-				[disabled]="disableButton"
-			>
-				<nb-icon icon="email-outline"> </nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.EMAIL' | translate }}</span>
-			</button>
-			<button
-				nbButton
-				status="basic"
-				class="action primary"
-				size="small"
-				(click)="exportToCsv()"
-				[disabled]="disableButton"
-			>
-				<nb-icon icon="file-text-outline"> </nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.EXPORT_TO_CSV' | translate }}</span>
-			</button>
-			<button
-				nbButton
-				status="basic"
-				class="action primary"
-				size="small"
-				(click)="archive()"
-				[disabled]="disableButton || selectedInvoice.isArchived"
-			>
-				<nb-icon icon="archive-outline"> </nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.ARCHIVE' | translate }}</span>
-			</button>
-			<button
-				nbButton
-				status="basic"
-				class="action danger"
-				size="small"
-				(click)="delete()"
-				[disabled]="disableButton"
-			>
-				<nb-icon status="danger" icon="trash-2-outline"> </nb-icon>
-				<span class="icon-text">{{ 'BUTTONS.DELETE' | translate }}</span>
-			</button>
-		</ng-container>
-	</div>
-</ng-template>-->

@@ -12,12 +12,11 @@ import { HttpClient } from '@angular/common/http';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Angular2SmartTableComponent, Cell } from 'angular2-smart-table';
 import { TranslateService } from '@ngx-translate/core';
-import { NbDialogService, NbMenuItem, NbMenuService, NbPopoverDirective, NbTabComponent } from '@nebular/theme';
+import { NbDialogService, NbMenuItem, NbPopoverDirective, NbTabComponent } from '@nebular/theme';
 import {
 	IInvoice,
 	ITag,
 	IOrganization,
-	InvoiceTypeEnum,
 	ComponentLayoutStyleEnum,
 	InvoiceStatusTypesEnum,
 	EstimateStatusTypesEnum,
@@ -25,22 +24,20 @@ import {
 	EstimateColumnsEnum,
 	IInvoiceEstimateHistory,
 	PermissionsEnum,
-	IInvoiceItemCreateInput,
 	InvoiceTabsEnum,
 	DiscountTaxTypeEnum,
-	IDateRangePicker
+	IDateRangePicker,
+	ICurrency
 } from '@gauzy/contracts';
-import { distinctUntilChange, isNotEmpty, toUTC } from '@gauzy/ui-core/common';
+import { distinctUntilChange, isNotEmpty, toUTC, API_PREFIX, ComponentEnum } from '@gauzy/ui-core/common';
 import { Router } from '@angular/router';
-import { first, map, filter, tap, debounceTime } from 'rxjs/operators';
+import { filter, tap, debounceTime } from 'rxjs/operators';
 import { Subject, firstValueFrom, combineLatest, BehaviorSubject, merge } from 'rxjs';
 import moment from 'moment';
 import { NgxPermissionsService } from 'ngx-permissions';
-import { API_PREFIX, ComponentEnum } from '@gauzy/ui-core/common';
 import {
 	DateRangePickerBuilderService,
 	InvoiceEstimateHistoryService,
-	InvoiceItemService,
 	InvoicesService,
 	ServerDataSource,
 	Store,
@@ -56,14 +53,8 @@ import {
 	NotesWithTagsComponent,
 	PaginationFilterBaseComponent,
 	StatusBadgeComponent,
-	generateCsv,
 	getAdjustDateRangeFutureAllowed
 } from '@gauzy/ui-core/shared';
-import { AddInternalNoteComponent } from '../../add-internal-note/add-internal-note.component';
-import { InvoiceDownloadMutationComponent } from '../../invoice-download/invoice-download-mutation.component';
-import { InvoiceEmailMutationComponent } from '../../invoice-email/invoice-email-mutation.component';
-import { InvoiceSendMutationComponent } from '../../invoice-send/invoice-send-mutation.component';
-import { PublicLinkComponent } from '../../public-link/public-link.component';
 import { InvoicePaidComponent } from '../../table-components';
 
 @UntilDestroy({ checkProperties: true })
@@ -85,19 +76,20 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 	viewComponentName: ComponentEnum;
 	componentLayoutStyleEnum = ComponentLayoutStyleEnum;
 	dataLayoutStyle = ComponentLayoutStyleEnum.TABLE;
-	invoiceStatusTypes = Object.values(InvoiceStatusTypesEnum);
+	invoiceStatusTypes = this.store.hasAnyPermission(PermissionsEnum.ALL_ORG_EDIT)
+		? Object.values(InvoiceStatusTypesEnum)
+		: [InvoiceStatusTypesEnum.SENT, InvoiceStatusTypesEnum.DRAFT];
 	estimateStatusTypes = Object.values(EstimateStatusTypesEnum);
 	settingsContextMenu: NbMenuItem[];
-	//contextMenus = [];
 	columns: string[] = [];
 	perPage = 10;
 	histories: IInvoiceEstimateHistory[] = [];
 	includeArchived = false;
 	invoiceTabsEnum = InvoiceTabsEnum;
 	permissionsEnum = PermissionsEnum;
-	invoices$: Subject<any> = this.subject$;
+	invoices$: Subject<IInvoice[]> = this.subject$;
 	nbTab$: Subject<string> = new BehaviorSubject(InvoiceTabsEnum.ACTIONS);
-	private _refresh$: Subject<any> = new Subject();
+	private readonly _refresh$: Subject<void> = new Subject();
 
 	/*
 	 * getter setter for check estimate or invoice
@@ -110,9 +102,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		return this._isEstimate;
 	}
 
-	/**
-	 *
-	 */
 	invoicesTable: Angular2SmartTableComponent;
 	@ViewChild('invoicesTable', { static: false }) set content(table: Angular2SmartTableComponent) {
 		if (table) {
@@ -129,14 +118,13 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 	public searchForm: UntypedFormGroup = InvoicesByRoleComponent.searchBuildForm(this.fb);
 	static searchBuildForm(fb: UntypedFormBuilder): UntypedFormGroup {
 		return fb.group({
-			invoiceNumber: [],
-			organizationContact: [],
-			invoiceDate: [],
-			dueDate: [],
-			totalValue: [],
-			currency: [],
-			status: [],
-			tags: []
+			invoiceNumber: [''],
+			invoiceDate: [''],
+			dueDate: [''],
+			totalValue: [''],
+			currency: [''],
+			status: [''],
+			tags: ['']
 		});
 	}
 
@@ -155,7 +143,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 	 * Actions Buttons directive
 	 */
 	@ViewChild('actionButtons', { static: true })
-	actionButtons: TemplateRef<any>;
+	actionButtons: TemplateRef<void>;
 
 	constructor(
 		private readonly fb: UntypedFormBuilder,
@@ -165,9 +153,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		private readonly dialogService: NbDialogService,
 		private readonly toastrService: ToastrService,
 		private readonly invoicesService: InvoicesService,
-		//private readonly invoiceItemService: InvoiceItemService,
 		private readonly router: Router,
-		//private readonly nbMenuService: NbMenuService,
 		private readonly invoiceEstimateHistoryService: InvoiceEstimateHistoryService,
 		private readonly ngxPermissionsService: NgxPermissionsService,
 		private readonly httpClient: HttpClient
@@ -184,21 +170,22 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		merge(
 			this.invoices$.pipe(
 				debounceTime(100),
-				tap(() => {
+				tap((invoices) => {
 					this._clearItem();
 					this.getInvoices();
+					this.invoices = invoices;
 				})
 			),
 			this.nbTab$.pipe(
 				distinctUntilChange(),
 				debounceTime(100),
 				filter(() => this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID),
-				tap(() => this.invoices$.next(true))
+				tap(() => this.invoices$.next([]))
 			),
 			this.pagination$.pipe(
 				debounceTime(100),
 				distinctUntilChange(),
-				tap(() => this.invoices$.next(true))
+				tap(() => this.invoices$.next([]))
 			),
 			combineLatest([
 				this.store.selectedOrganization$,
@@ -208,10 +195,10 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				distinctUntilChange(),
 				filter(([organization, dateRange]) => !!organization && !!dateRange),
 				tap(([organization, dateRange]) => {
-					this.organization = organization as IOrganization;
-					this.selectedDateRange = dateRange as IDateRangePicker;
-					this._refresh$.next(true);
-					this.invoices$.next(true);
+					this.organization = organization;
+					this.selectedDateRange = dateRange;
+					this._refresh$.next();
+					this.invoices$.next([]);
 				})
 			),
 			this._refresh$.pipe(
@@ -240,94 +227,12 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				filter((componentLayout) => componentLayout === ComponentLayoutStyleEnum.CARDS_GRID),
 				tap(() => {
 					this.invoices = [];
-					this.invoices$.next(true);
+					this.invoices$.next([]);
 				}),
 				untilDestroyed(this)
 			)
 			.subscribe();
 	}
-
-	/*loadMenu() {
-		this.contextMenus = [
-			{
-				title: this.getTranslation('INVOICES_PAGE.ACTION.DUPLICATE'),
-				icon: 'copy-outline',
-				permission: PermissionsEnum.INVOICES_EDIT
-			},
-			{
-				title: this.getTranslation('INVOICES_PAGE.ACTION.SEND'),
-				icon: 'upload-outline',
-				permission: PermissionsEnum.INVOICES_VIEW
-			},
-			{
-				title: this.getTranslation('INVOICES_PAGE.ACTION.CONVERT_TO_INVOICE'),
-				icon: 'swap',
-				permission: PermissionsEnum.INVOICES_EDIT
-			},
-			{
-				title: this.getTranslation('INVOICES_PAGE.ACTION.EMAIL'),
-				icon: 'email-outline',
-				permission: PermissionsEnum.INVOICES_VIEW
-			},
-			{
-				title: this.getTranslation('INVOICES_PAGE.ACTION.DELETE'),
-				icon: 'archive-outline',
-				permission: PermissionsEnum.INVOICES_EDIT
-			},
-			{
-				title: this.getTranslation('INVOICES_PAGE.ACTION.NOTE'),
-				icon: 'book-open-outline',
-				permission: PermissionsEnum.INVOICES_EDIT
-			}
-		];
-
-		if (!this.isEstimate) {
-			this.contextMenus.push({
-				title: this.getTranslation('INVOICES_PAGE.ACTION.PAYMENTS'),
-				icon: 'clipboard-outline',
-				permission: PermissionsEnum.INVOICES_EDIT
-			});
-		}
-
-		const contextMenus = this.contextMenus.filter(
-			(item) => this.ngxPermissionsService.getPermission(item.permission) != null
-		);
-		if (this.isEstimate) {
-			this.settingsContextMenu = contextMenus;
-		} else {
-			this.settingsContextMenu = contextMenus.filter(
-				(item) => item.title !== this.getTranslation('INVOICES_PAGE.ACTION.CONVERT_TO_INVOICE')
-			);
-		}
-		this.nbMenuService.onItemClick().pipe(first());
-	}*/
-
-	/*selectMenu(selectedItem?: IInvoice) {
-		if (selectedItem) {
-			this.selectInvoice({
-				isSelected: true,
-				data: selectedItem
-			});
-		}
-		this.nbMenuService
-			.onItemClick()
-			.pipe(
-				first(),
-				map(({ item: { title } }) => title),
-				untilDestroyed(this)
-			)
-			.subscribe((title) => this.bulkAction(title));
-	}
-
-	bulkAction(action: string) {
-		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.DUPLICATE')) this.duplicated(this.selectedInvoice);
-		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.SEND')) this.send(this.selectedInvoice);
-		if (action === this.getTranslation('INVOICES_PAGE.ACTION.CONVERT_TO_INVOICE'))
-			this.convert(this.selectedInvoice);
-		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.EMAIL')) this.email(this.selectedInvoice);
-		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.DELETE')) this.delete(this.selectedInvoice);
-		//if (action === this.getTranslation('INVOICES_PAGE.ACTION.NOTE')) this.addInternalNote();
-	}*/
 
 	async add() {
 		await this.navigateBasedOnPermissions(this.isEstimate, 'add');
@@ -345,98 +250,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		const { id } = this.selectedInvoice;
 		await this.navigateBasedOnPermissions(this.isEstimate, 'edit', id);
 	}
-
-	/*async duplicated(selectedItem?: IInvoice) {
-		this.invoicesService.changeValue(true);
-		if (selectedItem) {
-			this.selectInvoice({
-				isSelected: true,
-				data: selectedItem
-			});
-		}
-		const { tenantId } = this.store.user;
-		const { id: organizationId } = this.organization;
-
-		const status: any = this.selectedInvoice.status;
-		const tax: any = this.selectedInvoice.tax;
-		const tax2: any = this.selectedInvoice.tax2;
-		const discountValue: any = this.selectedInvoice.discountValue;
-
-		const invoiceNumber = await this.invoicesService.getHighestInvoiceNumber(tenantId);
-		const createdInvoice = await this.invoicesService.add({
-			invoiceNumber: +invoiceNumber['max'] + 1,
-			invoiceDate: this.selectedInvoice.invoiceDate,
-			dueDate: this.selectedInvoice.dueDate,
-			currency: this.selectedInvoice.currency,
-			discountValue: discountValue ? discountValue.originalValue : 0,
-			discountType: this.selectedInvoice.discountType,
-			tax: tax ? tax.originalValue : 0,
-			tax2: tax2 ? tax2.originalValue : 0,
-			taxType: this.selectedInvoice.taxType,
-			tax2Type: this.selectedInvoice.tax2Type,
-			terms: this.selectedInvoice.terms,
-			paid: this.selectedInvoice.paid,
-			totalValue: this.selectedInvoice.totalValue,
-			organizationContactId: this.selectedInvoice.organizationContactId,
-			toContactId: this.selectedInvoice.toContact.id,
-			organizationContactName: this.selectedInvoice.toContact?.name,
-			fromOrganizationId: this.organization.id,
-			organizationId,
-			tenantId,
-			invoiceType: this.selectedInvoice.invoiceType,
-			tags: this.selectedInvoice.tags,
-			isEstimate: this.isEstimate,
-			status: status ? status.originalValue : InvoiceStatusTypesEnum.DRAFT
-		});
-
-		const invoiceItems: IInvoiceItemCreateInput[] = [];
-
-		for (const item of this.selectedInvoice.invoiceItems) {
-			const itemToAdd = {
-				description: item.description,
-				price: item.price,
-				quantity: item.quantity,
-				totalValue: item.totalValue,
-				invoiceId: createdInvoice.id,
-				tenantId,
-				organizationId
-			};
-			switch (this.selectedInvoice.invoiceType) {
-				case InvoiceTypeEnum.BY_EMPLOYEE_HOURS:
-					itemToAdd['employeeId'] = item.employeeId;
-					break;
-				case InvoiceTypeEnum.BY_PROJECT_HOURS:
-					itemToAdd['projectId'] = item.projectId;
-					break;
-				case InvoiceTypeEnum.BY_TASK_HOURS:
-					itemToAdd['taskId'] = item.taskId;
-					break;
-				case InvoiceTypeEnum.BY_PRODUCTS:
-					itemToAdd['productId'] = item.productId;
-					break;
-				default:
-					break;
-			}
-
-			invoiceItems.push(itemToAdd);
-		}
-		await this.invoiceItemService.createBulk(createdInvoice.id, invoiceItems);
-
-		const action = this.isEstimate
-			? this.getTranslation('INVOICES_PAGE.INVOICES_DUPLICATE_ESTIMATE')
-			: this.getTranslation('INVOICES_PAGE.INVOICES_DUPLICATE_INVOICE');
-
-		await this.createInvoiceHistory(action);
-
-		const { id } = createdInvoice;
-		if (this.isEstimate) {
-			this.toastrService.success('INVOICES_PAGE.INVOICES_DUPLICATE_ESTIMATE');
-			this.router.navigate([`/pages/accounting/invoices/estimates/edit`, id]);
-		} else {
-			this.toastrService.success('INVOICES_PAGE.INVOICES_DUPLICATE_INVOICE');
-			this.router.navigate([`/pages/accounting/invoices/edit`, id]);
-		}
-	}*/
 
 	private async navigateBasedOnPermissions(isEstimate: boolean, baseRoute: string, id?: string) {
 		let route = '';
@@ -462,32 +275,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		this.router.navigate(id ? [route, id] : [route]);
 	}
 
-	/*send(selectedItem?: IInvoice) {
-		if (selectedItem) {
-			this.selectInvoice({
-				isSelected: true,
-				data: selectedItem
-			});
-		}
-		if (this.selectedInvoice.organizationContactId) {
-			this.dialogService
-				.open(InvoiceSendMutationComponent, {
-					context: {
-						invoice: this.selectedInvoice,
-						isEstimate: this.isEstimate
-					}
-				})
-				.onClose.pipe(
-					tap(() => this._refresh$.next(true)),
-					tap(() => this.invoices$.next(true)),
-					untilDestroyed(this)
-				)
-				.subscribe();
-		} else {
-			this.toastrService.warning('INVOICES_PAGE.SEND.NOT_LINKED');
-		}
-	}*/
-
 	async convert(selectedItem?: IInvoice) {
 		if (selectedItem) {
 			this.selectInvoice({
@@ -506,8 +293,8 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		await this.createInvoiceHistory(action);
 
 		this.toastrService.success('INVOICES_PAGE.ESTIMATES.ESTIMATE_CONVERT');
-		this._refresh$.next(true);
-		this.invoices$.next(true);
+		this._refresh$.next();
+		this.invoices$.next([]);
 	}
 
 	async delete(selectedItem?: IInvoice) {
@@ -528,8 +315,8 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 			} else {
 				this.toastrService.success('INVOICES_PAGE.INVOICES_DELETE_INVOICE');
 			}
-			this._refresh$.next(true);
-			this.invoices$.next(true);
+			this._refresh$.next();
+			this.invoices$.next([]);
 		}
 	}
 
@@ -541,103 +328,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 			this.router.navigate([`/pages/accounting/invoices/view`, id]);
 		}
 	}
-
-	/*email(selectedItem?: IInvoice) {
-		if (selectedItem) {
-			this.selectInvoice({
-				isSelected: true,
-				data: selectedItem
-			});
-		}
-		this.dialogService
-			.open(InvoiceEmailMutationComponent, {
-				context: {
-					invoice: this.selectedInvoice,
-					isEstimate: this.isEstimate
-				}
-			})
-			.onClose.pipe(
-				tap(() => this._refresh$.next(true)),
-				tap(() => this.invoices$.next(true)),
-				untilDestroyed(this)
-			)
-			.subscribe();
-	}*/
-
-	/*addInternalNote() {
-		this.dialogService
-			.open(AddInternalNoteComponent, {
-				context: {
-					invoice: this.selectedInvoice
-				}
-			})
-			.onClose.pipe(
-				tap(() => this._refresh$.next(true)),
-				tap(() => this.invoices$.next(true)),
-				untilDestroyed(this)
-			)
-			.subscribe();
-	}
-
-	exportToCsv(selectedItem) {
-		if (selectedItem) {
-			this.selectInvoice({
-				isSelected: true,
-				data: selectedItem
-			});
-		}
-
-		let fileName: string;
-		const {
-			invoiceNumber,
-			invoiceDate,
-			dueDate,
-			status,
-			totalValue,
-			tax,
-			tax2,
-			discountValue,
-			toContact,
-			isEstimate
-		} = this.selectedInvoice;
-		if (isEstimate) {
-			fileName = `${this.getTranslation('INVOICES_PAGE.ESTIMATE')}-${invoiceNumber}`;
-		} else {
-			fileName = `${this.getTranslation('INVOICES_PAGE.INVOICE')}-${invoiceNumber}`;
-		}
-
-		const data = [
-			{
-				invoiceNumber,
-				invoiceDate,
-				dueDate,
-				status: `${this.getTranslation(`INVOICES_PAGE.STATUSES.${status}`)}`,
-				totalValue,
-				tax,
-				tax2,
-				discountValue,
-				contact: toContact.name
-			}
-		];
-
-		const headers = [
-			isEstimate
-				? this.getTranslation('INVOICES_PAGE.ESTIMATE_NUMBER')
-				: this.getTranslation('INVOICES_PAGE.INVOICE_NUMBER'),
-			isEstimate
-				? this.getTranslation('INVOICES_PAGE.ESTIMATE_DATE')
-				: this.getTranslation('INVOICES_PAGE.INVOICE_DATE'),
-			this.getTranslation('INVOICES_PAGE.DUE_DATE'),
-			this.getTranslation('INVOICES_PAGE.STATUS'),
-			this.getTranslation('INVOICES_PAGE.TOTAL_VALUE'),
-			this.getTranslation('INVOICES_PAGE.TAX'),
-			this.getTranslation('INVOICES_PAGE.TAX_2'),
-			this.getTranslation('INVOICES_PAGE.INVOICES_SELECT_DISCOUNT_VALUE'),
-			this.getTranslation('INVOICES_PAGE.CONTACT')
-		].join(',');
-
-		generateCsv(data, headers, fileName);
-	}*/
 
 	/*
 	 * Register Smart Table Source Config
@@ -665,16 +355,15 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				'invoiceItems.task',
 				'tags',
 				'payments',
-				'fromOrganization',
-				'toContact',
+				'fromUser',
 				'historyRecords',
 				'historyRecords.user',
-				'createdBy'
+				'organization'
 			],
 			join: {
 				alias: 'invoice',
 				leftJoin: {
-					toContact: 'invoice.toContact',
+					organization: 'invoice.organization',
 					tags: 'invoice.tags'
 				},
 				...(this.filters.join ? this.filters.join : {})
@@ -691,14 +380,16 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				...(this.filters.where ? this.filters.where : {})
 			},
 			resultMap: (invoice: IInvoice) => {
-				console.log(invoice);
-				return Object.assign({}, invoice, {
-					toOrganization: invoice.toOrganization ? invoice.toOrganization.name : null,
+				if (!invoice.fromUser) {
+					return null;
+				}
+				return {
+					...invoice,
 					status: this.statusMapper(invoice.status),
 					tax: this.taxMapper(invoice.taxType, invoice.tax),
 					tax2: this.taxMapper(invoice.tax2Type, invoice.tax2),
 					discountValue: this.taxMapper(invoice.discountType, invoice.discountValue)
-				});
+				};
 			},
 			finalize: () => {
 				if (this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID) {
@@ -760,14 +451,14 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				'invoiceItems.task',
 				'tags',
 				'payments',
-				'fromOrganization',
-				'toContact',
 				'historyRecords',
-				'historyRecords.user'
+				'historyRecords.user',
+				'organization',
+				'fromUser'
 			]);
 
 			if (this.dataLayoutStyle === ComponentLayoutStyleEnum.TABLE) {
-				this.invoicesTable.grid.getRows().map((row) => {
+				this.invoicesTable.grid.getRows().forEach((row) => {
 					if (row['data']['id'] === invoice.id) {
 						row['data'] = invoice;
 						row.isSelected = true;
@@ -792,34 +483,12 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		}
 	}
 
-	/*async generatePublicLink(selectedItem: IInvoice) {
-		if (selectedItem) {
-			this.selectInvoice({
-				isSelected: true,
-				data: selectedItem
-			});
-		}
-		this.dialogService.open(PublicLinkComponent, {
-			context: {
-				invoice: this.selectedInvoice
-			}
-		});
-	}*/
-
-	/*async archive() {
-		await this.invoicesService.updateAction(this.selectedInvoice.id, {
-			isArchived: true
-		});
-		this._refresh$.next(true);
-		this.invoices$.next(true);
-	}*/
-
 	async selectInvoice({ isSelected, data }) {
 		this.disableButton = !isSelected;
 		this.selectedInvoice = isSelected ? data : null;
 
 		if (isSelected) {
-			this.canBeSend = data.toContact ? isSelected : !isSelected;
+			this.canBeSend = data.fromUser ? isSelected : !isSelected;
 		} else {
 			this.canBeSend = isSelected;
 		}
@@ -844,16 +513,24 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		}
 	}
 
-	private statusMapper = (value: string) => {
-		let badgeClass;
-		console.log(value);
-		if (value) {
-			badgeClass = ['sent', 'viewed', 'accepted', 'active', 'fully paid'].includes(value.toLowerCase())
-				? 'success'
-				: ['void', 'draft', 'partially paid'].includes(value.toLowerCase())
-				? 'warning'
-				: 'danger';
-		}
+	private readonly statusMapper = (value: string) => {
+		if (!value) return { originalValue: value, text: '', class: 'danger' };
+
+		const status = value.toLowerCase();
+		let badgeClass = 'danger';
+		const statusClasses = new Map([
+			['sent', 'success'],
+			['viewed', 'success'],
+			['accepted', 'success'],
+			['active', 'success'],
+			['fully paid', 'success'],
+			['void', 'warning'],
+			['draft', 'warning'],
+			['partially paid', 'warning']
+		]);
+
+		badgeClass = statusClasses.get(status) || 'danger';
+
 		return {
 			originalValue: value,
 			text: this.getTranslation(`INVOICES_PAGE.STATUSES.${value.toUpperCase()}`),
@@ -861,7 +538,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		};
 	};
 
-	private taxMapper = (taxType: DiscountTaxTypeEnum, tax: number) => {
+	private readonly taxMapper = (taxType: DiscountTaxTypeEnum, tax: number) => {
 		return {
 			originalValue: tax,
 			value: DiscountTaxTypeEnum.PERCENT === taxType ? `${tax}%` : `${tax}`
@@ -949,7 +626,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				type: 'text',
 				width: '5%',
 				isFilterable: false,
-				valuePrepareFunction: (row: { value?: any }) => {
+				valuePrepareFunction: (row: { value?: number }) => {
 					return row?.value ?? '';
 				}
 			};
@@ -960,7 +637,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				type: 'text',
 				width: '6%',
 				isFilterable: false,
-				valuePrepareFunction: (row: { value?: any }) => {
+				valuePrepareFunction: (row: { value?: number }) => {
 					return row?.value ?? '';
 				}
 			};
@@ -971,13 +648,13 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				type: 'text',
 				width: '5%',
 				isFilterable: false,
-				valuePrepareFunction: (row: { value?: any }) => {
+				valuePrepareFunction: (row: { value?: number }) => {
 					return row?.value ?? '';
 				}
 			};
 		}
 		if (this.columns.includes(InvoiceColumnsEnum.CONTACT)) {
-			this.settingsSmartTable['columns']['toContact'] = {
+			this.settingsSmartTable['columns']['organization'] = {
 				title: this.getTranslation('INVOICES_PAGE.CONTACT'),
 				type: 'custom',
 				width: '12%',
@@ -1028,19 +705,13 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 	}
 
 	search() {
-		const {
-			dueDate,
-			invoiceNumber,
-			invoiceDate,
-			totalValue,
-			currency,
-			status,
-			organizationContact,
-			tags = []
-		} = this.searchForm.value;
+		const { dueDate, invoiceNumber, invoiceDate, totalValue, currency, status, tags = [] } = this.searchForm.value;
 
 		if (invoiceNumber) {
-			this.setFilter({ field: 'invoiceNumber', search: invoiceNumber }, false);
+			const invoiceNumberAsNumber = Number(invoiceNumber);
+			if (!isNaN(invoiceNumberAsNumber)) {
+				this.setFilter({ field: 'invoiceNumber', search: invoiceNumberAsNumber }, false);
+			}
 		}
 		if (invoiceDate) {
 			this.setFilter(
@@ -1069,9 +740,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		if (status) {
 			this.setFilter({ field: 'status', search: status }, false);
 		}
-		if (organizationContact) {
-			this.setFilter({ field: 'toContact', search: [organizationContact.id] }, false);
-		}
 		if (isNotEmpty(tags)) {
 			const tagIds = [];
 			for (const tag of tags) {
@@ -1079,24 +747,25 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 			}
 			this.setFilter({ field: 'tags', search: tagIds });
 		}
+
 		if (isNotEmpty(this.filters)) {
 			this.refreshPagination();
-			this._refresh$.next(true);
-			this.invoices$.next(true);
+			this._refresh$.next();
+			this.invoices$.next([]);
 		}
 	}
 
 	toggleIncludeArchived(event) {
 		this.includeArchived = event;
-		this._refresh$.next(true);
-		this.invoices$.next(true);
+		this._refresh$.next();
+		this.invoices$.next([]);
 	}
 
 	reset() {
 		this.searchForm.reset();
 		this._filters = {};
-		this._refresh$.next(true);
-		this.invoices$.next(true);
+		this._refresh$.next();
+		this.invoices$.next([]);
 	}
 
 	selectedTagsEvent(currentTagSelection: ITag[]) {
@@ -1106,11 +775,24 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 	}
 
 	async selectStatus($event) {
+		const forbiddenStatuses = [InvoiceStatusTypesEnum.SENT, InvoiceStatusTypesEnum.DRAFT];
+		const status = this.selectedInvoice.status as unknown as {
+			class: string;
+			originalValue: InvoiceStatusTypesEnum;
+			text: string;
+		};
+		if (
+			!this.store.hasAnyPermission(PermissionsEnum.ALL_ORG_EDIT) &&
+			!forbiddenStatuses.includes(status?.originalValue)
+		) {
+			this.toastrService.warning('INVOICES_PAGE.STATUS_WARNING');
+			return;
+		}
 		await this.invoicesService.updateAction(this.selectedInvoice.id, {
 			status: $event
 		});
-		this._refresh$.next(true);
-		this.invoices$.next(true);
+		this._refresh$.next();
+		this.invoices$.next([]);
 	}
 
 	selectColumn($event: string[]) {
@@ -1118,31 +800,12 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		this._loadSmartTableSettings();
 	}
 
-	/*toggleActionsPopover() {
-		this.popups.last.toggle();
-		this.popups.first.hide();
-	}*/
-
 	toggleTableSettingsPopover() {
 		this.popups.first.toggle();
 		if (this.popups.length > 1) {
 			this.popups.last.hide();
 		}
 	}
-
-	/*closeActionsPopover() {
-		if (this.popups) {
-			const actionsPopup = this.popups.first;
-			const settingsPopup = this.popups.last;
-			if (settingsPopup.isShown) {
-				settingsPopup.hide();
-			}
-
-			if (actionsPopup.isShown) {
-				actionsPopup.hide();
-			}
-		}
-	}*/
 
 	private _applyTranslationOnSmartTable() {
 		this.translateService.onLangChange
@@ -1155,7 +818,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 
 	onChangeTab(tab: NbTabComponent) {
 		this.nbTab$.next(tab.tabId);
-		//this.closeActionsPopover();
 	}
 
 	private _clearItem() {
@@ -1205,12 +867,8 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 		});
 	}
 
-	/**
-	 * Handle event when user click outside tag
-	 * @param event is a boolean
-	 */
-	/*onClickOutside(event: boolean) {
-		// Close popover after click any button inside
-		if (event) this.toggleActionsPopover();
-	}*/
+	currencyChanged = (event: ICurrency) => {
+		this.searchForm.patchValue({ currency: event.isoCode });
+		this.searchForm.updateValueAndValidity();
+	};
 }

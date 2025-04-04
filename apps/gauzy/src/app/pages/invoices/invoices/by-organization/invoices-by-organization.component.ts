@@ -350,9 +350,7 @@ export class InvoicesByOrganizationComponent extends PaginationFilterBaseCompone
 		}
 
 		const { id } = this.selectedInvoice;
-		//TODO: GZY-161 - was commented because we have not generated invoices per user
-		//await this.navigateBasedOnPermissions(this.isEstimate, 'edit', id);
-		this.router.navigate([`/pages/accounting/invoices/edit-by-organization`, id]);
+		await this.navigateBasedOnPermissions(this.isEstimate, 'edit', id);
 	}
 
 	async duplicated(selectedItem?: IInvoice) {
