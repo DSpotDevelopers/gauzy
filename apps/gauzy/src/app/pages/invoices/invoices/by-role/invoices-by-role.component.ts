@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { Angular2SmartTableComponent, Cell } from 'angular2-smart-table';
+import { Angular2SmartTableComponent, Cell, Settings } from 'angular2-smart-table';
 import { TranslateService } from '@ngx-translate/core';
 import { NbDialogService, NbMenuItem, NbPopoverDirective, NbTabComponent } from '@nebular/theme';
 import {
@@ -65,7 +65,7 @@ import { environment as ENV } from '@gauzy/ui-config';
 	styleUrls: ['invoices-by-role.component.scss']
 })
 export class InvoicesByRoleComponent extends PaginationFilterBaseComponent implements AfterViewInit, OnInit {
-	settingsSmartTable: object;
+	settingsSmartTable: Settings;
 	smartTableSource: ServerDataSource;
 	selectedInvoice: IInvoice;
 	loading = false;
@@ -355,12 +355,12 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				'fromUser',
 				'historyRecords',
 				'historyRecords.user',
-				'fromOrganization'
+				'organization'
 			],
 			join: {
 				alias: 'invoice',
 				leftJoin: {
-					fromOrganization: 'invoice.fromOrganization',
+					organization: 'invoice.organization',
 					tags: 'invoice.tags'
 				},
 				...(this.filters.join ? this.filters.join : {})
@@ -541,9 +541,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 			},
 			hideSubHeader: true,
 			mode: 'external',
-			selectedRowIndex: -1,
 			actions: false,
-			editable: true,
 			noDataMessage: this.getTranslation(
 				this.isEstimate ? 'SM_TABLE.NO_DATA.ESTIMATE' : 'SM_TABLE.NO_DATA.INVOICE'
 			),
@@ -613,8 +611,8 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				type: 'text',
 				width: '5%',
 				isFilterable: false,
-				valuePrepareFunction: (row: { value?: number }) => {
-					return row?.value ?? '';
+				valuePrepareFunction: (row) => {
+					return row?.value?.toString() ?? '';
 				}
 			};
 		}
@@ -624,7 +622,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				type: 'text',
 				width: '6%',
 				isFilterable: false,
-				valuePrepareFunction: (row: { value?: number }) => {
+				valuePrepareFunction: (row) => {
 					return row?.value ?? '';
 				}
 			};
@@ -635,13 +633,13 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				type: 'text',
 				width: '5%',
 				isFilterable: false,
-				valuePrepareFunction: (row: { value?: number }) => {
+				valuePrepareFunction: (row) => {
 					return row?.value ?? '';
 				}
 			};
 		}
 		if (this.columns.includes(InvoiceColumnsEnum.CONTACT)) {
-			this.settingsSmartTable['columns']['fromOrganization'] = {
+			this.settingsSmartTable['columns']['organization'] = {
 				title: this.getTranslation('INVOICES_PAGE.CONTACT'),
 				type: 'custom',
 				width: '12%',
