@@ -86,8 +86,8 @@ export class InvoiceController extends CrudController<Invoice> {
 	)
 	@Get('pagination')
 	@UseValidationPipe({ transform: true })
-	async pagination(@Query() options: PaginationParams<Invoice>): Promise<IPagination<IInvoice>> {
-		this.invoiceService.checkIfUserCanAccessInvoiceForRead(options.where);
+	async pagination(@Query() options: PaginationParams<Invoice> & { isB2B: boolean }): Promise<IPagination<IInvoice>> {
+		this.invoiceService.checkIfUserCanAccessInvoiceForReadByType(options.where, options.isB2B);
 		return await this.invoiceService.pagination(options);
 	}
 
