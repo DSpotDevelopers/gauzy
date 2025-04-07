@@ -39,7 +39,6 @@
 						</div>
 					</div>
 				</ng-template>
-				<ga-layout-selector [componentName]="viewComponentName"></ga-layout-selector>
 			</div>
 		</ng-template>
 		<nb-tabset (changeTab)="onChangeTab($event)">
@@ -50,11 +49,7 @@
 			>
 				<ng-container *ngIf="(nbTab$ | async) === invoiceTabsEnum.ACTIONS">
 					<div class="custom-content-body">
-						<ng-template
-							[ngTemplateOutlet]="
-								dataLayoutStyle === componentLayoutStyleEnum.TABLE ? tableLayout : gridLayout
-							"
-						></ng-template>
+						<ng-template [ngTemplateOutlet]="tableLayout"></ng-template>
 					</div>
 				</ng-container>
 			</nb-tab>
@@ -258,12 +253,7 @@
 								</nb-accordion-item-body>
 							</nb-accordion-item>
 						</nb-accordion>
-						<ng-template
-							[ngTemplateOutlet]="
-								dataLayoutStyle === componentLayoutStyleEnum.TABLE ? tableLayout : gridLayout
-							"
-						>
-						</ng-template>
+						<ng-template [ngTemplateOutlet]="tableLayout"> </ng-template>
 					</div>
 				</ng-container>
 			</nb-tab>
@@ -367,12 +357,7 @@
 								</nb-accordion-item-body>
 							</nb-accordion-item>
 						</nb-accordion>
-						<ng-template
-							[ngTemplateOutlet]="
-								dataLayoutStyle === componentLayoutStyleEnum.TABLE ? tableLayout : gridLayout
-							"
-						>
-						</ng-template>
+						<ng-template [ngTemplateOutlet]="tableLayout"> </ng-template>
 					</div>
 				</ng-container>
 			</nb-tab>
@@ -391,17 +376,6 @@
 				<ng-container *ngIf="smartTableSource">
 					<ngx-pagination [source]="smartTableSource"></ngx-pagination>
 				</ng-container>
-			</div>
-		</ng-template>
-		<ng-template #gridLayout>
-			<div class="grid">
-				<ga-card-grid
-					[totalItems]="pagination?.totalItems"
-					[settings]="settingsSmartTable"
-					[source]="invoices"
-					(onSelectedItem)="selectInvoice($event)"
-					(scroll)="onScroll()"
-				></ga-card-grid>
 			</div>
 		</ng-template>
 	</nb-card-body>

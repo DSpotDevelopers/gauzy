@@ -29,7 +29,7 @@ import {
 	IDateRangePicker,
 	ICurrency
 } from '@gauzy/contracts';
-import { distinctUntilChange, isNotEmpty, toUTC, API_PREFIX, ComponentEnum } from '@gauzy/ui-core/common';
+import { distinctUntilChange, isNotEmpty, API_PREFIX, ComponentEnum, toInvoiceDateFilter } from '@gauzy/ui-core/common';
 import { Router } from '@angular/router';
 import { filter, tap, debounceTime } from 'rxjs/operators';
 import { Subject, firstValueFrom, combineLatest, BehaviorSubject, merge } from 'rxjs';
@@ -56,6 +56,7 @@ import {
 	getAdjustDateRangeFutureAllowed
 } from '@gauzy/ui-core/shared';
 import { InvoicePaidComponent } from '../../table-components';
+import { environment as ENV } from '@gauzy/ui-config';
 
 @UntilDestroy({ checkProperties: true })
 @Component({
@@ -176,12 +177,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 					this.invoices = invoices;
 				})
 			),
-			this.nbTab$.pipe(
-				distinctUntilChange(),
-				debounceTime(100),
-				filter(() => this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID),
-				tap(() => this.invoices$.next([]))
-			),
 			this.pagination$.pipe(
 				debounceTime(100),
 				distinctUntilChange(),
@@ -202,7 +197,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				})
 			),
 			this._refresh$.pipe(
-				filter(() => this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID),
 				tap(() => {
 					this.refreshPagination();
 					this.invoices = [];
@@ -210,7 +204,13 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 			)
 		)
 			.pipe(untilDestroyed(this))
-			.subscribe();
+			.subscribe(() => {
+				if (!this.searchForm.get('currency')?.value) {
+					this.searchForm.patchValue({
+						currency: this.store.selectedOrganization?.currency || ENV.DEFAULT_CURRENCY
+					});
+				}
+			});
 	}
 
 	setView() {
@@ -223,9 +223,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				tap((componentLayout) => {
 					this.dataLayoutStyle = componentLayout;
 					this.refreshPagination();
-				}),
-				filter((componentLayout) => componentLayout === ComponentLayoutStyleEnum.CARDS_GRID),
-				tap(() => {
 					this.invoices = [];
 					this.invoices$.next([]);
 				}),
@@ -358,12 +355,12 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				'fromUser',
 				'historyRecords',
 				'historyRecords.user',
-				'organization'
+				'fromOrganization'
 			],
 			join: {
 				alias: 'invoice',
 				leftJoin: {
-					organization: 'invoice.organization',
+					fromOrganization: 'invoice.fromOrganization',
 					tags: 'invoice.tags'
 				},
 				...(this.filters.join ? this.filters.join : {})
@@ -374,15 +371,12 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				isEstimate: this.isEstimate,
 				isArchived: this.includeArchived,
 				invoiceDate: {
-					startDate: toUTC(startDate).format('YYYY-MM-DD HH:mm:ss'),
-					endDate: toUTC(endDate).format('YYYY-MM-DD HH:mm:ss')
+					startDate: toInvoiceDateFilter(startDate),
+					endDate: toInvoiceDateFilter(endDate)
 				},
 				...(this.filters.where ? this.filters.where : {})
 			},
 			resultMap: (invoice: IInvoice) => {
-				if (!invoice.fromUser) {
-					return null;
-				}
 				return {
 					...invoice,
 					status: this.statusMapper(invoice.status),
@@ -392,9 +386,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				};
 			},
 			finalize: () => {
-				if (this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID) {
-					this.invoices.push(...this.smartTableSource.getData());
-				}
 				this.setPagination({
 					...this.getPagination(),
 					totalItems: this.smartTableSource.count()
@@ -413,10 +404,6 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 
 			const { activePage, itemsPerPage } = this.getPagination();
 			this.smartTableSource.setPaging(activePage, itemsPerPage, false);
-			if (this.dataLayoutStyle === ComponentLayoutStyleEnum.CARDS_GRID) {
-				// Initiate GRID or TABLE view pagination
-				await this.smartTableSource.getElements();
-			}
 		} catch (error) {
 			this.toastrService.danger(
 				this.getTranslation('NOTES.INVOICE.INVOICE_ERROR', {
@@ -654,7 +641,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 			};
 		}
 		if (this.columns.includes(InvoiceColumnsEnum.CONTACT)) {
-			this.settingsSmartTable['columns']['organization'] = {
+			this.settingsSmartTable['columns']['fromOrganization'] = {
 				title: this.getTranslation('INVOICES_PAGE.CONTACT'),
 				type: 'custom',
 				width: '12%',
@@ -664,6 +651,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				componentInitFunction: (instance: ContactLinksComponent, cell: Cell) => {
 					instance.rowData = cell.getRow().getData();
 					instance.value = cell.getRawValue();
+					instance.useNavigate = false;
 				}
 			};
 		}
@@ -713,40 +701,46 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 				this.setFilter({ field: 'invoiceNumber', search: invoiceNumberAsNumber }, false);
 			}
 		}
-		if (invoiceDate) {
-			this.setFilter(
-				{
-					field: 'invoiceDate',
-					search: moment(invoiceDate).format('YYYY-MM-DD')
-				},
-				false
-			);
-		}
-		if (dueDate) {
-			this.setFilter(
-				{
-					field: 'dueDate',
-					search: moment(dueDate).format('YYYY-MM-DD')
-				},
-				false
-			);
-		}
-		if (totalValue) {
-			this.setFilter({ field: 'totalValue', search: totalValue }, false);
-		}
-		if (currency) {
-			this.setFilter({ field: 'currency', search: currency }, false);
-		}
-		if (status) {
-			this.setFilter({ field: 'status', search: status }, false);
-		}
-		if (isNotEmpty(tags)) {
-			const tagIds = [];
-			for (const tag of tags) {
-				tagIds.push(tag.id);
-			}
-			this.setFilter({ field: 'tags', search: tagIds });
-		}
+
+		// Filter by invoice date
+		this.setFilter(
+			{
+				field: 'invoiceDate',
+				search: invoiceDate
+					? {
+							startDate: toInvoiceDateFilter(moment(invoiceDate).startOf('day')),
+							endDate: toInvoiceDateFilter(moment(invoiceDate).endOf('day'))
+					  }
+					: null
+			},
+			false
+		);
+
+		// Filter by invoice due date
+		this.setFilter(
+			{
+				field: 'dueDate',
+				search: dueDate
+					? {
+							startDate: toInvoiceDateFilter(moment(dueDate).startOf('day')),
+							endDate: toInvoiceDateFilter(moment(dueDate).endOf('day'))
+					  }
+					: null
+			},
+			false
+		);
+
+		// Filter by invoice total value
+		this.setFilter({ field: 'totalValue', search: totalValue }, false);
+
+		// Filter by invoice currency
+		this.setFilter({ field: 'currency', search: currency }, false);
+
+		// Filter by invoice status
+		this.setFilter({ field: 'status', search: status }, false);
+
+		// Filter by tags
+		this.setFilter({ field: 'tags', search: isNotEmpty(tags) ? tags.map((tag) => tag.id) : null });
 
 		if (isNotEmpty(this.filters)) {
 			this.refreshPagination();
@@ -817,6 +811,7 @@ export class InvoicesByRoleComponent extends PaginationFilterBaseComponent imple
 	}
 
 	onChangeTab(tab: NbTabComponent) {
+		this.reset();
 		this.nbTab$.next(tab.tabId);
 	}
 

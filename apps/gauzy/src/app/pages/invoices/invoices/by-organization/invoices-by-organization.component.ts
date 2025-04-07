@@ -30,13 +30,12 @@ import {
 	DiscountTaxTypeEnum,
 	IDateRangePicker
 } from '@gauzy/contracts';
-import { distinctUntilChange, isNotEmpty, toUTC } from '@gauzy/ui-core/common';
+import { distinctUntilChange, isNotEmpty, toInvoiceDateFilter, API_PREFIX, ComponentEnum } from '@gauzy/ui-core/common';
 import { Router } from '@angular/router';
 import { first, map, filter, tap, debounceTime } from 'rxjs/operators';
 import { Subject, firstValueFrom, combineLatest, BehaviorSubject } from 'rxjs';
 import moment from 'moment';
 import { NgxPermissionsService } from 'ngx-permissions';
-import { API_PREFIX, ComponentEnum } from '@gauzy/ui-core/common';
 import {
 	DateRangePickerBuilderService,
 	InvoiceEstimateHistoryService,
@@ -65,16 +64,6 @@ import { InvoiceEmailMutationComponent } from '../../invoice-email/invoice-email
 import { InvoiceSendMutationComponent } from '../../invoice-send/invoice-send-mutation.component';
 import { PublicLinkComponent } from '../../public-link/public-link.component';
 import { InvoicePaidComponent } from '../../table-components';
-
-/**
- * Convert date to UTC string format to be used in filter
- * 
- * @param date
- * @returns {string}
- */
-function toInvoiceDateFilter(date: string | Date | moment.Moment): string {
-	return toUTC(date).format('YYYY-MM-DD HH:mm:ss');
-}
 
 @UntilDestroy({ checkProperties: true })
 @Component({
@@ -705,8 +694,7 @@ export class InvoicesByOrganizationComponent extends PaginationFilterBaseCompone
 				'fromOrganization',
 				'toContact',
 				'historyRecords',
-				'historyRecords.user',
-				'fromUser'
+				'historyRecords.user'
 			],
 			join: {
 				alias: 'invoice',

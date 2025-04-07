@@ -654,7 +654,6 @@ export class InvoiceAddByRoleComponent extends PaginationFilterBaseComponent imp
 		const invoice = await this.createInvoiceEstimate(InvoiceStatusTypesEnum.SENT);
 		const invoiceItems = await this.createInvoiceEstimateItems();
 
-		console.log(invoice, invoiceDate);
 		await firstValueFrom(
 			this.dialogService.open(InvoiceEmailMutationComponent, {
 				context: {
