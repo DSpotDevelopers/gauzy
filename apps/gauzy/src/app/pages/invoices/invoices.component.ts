@@ -1074,7 +1074,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 			this.setFilter(
 				{
 					field: 'invoiceDate',
-					search: moment(invoiceDate).format('YYYY-MM-DD')
+					search: moment(invoiceDate).startOf('day').toDate()
 				},
 				false
 			);
@@ -1083,7 +1083,7 @@ export class InvoicesComponent extends PaginationFilterBaseComponent implements 
 			this.setFilter(
 				{
 					field: 'dueDate',
-					search: moment(dueDate).format('YYYY-MM-DD')
+					search: moment(dueDate).endOf('day').toDate()
 				},
 				false
 			);
