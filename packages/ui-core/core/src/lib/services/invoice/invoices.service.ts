@@ -91,19 +91,19 @@ export class InvoicesService {
 	sendEmail(
 		email: string,
 		invoiceNumber: number,
-		invoiceId: ID,
 		isEstimate: boolean,
 		organizationId: ID,
-		tenantId: ID
+		tenantId: ID,
+		invoiceId?: ID
 	): Promise<any> {
 		return firstValueFrom(
 			this.http.put<any>(`${API_PREFIX}/invoices/email/${email}`, {
 				params: {
 					isEstimate,
 					invoiceNumber,
-					invoiceId,
 					organizationId,
-					tenantId
+					tenantId,
+					invoiceId
 				}
 			})
 		);
