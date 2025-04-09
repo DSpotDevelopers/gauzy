@@ -230,8 +230,10 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 				perPage: pagination ? pagination.itemsPerPage : 10
 			},
 			add: {
-				hiddenWhen: () => true,
-				confirmCreate: false
+				addButtonContent: '<i class="nb-plus"></i>',
+				createButtonContent: '<i class="nb-checkmark"></i>',
+				cancelButtonContent: '<i class="nb-close"></i>',
+				confirmCreate: true
 			},
 			edit: {
 				editButtonContent: '<i class="nb-edit"></i>',
@@ -254,11 +256,12 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 					title: this.getTranslation('INVOICES_PAGE.INVOICE_ITEM.EMPLOYEE'),
 					width: '13%',
 					isEditable: false,
+					isAddable: false,
 					editor: {
 						type: 'text'
 					},
 					valuePrepareFunction: (cell) => {
-						return `${cell ?? this.invoice?.fromUser?.fullName}`;
+						return `${cell ?? this.invoice?.fromUser?.name}`;
 					}
 				};
 				break;
@@ -330,14 +333,19 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 				isFilterable: false,
 				width: '13%',
 				valuePrepareFunction: (value: IInvoiceItem['price']) => {
-					return `${this.invoice?.currency} ${value}`;
+					return `${this.invoice?.currency} ${
+						value ?? this.invoice?.invoiceItems[0].employee?.billRateValue
+					}`;
 				}
 			};
 			quantity = {
 				title: this.getTranslation('INVOICES_PAGE.INVOICE_ITEM.HOURS_WORKED'),
 				type: 'text',
 				isFilterable: false,
-				width: '13%'
+				width: '13%',
+				valuePrepareFunction: (cell) => {
+					return `${cell ?? 0}`;
+				}
 			};
 		} else if (
 			this.invoice.invoiceType === InvoiceTypeEnum.DETAILED_ITEMS ||
@@ -370,9 +378,8 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 			type: 'text',
 			isAddable: false,
 			isEditable: false,
-			valuePrepareFunction: (value: IInvoiceItem['totalValue'], cell: Cell) => {
-				const row = cell.getRow().getData();
-				return `${this.invoice?.currency} ${+(row.quantity * row.price).toFixed(2)}`;
+			valuePrepareFunction: (cell) => {
+				return `${this.invoice.currency} ${parseFloat(cell ?? '0')?.toFixed(2) ?? (0).toFixed(2)}`;
 			},
 			isFilterable: false,
 			width: '13%'
@@ -811,6 +818,55 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 		this.translate.onLangChange.pipe(untilDestroyed(this)).subscribe(() => {
 			this.loadSmartTable();
 		});
+	}
+
+	async onCreateConfirm(event) {
+		let newData = event.newData;
+		const sourceData = event.source?.data;
+		if (sourceData?.length === 0) {
+			this.toastrService.danger(
+				this.getTranslation('INVOICES_PAGE.INVOICE_ITEM.INVALID_ITEM'),
+				this.getTranslation('TOASTR.TITLE.WARNING')
+			);
+			event.confirm.reject();
+			return;
+		}
+		const lastSourceData = sourceData[sourceData.length - 1];
+		newData = {
+			...lastSourceData,
+			...newData,
+
+			price: newData.price !== undefined ? extractNumber(newData.price) : lastSourceData.price,
+			quantity:
+				newData.quantity !== undefined
+					? newData.quantity
+							?.toString()
+							.trim()
+							.replace(/^0+(?=\d)/, '')
+					: 0,
+			selectedItem: newData.selectedItem !== undefined ? newData.selectedItem : lastSourceData.selectedItem
+		};
+		const quantityIsValid = /^\d*\.?\d+$/.test(newData.quantity) && !/^0\d+/.test(newData.quantity);
+		if (
+			quantityIsValid &&
+			Number.isFinite(+newData.quantity) &&
+			Number.isFinite(+newData.price) &&
+			(newData.selectedItem || this.invoice.invoiceType === InvoiceTypeEnum.DETAILED_ITEMS)
+		) {
+			newData = { ...newData, price: extractNumber(newData.price) };
+			const itemTotal = +newData.quantity * +extractNumber(newData.price);
+			newData.totalValue = itemTotal;
+			this.subtotal += itemTotal;
+
+			await event.confirm.resolve(newData);
+			await this.calculateTotal();
+		} else {
+			this.toastrService.danger(
+				this.getTranslation('INVOICES_PAGE.INVOICE_ITEM.INVALID_ITEM'),
+				this.getTranslation('TOASTR.TITLE.WARNING')
+			);
+			event.confirm.reject();
+		}
 	}
 
 	async onEditConfirm(event) {

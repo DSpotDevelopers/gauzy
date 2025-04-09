@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { TranslationBaseComponent } from '@gauzy/ui-core/i18n';
 import { IInvoice, InvoiceStatusTypesEnum, IInvoiceItem } from '@gauzy/contracts';
 import { TranslateService } from '@ngx-translate/core';
@@ -17,8 +17,6 @@ export class InvoiceEmailMutationComponent extends TranslationBaseComponent impl
 	isEstimate: boolean;
 	invoiceItems: IInvoiceItem[];
 	createdInvoice: IInvoice;
-
-	@Input() showPreviewPdf = true;
 
 	constructor(
 		public readonly translateService: TranslateService,
@@ -52,18 +50,19 @@ export class InvoiceEmailMutationComponent extends TranslationBaseComponent impl
 		await this.invoiceService.sendEmail(
 			email,
 			this.invoice.invoiceNumber,
+			this.invoice.id ? this.invoice?.id : this.createdInvoice?.id,
 			this.isEstimate,
 			organizationId,
-			tenantId,
-			this.invoice.id ? this.invoice?.id : this.createdInvoice?.id
+			tenantId
 		);
 
 		if (this.invoice.id) {
 			await this.invoiceService.updateAction(this.invoice.id, {
 				status: InvoiceStatusTypesEnum.SENT
 			});
-			await this.invoiceEstimateSendHistory();
 		}
+
+		await this.invoiceEstimateSendHistory();
 
 		this.toastrService.success('INVOICES_PAGE.EMAIL.EMAIL_SENT');
 		this.dialogRef.close('ok');

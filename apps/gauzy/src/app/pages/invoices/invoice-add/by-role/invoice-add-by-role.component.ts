@@ -255,6 +255,7 @@ export class InvoiceAddByRoleComponent extends PaginationFilterBaseComponent imp
 					title: this.getTranslation('INVOICES_PAGE.INVOICE_ITEM.EMPLOYEE'),
 					width: '13%',
 					isEditable: false,
+					isAddable: false,
 					editor: {
 						type: 'text'
 					},
@@ -641,20 +642,8 @@ export class InvoiceAddByRoleComponent extends PaginationFilterBaseComponent imp
 			return;
 		}
 
-		const {
-			invoiceNumber,
-			invoiceDate,
-			dueDate,
-			discountValue,
-			discountType,
-			tax,
-			tax2,
-			taxType,
-			notes,
-			tax2Type,
-			tags
-		} = this.form.value;
-		const { tenantId } = this.store.user;
+		const { invoiceNumber, invoiceDate, dueDate } = this.form.value;
+
 		if (!invoiceDate || !dueDate || compareDate(invoiceDate, dueDate)) {
 			this.toastrService.danger(
 				this.getTranslation('INVOICES_PAGE.INVALID_DATES'),
@@ -666,6 +655,7 @@ export class InvoiceAddByRoleComponent extends PaginationFilterBaseComponent imp
 		const invoiceExists = await this.invoicesService.getAll({
 			invoiceNumber
 		});
+
 		if (invoiceExists.items.length) {
 			this.toastrService.danger(
 				this.getTranslation('INVOICES_PAGE.INVOICE_NUMBER_DUPLICATE'),
@@ -674,83 +664,18 @@ export class InvoiceAddByRoleComponent extends PaginationFilterBaseComponent imp
 			return;
 		}
 
-		const invoice = {
-			invoiceNumber: invoiceNumber,
-			invoiceDate: invoiceDate,
-			currency: this.organization.currency,
-			dueDate: dueDate,
-			discountValue: discountValue,
-			discountType: discountType,
-			tax: tax,
-			tax2: tax2,
-			taxType: taxType,
-			tax2Type: tax2Type,
-			terms: notes,
-			paid: false,
-			totalValue: +this.total.toFixed(2),
-			fromUserId: this.selectedEmployee?.id,
-			fromOrganization: this.organization,
-			fromOrganizationId: this.organization?.id,
-			organizationId: this.organization?.id,
-			tenantId,
-			invoiceType: this.selectedInvoiceType,
-			tags: tags,
-			isEstimate: this.isEstimate,
-			invoiceItems: []
-		};
+		const invoice = await this.createInvoiceEstimate(InvoiceStatusTypesEnum.SENT);
+		const invoiceItems = await this.createInvoiceEstimateItems();
 
-		const invoiceItems = [];
-
-		for (const invoiceItem of tableSources) {
-			const itemToAdd = {
-				price: invoiceItem.price,
-				quantity: invoiceItem.quantity,
-				totalValue: invoiceItem.totalValue,
-				applyTax: invoiceItem.applyTax,
-				applyDiscount: invoiceItem.applyDiscount,
-				organizationId: this.organization?.id,
-				tenantId
-			};
-			switch (this.invoiceType) {
-				case InvoiceTypeEnum.BY_EMPLOYEE_HOURS:
-					itemToAdd['employeeId'] = invoiceItem.selectedItem;
-					break;
-				case InvoiceTypeEnum.BY_PROJECT_HOURS:
-					itemToAdd['projectId'] = invoiceItem.selectedItem;
-					break;
-				case InvoiceTypeEnum.BY_TASK_HOURS:
-					itemToAdd['taskId'] = invoiceItem.selectedItem;
-					break;
-				case InvoiceTypeEnum.BY_PRODUCTS:
-					itemToAdd['productId'] = invoiceItem.selectedItem;
-					break;
-				case InvoiceTypeEnum.BY_EXPENSES:
-					itemToAdd['expenseId'] = invoiceItem.selectedItem;
-					break;
-				default:
-					break;
-			}
-			invoiceItems.push(itemToAdd);
-		}
-
-		invoice.invoiceItems = invoiceItems;
-
-		const dialogResult = await firstValueFrom(
+		await firstValueFrom(
 			this.dialogService.open(InvoiceEmailMutationComponent, {
 				context: {
 					invoice: invoice,
-					showPreviewPdf: false,
+					invoiceItems: invoiceItems,
 					isEstimate: this.isEstimate
 				}
 			}).onClose
 		);
-
-		if (dialogResult) {
-			await this.createInvoiceEstimate(InvoiceStatusTypesEnum.SENT);
-			await this.createInvoiceEstimateItems();
-		} else {
-			return;
-		}
 
 		if (this.isEstimate) {
 			this.toastrService.success(
