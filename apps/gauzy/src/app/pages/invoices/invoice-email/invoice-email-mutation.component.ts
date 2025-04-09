@@ -42,9 +42,8 @@ export class InvoiceEmailMutationComponent extends TranslationBaseComponent impl
 
 	async sendEmail() {
 		const { tenantId } = this.store.user;
-		const { id: organizationId } = this.invoice.fromOrganization
-			? this.invoice.fromOrganization
-			: this.invoice.toOrganization;
+		const organizationId = this.invoice.fromOrganization?.id ?? this.invoice.organizationId;
+
 		const { email } = this.form.value;
 
 		await this.invoiceService.sendEmail(
