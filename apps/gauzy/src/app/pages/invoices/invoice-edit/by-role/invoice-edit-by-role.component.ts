@@ -3,7 +3,7 @@ import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms
 import { TranslateService } from '@ngx-translate/core';
 import { filter, tap } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
-import { Cell, LocalDataSource, Settings } from 'angular2-smart-table';
+import { LocalDataSource, Settings } from 'angular2-smart-table';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NbDialogService } from '@nebular/theme';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -175,10 +175,9 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 			.then(async (invoice: IInvoice) => {
 				this.invoice = invoice;
 				this.invoiceItems = invoice?.invoiceItems;
-				this.discountAfterTax = invoice?.fromOrganization?.discountAfterTax;
+				this.discountAfterTax = invoice?.toOrganization?.discountAfterTax;
 
-				await this._loadOrganizationData();
-				this.updateValueAndValidity(invoice);
+				await this._loadOrganizationData().finally(() => this.updateValueAndValidity(invoice));
 			})
 			.finally(() => {
 				this.loading = false;
@@ -333,9 +332,7 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 				isFilterable: false,
 				width: '13%',
 				valuePrepareFunction: (value: IInvoiceItem['price']) => {
-					return `${this.invoice?.currency} ${
-						value ?? this.invoice?.invoiceItems[0].employee?.billRateValue
-					}`;
+					return `${this.invoice?.currency} ${value ?? this.invoice.invoiceItems[0]?.price}`;
 				}
 			};
 			quantity = {
@@ -544,8 +541,8 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 					invoiceId: this.invoice.id,
 					user: this.store.user,
 					userId: this.store.userId,
-					organization: this.invoice.fromOrganization,
-					organizationId: this.invoice.fromOrganization.id
+					organization: this.invoice.toOrganization,
+					organizationId: this.invoice.toOrganization?.id
 				});
 			}
 
@@ -715,7 +712,7 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 
 			switch (this.invoice.invoiceType) {
 				case InvoiceTypeEnum.BY_EMPLOYEE_HOURS:
-					data['selectedItem'] = item.employee.fullName;
+					data['selectedItem'] = this.invoice.fromUser?.name;
 					break;
 				case InvoiceTypeEnum.BY_PROJECT_HOURS:
 					data['selectedItem'] = item.project;
@@ -835,7 +832,6 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 		newData = {
 			...lastSourceData,
 			...newData,
-
 			price: newData.price !== undefined ? extractNumber(newData.price) : lastSourceData.price,
 			quantity:
 				newData.quantity !== undefined
@@ -880,16 +876,17 @@ export class InvoiceEditByRoleComponent extends PaginationFilterBaseComponent im
 			event.confirm.reject();
 			return;
 		}
+		const lastSourceData = sourceData[sourceData.length - 1];
 		newData = {
 			...newData,
-			price: newData.price !== undefined ? extractNumber(newData.price) : 'this.rate?.toString()',
+			price: newData.price !== undefined ? extractNumber(newData.price) : lastSourceData.price,
 			quantity:
 				newData.quantity !== undefined
 					? newData.quantity
 							?.toString()
 							.trim()
 							.replace(/^0+(?=\d)/, '')
-					: 0
+					: lastSourceData.quantity
 		};
 		const quantityIsValid = /^\d*\.?\d+$/.test(newData.quantity) && !/^0\d+/.test(newData.quantity);
 
