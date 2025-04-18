@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOptionsWhere } from 'typeorm';
 import { Knex as KnexConnection } from 'knex';
@@ -27,9 +27,6 @@ import { setFullIconUrl } from '../utils';
 
 @Injectable()
 export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus> {
-	// Logger for tracking operations
-	logger = new Logger('TaskStatusService'); // Update with your service name
-
 	constructor(
 		@InjectRepository(TaskStatus)
 		readonly typeOrmTaskStatusRepository: TypeOrmTaskStatusRepository,
@@ -127,7 +124,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return await this.typeOrmRepository.save(statuses);
 		} catch (error) {
 			// If an error occurs during the creation process, log the error.
-			console.error('Error while creating task statuses', error.message);
+			throw new BadRequestException(`Error while creating task statuses: ${error}`);
 		}
 	}
 
@@ -181,7 +178,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return await this.typeOrmRepository.save(statuses);
 		} catch (error) {
 			// If an error occurs during the creation process, log the error.
-			this.logger.error(`Error while creating task statuses for organization: ${error}`);
+			throw new BadRequestException(`Error while creating task statuses for organization: ${error}`);
 		}
 	}
 
@@ -235,7 +232,7 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 			return statuses;
 		} catch (error) {
 			// If an error occurs during the creation process, log the error.
-			this.logger.error(`Error while creating task statuses: ${error}`);
+			throw new BadRequestException(`Error while creating task statuses: ${error}`);
 		}
 	}
 
@@ -249,8 +246,6 @@ export class TaskStatusService extends TaskStatusPrioritySizeService<TaskStatus>
 		try {
 			// Loop through the list and update each item's order
 			for (const item of list) {
-				this.logger.log(`Updating item with ID: ${item.id} to order: ${item.order}`); // Logging operation
-
 				// Update the entity with the new order value
 				if (item.id) {
 					await super.update({ id: item.id, isSystem: false }, { order: item.order });
