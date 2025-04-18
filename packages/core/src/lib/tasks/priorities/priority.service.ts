@@ -64,7 +64,7 @@ export class TaskPriorityService extends TaskStatusPrioritySizeService<TaskPrior
 					: await super.fetchAll(params);
 
 			// Ensure the fullIconUrl is set for each priority
-			setFullIconUrl(result.items);
+			await setFullIconUrl(result.items);
 			return result;
 		} catch (error) {
 			throw new BadRequestException(error);

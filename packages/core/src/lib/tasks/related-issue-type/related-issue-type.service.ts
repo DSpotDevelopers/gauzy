@@ -48,7 +48,7 @@ export class TaskRelatedIssueTypeService extends TaskStatusPrioritySizeService<T
 					: await super.fetchAll(params);
 
 			// Ensure the fullIconUrl is set for each task related issue type
-			setFullIconUrl(result.items);
+			await setFullIconUrl(result.items);
 			return result;
 		} catch (error) {
 			throw new BadRequestException(error);

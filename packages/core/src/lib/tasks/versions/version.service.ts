@@ -50,7 +50,7 @@ export class TaskVersionService extends TaskStatusPrioritySizeService<TaskVersio
 					: await super.fetchAll(params);
 
 			// Ensure the fullIconUrl is set for each version
-			setFullIconUrl(result.items);
+			await setFullIconUrl(result.items);
 			return result;
 		} catch (error) {
 			throw new BadRequestException(error);
