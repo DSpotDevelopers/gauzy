@@ -1,6 +1,6 @@
 import { FileStorageProviderEnum } from '@gauzy/contracts';
 import { FileStorage } from '../core/file-storage';
-import { TaskPriority, TaskSize, TaskStatus } from '../core';
+import { IssueType, TaskPriority, TaskSize, TaskStatus, TaskRelatedIssueType, TaskVersion } from '../core';
 
 /**
  * Get full icon url for items with an icon
@@ -9,7 +9,9 @@ import { TaskPriority, TaskSize, TaskStatus } from '../core';
  *
  * @param items
  */
-export const setFullIconUrl = async (items: (TaskPriority | TaskSize | TaskStatus)[]) => {
+export const setFullIconUrl = async (
+	items: (TaskPriority | TaskSize | TaskStatus | IssueType | TaskRelatedIssueType | TaskVersion)[]
+) => {
 	const store = new FileStorage().setProvider(FileStorageProviderEnum.LOCAL);
 	const provider = store.getProviderInstance();
 
